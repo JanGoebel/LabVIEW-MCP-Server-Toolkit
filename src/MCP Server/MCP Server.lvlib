@@ -28,10 +28,21 @@
 			<Item Name="shutdown.vi" Type="VI" URL="../shutdown.vi"/>
 			<Item Name="exit.vi" Type="VI" URL="../exit.vi"/>
 		</Item>
+		<Item Name="Debug" Type="Folder">
+			<Item Name="Test_Tool.vi" Type="VI" URL="../Test_Tool.vi"/>
+			<Item Name="Create Debug Tool.vi" Type="VI" URL="../Create Debug Tool.vi"/>
+		</Item>
+		<Item Name="SubVIs" Type="Folder">
+			<Item Name="Get ID from JSON.vi" Type="VI" URL="../Get ID from JSON.vi"/>
+		</Item>
+		<Item Name="ctls" Type="Folder">
+			<Item Name="rpc_methods.ctl" Type="VI" URL="../rpc_methods.ctl"/>
+			<Item Name="Output Parameter.ctl" Type="VI" URL="../Output Parameter.ctl"/>
+			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
+			<Item Name="MCP Server Data.ctl" Type="VI" URL="../MCP Server Data.ctl"/>
+			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
+		</Item>
 		<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
-		<Item Name="rpc_methods.ctl" Type="VI" URL="../rpc_methods.ctl"/>
 		<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
-		<Item Name="MCP Server Data.ctl" Type="VI" URL="../MCP Server Data.ctl"/>
-		<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
 	</Item>
 </Library>
