@@ -11,6 +11,7 @@
 	<Item Name="Public API" Type="Folder">
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
+		<Item Name="Clear Tools.vi" Type="VI" URL="../Clear Tools.vi"/>
 		<Item Name="Get Status.vi" Type="VI" URL="../Get Status.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
 		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>

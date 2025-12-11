@@ -12,6 +12,11 @@
 		<Property Name="server.vi.callsEnabled" Type="Bool">true</Property>
 		<Property Name="server.vi.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
+		<Item Name="Test_Tools" Type="Folder">
+			<Item Name="Calclulator-Add.vi" Type="VI" URL="../test tools/Calclulator-Add.vi"/>
+			<Item Name="Calculator-Multiply.vi" Type="VI" URL="../test tools/Calculator-Multiply.vi"/>
+			<Item Name="get waveform.vi" Type="VI" URL="../test tools/get waveform.vi"/>
+		</Item>
 		<Item Name="DAQ Application.vi" Type="VI" URL="../DAQ Application.vi"/>
 		<Item Name="mcp" Type="Web Service">
 			<Property Name="ws.autoIncrementVersion" Type="Bool">true</Property>
