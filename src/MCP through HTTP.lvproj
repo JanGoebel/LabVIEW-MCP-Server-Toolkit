@@ -3,6 +3,7 @@
 	<Property Name="NI.LV.All.SaveVersion" Type="Str">25.0</Property>
 	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
 	<Item Name="My Computer" Type="My Computer">
+		<Property Name="NI.SortType" Type="Int">3</Property>
 		<Property Name="server.app.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="server.control.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="server.tcp.enabled" Type="Bool">false</Property>
@@ -17,7 +18,7 @@
 			<Item Name="Calculator-Multiply.vi" Type="VI" URL="../test tools/Calculator-Multiply.vi"/>
 			<Item Name="get waveform.vi" Type="VI" URL="../test tools/get waveform.vi"/>
 		</Item>
-		<Item Name="DAQ Application.vi" Type="VI" URL="../DAQ Application.vi"/>
+		<Item Name="MCP Demo Application.lvlib" Type="Library" URL="../../examples/Demo Application/MCP Demo Application.lvlib"/>
 		<Item Name="mcp" Type="Web Service">
 			<Property Name="ws.autoIncrementVersion" Type="Bool">true</Property>
 			<Property Name="ws.disconnectInline" Type="Bool">true</Property>

@@ -9,11 +9,36 @@
 	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
 	<Property Name="NI.SortType" Type="Int">3</Property>
 	<Item Name="Public API" Type="Folder">
+		<Item Name="Advanced" Type="Folder">
+			<Item Name="FGVs" Type="Folder">
+				<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
+			</Item>
+			<Item Name="Events" Type="Folder">
+				<Item Name="onLog.ctl" Type="VI" URL="../onLog.ctl"/>
+				<Item Name="onConnect.ctl" Type="VI" URL="../onConnect.ctl"/>
+				<Item Name="onToolsList.ctl" Type="VI" URL="../onToolsList.ctl"/>
+				<Item Name="onToolsCall.ctl" Type="VI" URL="../onToolsCall.ctl"/>
+				<Item Name="onNotification.ctl" Type="VI" URL="../onNotification.ctl"/>
+				<Item Name="onRpc.ctl" Type="VI" URL="../onRpc.ctl"/>
+				<Item Name="onTool.ctl" Type="VI" URL="../onTool.ctl"/>
+			</Item>
+			<Item Name="Get ID from name.vi" Type="VI" URL="../Get ID from name.vi"/>
+			<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
+			<Item Name="Get Tool.vi" Type="VI" URL="../Get Tool.vi"/>
+			<Item Name="Send onToolsList.vi" Type="VI" URL="../Send onToolsList.vi"/>
+			<Item Name="Send onRpc.vi" Type="VI" URL="../Send onRpc.vi"/>
+			<Item Name="Send onError.vi" Type="VI" URL="../Send onError.vi"/>
+			<Item Name="Send onTool.vi" Type="VI" URL="../Send onTool.vi"/>
+			<Item Name="Send onNotification.vi" Type="VI" URL="../Send onNotification.vi"/>
+			<Item Name="Log.vi" Type="VI" URL="../Log.vi"/>
+			<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
+			<Item Name="Set Parameters.vi" Type="VI" URL="../Set Parameters.vi"/>
+		</Item>
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
 		<Item Name="Clear Tools.vi" Type="VI" URL="../Clear Tools.vi"/>
-		<Item Name="Get Status.vi" Type="VI" URL="../Get Status.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
+		<Item Name="Get Status.vi" Type="VI" URL="../Get Status.vi"/>
 		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
@@ -41,9 +66,13 @@
 			<Item Name="Output Parameter.ctl" Type="VI" URL="../Output Parameter.ctl"/>
 			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
 			<Item Name="MCP Server Data.ctl" Type="VI" URL="../MCP Server Data.ctl"/>
+			<Item Name="Logging.ctl" Type="VI" URL="../Logging.ctl"/>
+			<Item Name="User Events.ctl" Type="VI" URL="../User Events.ctl"/>
 			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
+			<Item Name="Server Data.ctl" Type="VI" URL="../Server Data.ctl"/>
 		</Item>
 		<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
-		<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
 	</Item>
+	<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
+	<Item Name="Convert Image To Base64.vi" Type="VI" URL="../Convert Image To Base64.vi"/>
 </Library>
