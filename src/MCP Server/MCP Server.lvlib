@@ -9,33 +9,9 @@
 	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
 	<Property Name="NI.SortType" Type="Int">3</Property>
 	<Item Name="Public API" Type="Folder">
-		<Item Name="Advanced" Type="Folder">
-			<Item Name="FGVs" Type="Folder">
-				<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
-			</Item>
-			<Item Name="Events" Type="Folder">
-				<Item Name="onLog.ctl" Type="VI" URL="../onLog.ctl"/>
-				<Item Name="onConnect.ctl" Type="VI" URL="../onConnect.ctl"/>
-				<Item Name="onToolsList.ctl" Type="VI" URL="../onToolsList.ctl"/>
-				<Item Name="onToolsCall.ctl" Type="VI" URL="../onToolsCall.ctl"/>
-				<Item Name="onNotification.ctl" Type="VI" URL="../onNotification.ctl"/>
-				<Item Name="onRpc.ctl" Type="VI" URL="../onRpc.ctl"/>
-				<Item Name="onTool.ctl" Type="VI" URL="../onTool.ctl"/>
-			</Item>
-			<Item Name="Get ID from name.vi" Type="VI" URL="../Get ID from name.vi"/>
-			<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
-			<Item Name="Get Tool.vi" Type="VI" URL="../Get Tool.vi"/>
-			<Item Name="Get Server Name from ID.vi" Type="VI" URL="../Get Server Name from ID.vi"/>
-			<Item Name="Get Prompts.vi" Type="VI" URL="../Get Prompts.vi"/>
-			<Item Name="Send onToolsList.vi" Type="VI" URL="../Send onToolsList.vi"/>
-			<Item Name="Send onRpc.vi" Type="VI" URL="../Send onRpc.vi"/>
-			<Item Name="Send onError.vi" Type="VI" URL="../Send onError.vi"/>
-			<Item Name="Send onTool.vi" Type="VI" URL="../Send onTool.vi"/>
-			<Item Name="Send onNotification.vi" Type="VI" URL="../Send onNotification.vi"/>
-			<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
-			<Item Name="Log.vi" Type="VI" URL="../Log.vi"/>
-			<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
-			<Item Name="Set Parameters.vi" Type="VI" URL="../Set Parameters.vi"/>
+		<Item Name="Server" Type="Folder">
+			<Item Name="Handle Web service.vi" Type="VI" URL="../Handle Web service.vi"/>
+			<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
 		</Item>
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
@@ -59,10 +35,37 @@
 		</Item>
 		<Item Name="Debug" Type="Folder">
 			<Item Name="Test_Tool.vi" Type="VI" URL="../Test_Tool.vi"/>
-			<Item Name="Create Debug Tool.vi" Type="VI" URL="../Create Debug Tool.vi"/>
 			<Item Name="Untitled 3.vi" Type="VI" URL="../../../../../../Temp/Untitled 3.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
+			<Item Name="Internal API" Type="Folder">
+				<Item Name="FGVs" Type="Folder">
+					<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
+				</Item>
+				<Item Name="Events" Type="Folder">
+					<Item Name="onLog.ctl" Type="VI" URL="../onLog.ctl"/>
+					<Item Name="onConnect.ctl" Type="VI" URL="../onConnect.ctl"/>
+					<Item Name="onToolsList.ctl" Type="VI" URL="../onToolsList.ctl"/>
+					<Item Name="onToolsCall.ctl" Type="VI" URL="../onToolsCall.ctl"/>
+					<Item Name="onNotification.ctl" Type="VI" URL="../onNotification.ctl"/>
+					<Item Name="onRpc.ctl" Type="VI" URL="../onRpc.ctl"/>
+					<Item Name="onTool.ctl" Type="VI" URL="../onTool.ctl"/>
+				</Item>
+				<Item Name="Log.vi" Type="VI" URL="../Log.vi"/>
+				<Item Name="Send onToolsList.vi" Type="VI" URL="../Send onToolsList.vi"/>
+				<Item Name="Send onRpc.vi" Type="VI" URL="../Send onRpc.vi"/>
+				<Item Name="Send onError.vi" Type="VI" URL="../Send onError.vi"/>
+				<Item Name="Send onTool.vi" Type="VI" URL="../Send onTool.vi"/>
+				<Item Name="Send onNotification.vi" Type="VI" URL="../Send onNotification.vi"/>
+				<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
+				<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
+				<Item Name="Set Parameters.vi" Type="VI" URL="../Set Parameters.vi"/>
+				<Item Name="Get ID from name.vi" Type="VI" URL="../Get ID from name.vi"/>
+				<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
+				<Item Name="Get Tool.vi" Type="VI" URL="../Get Tool.vi"/>
+				<Item Name="Get Server Name from ID.vi" Type="VI" URL="../Get Server Name from ID.vi"/>
+				<Item Name="Get Prompts.vi" Type="VI" URL="../Get Prompts.vi"/>
+			</Item>
 			<Item Name="Get ID from JSON.vi" Type="VI" URL="../Get ID from JSON.vi"/>
 			<Item Name="Convert Image To Base64.vi" Type="VI" URL="../Convert Image To Base64.vi"/>
 			<Item Name="Get Connector Pane Info.vi" Type="VI" URL="../Get Connector Pane Info.vi"/>
@@ -86,8 +89,6 @@
 			<Item Name="Terminal.ctl" Type="VI" URL="../Terminal.ctl"/>
 			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
 		</Item>
-		<Item Name="Handle Web service.vi" Type="VI" URL="../Handle Web service.vi"/>
-		<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
 	</Item>
 	<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
 </Library>

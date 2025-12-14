@@ -106,6 +106,46 @@
 				<Property Name="TgtF_targetfileName" Type="Str">MCP_Datalogger.exe</Property>
 				<Property Name="TgtF_versionIndependent" Type="Bool">true</Property>
 			</Item>
+			<Item Name="MCP Toolkit Packed Library" Type="Packed Library">
+				<Property Name="Bld_autoIncrement" Type="Bool">true</Property>
+				<Property Name="Bld_buildCacheID" Type="Str">{7606C22D-71DB-465B-A52D-646E01B27714}</Property>
+				<Property Name="Bld_buildSpecName" Type="Str">MCP Toolkit Packed Library</Property>
+				<Property Name="Bld_excludeLibraryItems" Type="Bool">true</Property>
+				<Property Name="Bld_excludePolymorphicVIs" Type="Bool">true</Property>
+				<Property Name="Bld_localDestDir" Type="Path">../builds/MCP Toolkit Packed Library</Property>
+				<Property Name="Bld_localDestDirType" Type="Str">relativeToCommon</Property>
+				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
+				<Property Name="Bld_previewCacheID" Type="Str">{E7140303-E21F-43D1-8D4C-04C004DCD75C}</Property>
+				<Property Name="Bld_version.build" Type="Int">1</Property>
+				<Property Name="Bld_version.major" Type="Int">1</Property>
+				<Property Name="Destination[0].destName" Type="Str">MCP Server.lvlibp</Property>
+				<Property Name="Destination[0].path" Type="Path">../builds/MCP Toolkit Packed Library/MCP Server.lvlibp</Property>
+				<Property Name="Destination[0].preserveHierarchy" Type="Bool">true</Property>
+				<Property Name="Destination[0].type" Type="Str">App</Property>
+				<Property Name="Destination[1].destName" Type="Str">Support Directory</Property>
+				<Property Name="Destination[1].path" Type="Path">../builds/MCP Toolkit Packed Library</Property>
+				<Property Name="DestinationCount" Type="Int">2</Property>
+				<Property Name="PackedLib_callersAdapt" Type="Bool">true</Property>
+				<Property Name="Source[0].itemID" Type="Str">{F2D401EA-414F-42AF-8FAC-1F85311F9A15}</Property>
+				<Property Name="Source[0].type" Type="Str">Container</Property>
+				<Property Name="Source[1].destinationIndex" Type="Int">0</Property>
+				<Property Name="Source[1].itemID" Type="Ref">/My Computer/MCP Server.lvlib</Property>
+				<Property Name="Source[1].Library.allowMissingMembers" Type="Bool">true</Property>
+				<Property Name="Source[1].Library.atomicCopy" Type="Bool">true</Property>
+				<Property Name="Source[1].Library.LVLIBPtopLevel" Type="Bool">true</Property>
+				<Property Name="Source[1].preventRename" Type="Bool">true</Property>
+				<Property Name="Source[1].sourceInclusion" Type="Str">TopLevel</Property>
+				<Property Name="Source[1].type" Type="Str">Library</Property>
+				<Property Name="SourceCount" Type="Int">2</Property>
+				<Property Name="TgtF_companyName" Type="Str">Datatec</Property>
+				<Property Name="TgtF_fileDescription" Type="Str">MCP Toolkit Packed Library</Property>
+				<Property Name="TgtF_internalName" Type="Str">MCP Toolkit Packed Library</Property>
+				<Property Name="TgtF_legalCopyright" Type="Str">Copyright © 2025 Datatec</Property>
+				<Property Name="TgtF_productName" Type="Str">MCP Toolkit Packed Library</Property>
+				<Property Name="TgtF_targetfileGUID" Type="Str">{9E467223-63A8-4B25-AA1B-3860E6763527}</Property>
+				<Property Name="TgtF_targetfileName" Type="Str">MCP Server.lvlibp</Property>
+				<Property Name="TgtF_versionIndependent" Type="Bool">true</Property>
+			</Item>
 		</Item>
 	</Item>
 </Project>
