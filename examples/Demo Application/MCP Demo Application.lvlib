@@ -13,6 +13,10 @@
 		<Item Name="Set Frequency.vi" Type="VI" URL="../Set Frequency.vi"/>
 		<Item Name="Get Waveforms.vi" Type="VI" URL="../Get Waveforms.vi"/>
 	</Item>
+	<Item Name="MCP Prompts" Type="Folder">
+		<Item Name="Joke Creator.vi" Type="VI" URL="../Joke Creator.vi"/>
+	</Item>
 	<Item Name="Globals.vi" Type="VI" URL="../Globals.vi"/>
 	<Item Name="DAQ Application.vi" Type="VI" URL="../../../src/DAQ Application.vi"/>
+	<Item Name="Acquire Data.vi" Type="VI" URL="../Acquire Data.vi"/>
 </Library>

@@ -25,11 +25,14 @@
 			<Item Name="Get ID from name.vi" Type="VI" URL="../Get ID from name.vi"/>
 			<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
 			<Item Name="Get Tool.vi" Type="VI" URL="../Get Tool.vi"/>
+			<Item Name="Get Server Name from ID.vi" Type="VI" URL="../Get Server Name from ID.vi"/>
+			<Item Name="Get Prompts.vi" Type="VI" URL="../Get Prompts.vi"/>
 			<Item Name="Send onToolsList.vi" Type="VI" URL="../Send onToolsList.vi"/>
 			<Item Name="Send onRpc.vi" Type="VI" URL="../Send onRpc.vi"/>
 			<Item Name="Send onError.vi" Type="VI" URL="../Send onError.vi"/>
 			<Item Name="Send onTool.vi" Type="VI" URL="../Send onTool.vi"/>
 			<Item Name="Send onNotification.vi" Type="VI" URL="../Send onNotification.vi"/>
+			<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
 			<Item Name="Log.vi" Type="VI" URL="../Log.vi"/>
 			<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
 			<Item Name="Set Parameters.vi" Type="VI" URL="../Set Parameters.vi"/>
@@ -57,22 +60,34 @@
 		<Item Name="Debug" Type="Folder">
 			<Item Name="Test_Tool.vi" Type="VI" URL="../Test_Tool.vi"/>
 			<Item Name="Create Debug Tool.vi" Type="VI" URL="../Create Debug Tool.vi"/>
+			<Item Name="Untitled 3.vi" Type="VI" URL="../../../../../../Temp/Untitled 3.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Get ID from JSON.vi" Type="VI" URL="../Get ID from JSON.vi"/>
+			<Item Name="Convert Image To Base64.vi" Type="VI" URL="../Convert Image To Base64.vi"/>
+			<Item Name="Get Connector Pane Info.vi" Type="VI" URL="../Get Connector Pane Info.vi"/>
+			<Item Name="Build Tool.vi" Type="VI" URL="../Build Tool.vi"/>
+			<Item Name="To MCP Name.vi" Type="VI" URL="../To MCP Name.vi"/>
+			<Item Name="LV type to MCP type.vi" Type="VI" URL="../LV type to MCP type.vi"/>
+			<Item Name="Call VI.vi" Type="VI" URL="../Call VI.vi"/>
+			<Item Name="Build Content.vi" Type="VI" URL="../Build Content.vi"/>
+			<Item Name="Build Picture JSON.vi" Type="VI" URL="../Build Picture JSON.vi"/>
+			<Item Name="Build Text JSON for MCP.vi" Type="VI" URL="../Build Text JSON for MCP.vi"/>
 		</Item>
 		<Item Name="ctls" Type="Folder">
 			<Item Name="rpc_methods.ctl" Type="VI" URL="../rpc_methods.ctl"/>
 			<Item Name="Output Parameter.ctl" Type="VI" URL="../Output Parameter.ctl"/>
 			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
-			<Item Name="MCP Server Data.ctl" Type="VI" URL="../MCP Server Data.ctl"/>
 			<Item Name="Logging.ctl" Type="VI" URL="../Logging.ctl"/>
 			<Item Name="User Events.ctl" Type="VI" URL="../User Events.ctl"/>
 			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
 			<Item Name="Server Data.ctl" Type="VI" URL="../Server Data.ctl"/>
+			<Item Name="Prompt Data.ctl" Type="VI" URL="../Prompt Data.ctl"/>
+			<Item Name="Terminal.ctl" Type="VI" URL="../Terminal.ctl"/>
+			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
 		</Item>
+		<Item Name="Handle Web service.vi" Type="VI" URL="../Handle Web service.vi"/>
 		<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
 	</Item>
-	<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
-	<Item Name="Convert Image To Base64.vi" Type="VI" URL="../Convert Image To Base64.vi"/>
+	<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
 </Library>
