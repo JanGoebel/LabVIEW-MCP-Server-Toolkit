@@ -19,45 +19,6 @@
 			<Item Name="get waveform.vi" Type="VI" URL="../test tools/get waveform.vi"/>
 		</Item>
 		<Item Name="MCP Demo Application.lvlib" Type="Library" URL="../../examples/Demo Application/MCP Demo Application.lvlib"/>
-		<Item Name="mcp" Type="Web Service">
-			<Property Name="Bld_buildSpecName" Type="Str"></Property>
-			<Property Name="Bld_version.build" Type="Int">50</Property>
-			<Property Name="ws.autoIncrementVersion" Type="Bool">true</Property>
-			<Property Name="ws.disconnectInline" Type="Bool">true</Property>
-			<Property Name="ws.disconnectTypeDefs" Type="Bool">false</Property>
-			<Property Name="ws.guid" Type="Str">{1740064B-8FAC-4724-82C1-8BDAA49F8F8F}</Property>
-			<Property Name="ws.modifyLibraryFile" Type="Bool">true</Property>
-			<Property Name="ws.privilege_role_map_size" Type="Int">0</Property>
-			<Property Name="ws.remoteDebugging" Type="Bool">false</Property>
-			<Property Name="ws.removeLibraryItems" Type="Bool">true</Property>
-			<Property Name="ws.removePolyVIs" Type="Bool">true</Property>
-			<Property Name="ws.serveDefaultDoc" Type="Bool">true</Property>
-			<Property Name="ws.SSE2" Type="Bool">true</Property>
-			<Property Name="ws.static_permissions" Type="Str"></Property>
-			<Property Name="ws.version.build" Type="Int">50</Property>
-			<Property Name="ws.version.fix" Type="Int">0</Property>
-			<Property Name="ws.version.major" Type="Int">1</Property>
-			<Property Name="ws.version.minor" Type="Int">0</Property>
-			<Item Name="Web-Ressourcen" Type="HTTP WebResources Container">
-				<Item Name="server.vi" Type="VI" URL="../server.vi">
-					<Property Name="ws.buffered" Type="Bool">true</Property>
-					<Property Name="ws.includeNameInURL" Type="Bool">true</Property>
-					<Property Name="ws.keepInMemory" Type="Bool">true</Property>
-					<Property Name="ws.loadAtStartup" Type="Bool">true</Property>
-					<Property Name="ws.method" Type="Int">3</Property>
-					<Property Name="ws.outputFormat" Type="Int">4</Property>
-					<Property Name="ws.outputType" Type="Int">1</Property>
-					<Property Name="ws.permissions" Type="Str"></Property>
-					<Property Name="ws.requireAPIKey" Type="Bool">false</Property>
-					<Property Name="ws.requiredPrivilege" Type="Str"></Property>
-					<Property Name="ws.type" Type="Int">1</Property>
-					<Property Name="ws.uri" Type="Str"></Property>
-					<Property Name="ws.useHeaders" Type="Bool">true</Property>
-					<Property Name="ws.useStandardURL" Type="Bool">true</Property>
-				</Item>
-			</Item>
-			<Item Name="Zu startende VIs" Type="Startup VIs Container"/>
-		</Item>
 		<Item Name="MCP Server.lvlib" Type="Library" URL="../MCP Server/MCP Server.lvlib"/>
 		<Item Name="Dependencies" Type="Dependencies"/>
 		<Item Name="Build Specifications" Type="Build">
@@ -68,7 +29,7 @@
 				<Property Name="App_serverConfig.httpPort" Type="Int">8002</Property>
 				<Property Name="App_serverType" Type="Int">1</Property>
 				<Property Name="App_webService.count" Type="Int">1</Property>
-				<Property Name="App_webService[0].itemID" Type="Ref">/My Computer/mcp</Property>
+				<Property Name="App_webService[0].itemID" Type="Ref"></Property>
 				<Property Name="App_winsec.description" Type="Str">http://www.Datatec.com</Property>
 				<Property Name="Bld_autoIncrement" Type="Bool">true</Property>
 				<Property Name="Bld_buildCacheID" Type="Str">{242E6EE8-18ED-4E0D-B371-9C681364D448}</Property>
@@ -116,7 +77,7 @@
 				<Property Name="Bld_localDestDirType" Type="Str">relativeToCommon</Property>
 				<Property Name="Bld_modifyLibraryFile" Type="Bool">true</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{E7140303-E21F-43D1-8D4C-04C004DCD75C}</Property>
-				<Property Name="Bld_version.build" Type="Int">1</Property>
+				<Property Name="Bld_version.build" Type="Int">6</Property>
 				<Property Name="Bld_version.major" Type="Int">1</Property>
 				<Property Name="Destination[0].destName" Type="Str">MCP Server.lvlibp</Property>
 				<Property Name="Destination[0].path" Type="Path">../builds/MCP Toolkit Packed Library/MCP Server.lvlibp</Property>
@@ -126,7 +87,7 @@
 				<Property Name="Destination[1].path" Type="Path">../builds/MCP Toolkit Packed Library</Property>
 				<Property Name="DestinationCount" Type="Int">2</Property>
 				<Property Name="PackedLib_callersAdapt" Type="Bool">true</Property>
-				<Property Name="Source[0].itemID" Type="Str">{F2D401EA-414F-42AF-8FAC-1F85311F9A15}</Property>
+				<Property Name="Source[0].itemID" Type="Str">{5AFCF7DE-AE62-4160-8EE8-3C91C62263AB}</Property>
 				<Property Name="Source[0].type" Type="Str">Container</Property>
 				<Property Name="Source[1].destinationIndex" Type="Int">0</Property>
 				<Property Name="Source[1].itemID" Type="Ref">/My Computer/MCP Server.lvlib</Property>
@@ -145,6 +106,41 @@
 				<Property Name="TgtF_targetfileGUID" Type="Str">{9E467223-63A8-4B25-AA1B-3860E6763527}</Property>
 				<Property Name="TgtF_targetfileName" Type="Str">MCP Server.lvlibp</Property>
 				<Property Name="TgtF_versionIndependent" Type="Bool">true</Property>
+			</Item>
+			<Item Name="MCP Toolkit Source Distribution" Type="Source Distribution">
+				<Property Name="Bld_autoIncrement" Type="Bool">true</Property>
+				<Property Name="Bld_buildCacheID" Type="Str">{B67992E0-7C20-4F1D-9A87-50B7B9A04FF1}</Property>
+				<Property Name="Bld_buildSpecName" Type="Str">MCP Toolkit Source Distribution</Property>
+				<Property Name="Bld_excludedDirectory[0]" Type="Path">vi.lib</Property>
+				<Property Name="Bld_excludedDirectory[0].pathType" Type="Str">relativeToAppDir</Property>
+				<Property Name="Bld_excludedDirectory[1]" Type="Path">instr.lib</Property>
+				<Property Name="Bld_excludedDirectory[1].pathType" Type="Str">relativeToAppDir</Property>
+				<Property Name="Bld_excludedDirectory[2]" Type="Path">user.lib</Property>
+				<Property Name="Bld_excludedDirectory[2].pathType" Type="Str">relativeToAppDir</Property>
+				<Property Name="Bld_excludedDirectory[3]" Type="Path">resource/objmgr</Property>
+				<Property Name="Bld_excludedDirectory[3].pathType" Type="Str">relativeToAppDir</Property>
+				<Property Name="Bld_excludedDirectory[4]" Type="Path">/C/ProgramData/National Instruments/InstCache/25.0</Property>
+				<Property Name="Bld_excludedDirectory[5]" Type="Path">/C/Users/jgoebel/OneDrive - Emerson/Dokumente/LabVIEW Data/2025(64-bit)/ExtraVILib</Property>
+				<Property Name="Bld_excludedDirectoryCount" Type="Int">6</Property>
+				<Property Name="Bld_localDestDir" Type="Path">../builds/MCP Toolkit Source Distribution</Property>
+				<Property Name="Bld_localDestDirType" Type="Str">relativeToCommon</Property>
+				<Property Name="Bld_previewCacheID" Type="Str">{5DEACF5B-E1BA-472A-BBCA-FAB28A44B653}</Property>
+				<Property Name="Bld_removeVIObj" Type="Int">2</Property>
+				<Property Name="Bld_version.build" Type="Int">3</Property>
+				<Property Name="Bld_version.major" Type="Int">1</Property>
+				<Property Name="Destination[0].destName" Type="Str">Destination Directory</Property>
+				<Property Name="Destination[0].path" Type="Path">../builds/MCP Toolkit Source Distribution</Property>
+				<Property Name="Destination[1].destName" Type="Str">Support Directory</Property>
+				<Property Name="Destination[1].path" Type="Path">../builds/MCP Toolkit Source Distribution/data</Property>
+				<Property Name="DestinationCount" Type="Int">2</Property>
+				<Property Name="Source[0].itemID" Type="Str">{5AFCF7DE-AE62-4160-8EE8-3C91C62263AB}</Property>
+				<Property Name="Source[0].type" Type="Str">Container</Property>
+				<Property Name="Source[1].destinationIndex" Type="Int">0</Property>
+				<Property Name="Source[1].itemID" Type="Ref">/My Computer/MCP Server.lvlib</Property>
+				<Property Name="Source[1].Library.allowMissingMembers" Type="Bool">true</Property>
+				<Property Name="Source[1].sourceInclusion" Type="Str">Include</Property>
+				<Property Name="Source[1].type" Type="Str">Library</Property>
+				<Property Name="SourceCount" Type="Int">2</Property>
 			</Item>
 		</Item>
 	</Item>

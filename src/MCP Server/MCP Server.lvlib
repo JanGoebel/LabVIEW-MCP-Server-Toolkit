@@ -10,7 +10,6 @@
 	<Property Name="NI.SortType" Type="Int">3</Property>
 	<Item Name="Public API" Type="Folder">
 		<Item Name="Server" Type="Folder">
-			<Item Name="Handle Web service.vi" Type="VI" URL="../Handle Web service.vi"/>
 			<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
 		</Item>
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
@@ -36,6 +35,7 @@
 		<Item Name="Debug" Type="Folder">
 			<Item Name="Test_Tool.vi" Type="VI" URL="../Test_Tool.vi"/>
 			<Item Name="Untitled 3.vi" Type="VI" URL="../../../../../../Temp/Untitled 3.vi"/>
+			<Item Name="TestHTTP.vi" Type="VI" URL="../TestHTTP.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
@@ -91,6 +91,9 @@
 			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
 			<Item Name="resource data.ctl" Type="VI" URL="../resource data.ctl"/>
 		</Item>
+	</Item>
+	<Item Name="Webserver" Type="Folder">
+		<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
 	</Item>
 	<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
 </Library>

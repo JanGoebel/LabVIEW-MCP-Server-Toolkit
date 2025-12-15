@@ -7,6 +7,8 @@
 	<Property Name="NI.SortType" Type="Int">3</Property>
 	<Item Name="SubVIs" Type="Folder">
 		<Item Name="to wfm.vi" Type="VI" URL="../to wfm.vi"/>
+		<Item Name="Acquire Data.vi" Type="VI" URL="../Acquire Data.vi"/>
+		<Item Name="Globals.vi" Type="VI" URL="../Globals.vi"/>
 	</Item>
 	<Item Name="MCP Tools" Type="Folder">
 		<Item Name="Set Amplitude.vi" Type="VI" URL="../Set Amplitude.vi"/>
@@ -16,7 +18,5 @@
 	<Item Name="MCP Prompts" Type="Folder">
 		<Item Name="Joke Creator.vi" Type="VI" URL="../Joke Creator.vi"/>
 	</Item>
-	<Item Name="Globals.vi" Type="VI" URL="../Globals.vi"/>
 	<Item Name="DAQ Application.vi" Type="VI" URL="../DAQ Application.vi"/>
-	<Item Name="Acquire Data.vi" Type="VI" URL="../Acquire Data.vi"/>
 </Library>
