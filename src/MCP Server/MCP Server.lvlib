@@ -15,9 +15,9 @@
 		</Item>
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
+		<Item Name="Add Resource (File).vi" Type="VI" URL="../Add Resource (File).vi"/>
 		<Item Name="Clear Tools.vi" Type="VI" URL="../Clear Tools.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
-		<Item Name="Get Status.vi" Type="VI" URL="../Get Status.vi"/>
 		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
@@ -26,8 +26,8 @@
 			<Item Name="initialized.vi" Type="VI" URL="../initialized.vi"/>
 			<Item Name="tool list.vi" Type="VI" URL="../tool list.vi"/>
 			<Item Name="tool call.vi" Type="VI" URL="../tool call.vi"/>
-			<Item Name="resource list.vi" Type="VI" URL="../resource list.vi"/>
-			<Item Name="resource read.vi" Type="VI" URL="../resource read.vi"/>
+			<Item Name="resources list.vi" Type="VI" URL="../resources list.vi"/>
+			<Item Name="resources read.vi" Type="VI" URL="../resources read.vi"/>
 			<Item Name="prompts list.vi" Type="VI" URL="../prompts list.vi"/>
 			<Item Name="prompts get.vi" Type="VI" URL="../prompts get.vi"/>
 			<Item Name="shutdown.vi" Type="VI" URL="../shutdown.vi"/>
@@ -64,6 +64,7 @@
 				<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
 				<Item Name="Get Tool.vi" Type="VI" URL="../Get Tool.vi"/>
 				<Item Name="Get Server Name from ID.vi" Type="VI" URL="../Get Server Name from ID.vi"/>
+				<Item Name="Get Resources.vi" Type="VI" URL="../Get Resources.vi"/>
 				<Item Name="Get Prompts.vi" Type="VI" URL="../Get Prompts.vi"/>
 			</Item>
 			<Item Name="Get ID from JSON.vi" Type="VI" URL="../Get ID from JSON.vi"/>
@@ -88,6 +89,7 @@
 			<Item Name="Prompt Data.ctl" Type="VI" URL="../Prompt Data.ctl"/>
 			<Item Name="Terminal.ctl" Type="VI" URL="../Terminal.ctl"/>
 			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
+			<Item Name="resource data.ctl" Type="VI" URL="../resource data.ctl"/>
 		</Item>
 	</Item>
 	<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
