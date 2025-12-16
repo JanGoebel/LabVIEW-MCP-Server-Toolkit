@@ -12,17 +12,21 @@
 		<Item Name="Server" Type="Folder">
 			<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
 		</Item>
+		<Item Name="ctls" Type="Folder">
+			<Item Name="User Events.ctl" Type="VI" URL="../User Events.ctl"/>
+		</Item>
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
 		<Item Name="Add Resource (File).vi" Type="VI" URL="../Add Resource (File).vi"/>
+		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
 		<Item Name="Clear Tools.vi" Type="VI" URL="../Clear Tools.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
-		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
+		<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
+		<Property Name="NI.LibItem.Scope" Type="Int">2</Property>
 		<Item Name="RPC Methods" Type="Folder">
 			<Item Name="initialize.vi" Type="VI" URL="../initialize.vi"/>
-			<Item Name="initialized.vi" Type="VI" URL="../initialized.vi"/>
 			<Item Name="tool list.vi" Type="VI" URL="../tool list.vi"/>
 			<Item Name="tool call.vi" Type="VI" URL="../tool call.vi"/>
 			<Item Name="resources list.vi" Type="VI" URL="../resources list.vi"/>
@@ -31,11 +35,6 @@
 			<Item Name="prompts get.vi" Type="VI" URL="../prompts get.vi"/>
 			<Item Name="shutdown.vi" Type="VI" URL="../shutdown.vi"/>
 			<Item Name="exit.vi" Type="VI" URL="../exit.vi"/>
-		</Item>
-		<Item Name="Debug" Type="Folder">
-			<Item Name="Test_Tool.vi" Type="VI" URL="../Test_Tool.vi"/>
-			<Item Name="Untitled 3.vi" Type="VI" URL="../Untitled 3.vi"/>
-			<Item Name="TestHTTP.vi" Type="VI" URL="../TestHTTP.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
@@ -58,7 +57,6 @@
 				<Item Name="Send onTool.vi" Type="VI" URL="../Send onTool.vi"/>
 				<Item Name="Send onNotification.vi" Type="VI" URL="../Send onNotification.vi"/>
 				<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
-				<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
 				<Item Name="Set Parameters.vi" Type="VI" URL="../Set Parameters.vi"/>
 				<Item Name="Get ID from name.vi" Type="VI" URL="../Get ID from name.vi"/>
 				<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
@@ -77,13 +75,12 @@
 			<Item Name="Build Content.vi" Type="VI" URL="../Build Content.vi"/>
 			<Item Name="Build Picture JSON.vi" Type="VI" URL="../Build Picture JSON.vi"/>
 			<Item Name="Build Text JSON for MCP.vi" Type="VI" URL="../Build Text JSON for MCP.vi"/>
+			<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
 		</Item>
 		<Item Name="ctls" Type="Folder">
-			<Item Name="rpc_methods.ctl" Type="VI" URL="../rpc_methods.ctl"/>
 			<Item Name="Output Parameter.ctl" Type="VI" URL="../Output Parameter.ctl"/>
 			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
 			<Item Name="Logging.ctl" Type="VI" URL="../Logging.ctl"/>
-			<Item Name="User Events.ctl" Type="VI" URL="../User Events.ctl"/>
 			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
 			<Item Name="Server Data.ctl" Type="VI" URL="../Server Data.ctl"/>
 			<Item Name="Prompt Data.ctl" Type="VI" URL="../Prompt Data.ctl"/>
@@ -91,9 +88,8 @@
 			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
 			<Item Name="resource data.ctl" Type="VI" URL="../resource data.ctl"/>
 		</Item>
+		<Item Name="Webserver" Type="Folder">
+			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler.lvclass"/>
+		</Item>
 	</Item>
-	<Item Name="Webserver" Type="Folder">
-		<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler.lvclass"/>
-	</Item>
-	<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
 </Library>
