@@ -13,7 +13,26 @@
 			<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
 		</Item>
 		<Item Name="ctls" Type="Folder">
+			<Property Name="NI.LibItem.Scope" Type="Int">1</Property>
+			<Item Name="Events" Type="Folder">
+				<Item Name="onLog.ctl" Type="VI" URL="../onLog.ctl"/>
+				<Item Name="onConnect.ctl" Type="VI" URL="../onConnect.ctl"/>
+				<Item Name="onToolsList.ctl" Type="VI" URL="../onToolsList.ctl"/>
+				<Item Name="onToolsCall.ctl" Type="VI" URL="../onToolsCall.ctl"/>
+				<Item Name="onNotification.ctl" Type="VI" URL="../onNotification.ctl"/>
+				<Item Name="onRpc.ctl" Type="VI" URL="../onRpc.ctl"/>
+				<Item Name="onTool.ctl" Type="VI" URL="../onTool.ctl"/>
+			</Item>
 			<Item Name="User Events.ctl" Type="VI" URL="../User Events.ctl"/>
+			<Item Name="Output Parameter.ctl" Type="VI" URL="../Output Parameter.ctl"/>
+			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
+			<Item Name="Logging.ctl" Type="VI" URL="../Logging.ctl"/>
+			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
+			<Item Name="Server Data.ctl" Type="VI" URL="../Server Data.ctl"/>
+			<Item Name="Prompt Data.ctl" Type="VI" URL="../Prompt Data.ctl"/>
+			<Item Name="Terminal.ctl" Type="VI" URL="../Terminal.ctl"/>
+			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
+			<Item Name="resource data.ctl" Type="VI" URL="../resource data.ctl"/>
 		</Item>
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
@@ -40,15 +59,6 @@
 			<Item Name="Internal API" Type="Folder">
 				<Item Name="FGVs" Type="Folder">
 					<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
-				</Item>
-				<Item Name="Events" Type="Folder">
-					<Item Name="onLog.ctl" Type="VI" URL="../onLog.ctl"/>
-					<Item Name="onConnect.ctl" Type="VI" URL="../onConnect.ctl"/>
-					<Item Name="onToolsList.ctl" Type="VI" URL="../onToolsList.ctl"/>
-					<Item Name="onToolsCall.ctl" Type="VI" URL="../onToolsCall.ctl"/>
-					<Item Name="onNotification.ctl" Type="VI" URL="../onNotification.ctl"/>
-					<Item Name="onRpc.ctl" Type="VI" URL="../onRpc.ctl"/>
-					<Item Name="onTool.ctl" Type="VI" URL="../onTool.ctl"/>
 				</Item>
 				<Item Name="Log.vi" Type="VI" URL="../Log.vi"/>
 				<Item Name="Send onToolsList.vi" Type="VI" URL="../Send onToolsList.vi"/>
@@ -77,17 +87,7 @@
 			<Item Name="Build Text JSON for MCP.vi" Type="VI" URL="../Build Text JSON for MCP.vi"/>
 			<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
 		</Item>
-		<Item Name="ctls" Type="Folder">
-			<Item Name="Output Parameter.ctl" Type="VI" URL="../Output Parameter.ctl"/>
-			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
-			<Item Name="Logging.ctl" Type="VI" URL="../Logging.ctl"/>
-			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
-			<Item Name="Server Data.ctl" Type="VI" URL="../Server Data.ctl"/>
-			<Item Name="Prompt Data.ctl" Type="VI" URL="../Prompt Data.ctl"/>
-			<Item Name="Terminal.ctl" Type="VI" URL="../Terminal.ctl"/>
-			<Item Name="Prompt Argument.ctl" Type="VI" URL="../Prompt Argument.ctl"/>
-			<Item Name="resource data.ctl" Type="VI" URL="../resource data.ctl"/>
-		</Item>
+		<Item Name="ctls" Type="Folder"/>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler.lvclass"/>
 		</Item>

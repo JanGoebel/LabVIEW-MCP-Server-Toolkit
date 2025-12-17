@@ -1,7 +1,7 @@
-<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2025-12-16 19:31:40" Creator="jgoebel" Comments="" ID="26bc1b2fce2a42c21ec8d5e515ab235a">
+<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2025-12-17 02:27:56" Creator="jgoebel" Comments="" ID="8a55c51f7746177401fd4c543767874a">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
-    <Library_Version>2.1.0.15</Library_Version>
+    <Library_Version>2.1.0.18</Library_Version>
     <Auto_Increment_Version>false</Auto_Increment_Version>
     <Library_Source_Folder>..\builds\MCP Toolkit Source Distribution</Library_Source_Folder>
     <Library_Output_Folder>..\builds</Library_Output_Folder>
