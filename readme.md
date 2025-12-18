@@ -62,3 +62,6 @@ https://www.vipm.io/package/jdp_science_jsontext/
 ## VI-Scripting-Server
 Main purpouse to develop this toolkit is to use it for my vi-scripting-server project which can generate LabVIEW code using LLMs. Have a look at it here:
 https://github.com/JanGoebel/labview_assistant
+
+## License
+This toolkit is published under the MIT license. Feel free to use and modify it.

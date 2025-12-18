@@ -1,7 +1,7 @@
-<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2025-12-18 02:22:59" Creator="jgoebel" Comments="" ID="03cebeb3dcb6d9b1f29be3afe6cb7814">
+<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2025-12-18 03:38:43" Creator="jgoebel" Comments="" ID="1a7fc62fbe02389dfc27cd9ee684adb0">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
-    <Library_Version>2.2.0.23</Library_Version>
+    <Library_Version>2.2.0.24</Library_Version>
     <Auto_Increment_Version>false</Auto_Increment_Version>
     <Library_Source_Folder>..\builds\MCP Toolkit Source Distribution</Library_Source_Folder>
     <Library_Output_Folder>..\builds\vip</Library_Output_Folder>
@@ -37,7 +37,19 @@ https://github.com/JanGoebel/LabVIEW-MCP-Server-Toolkit
 Use MCP to control your Applications using AI. You can have a large language model chat-application like claude desktop communicate with your LabVIEW application to trigger actions, change parameters or read and interpret informations.
 
 MCP Server toolkit. Enables you to register LabVIEW VIs as MCP Tools, Promps or Resources. 
-Features return of LabVIEW Images. If you wire a labview picture indicator to the connector pane of your tool vi, the picture will be printed in the chat history of the chat interface and the LLM can read and interpret the image. You can return whole front-panels to the AI and have it interpret them.</Description>
+Features return of LabVIEW Images. If you wire a labview picture indicator to the connector pane of your tool vi, the picture will be printed in the chat history of the chat interface and the LLM can read and interpret the image. You can return whole front-panels to the AI and have it interpret them.
+
+This toolkit is licensed under the MIT license:
+
+MIT License
+
+Copyright (c) 2025 Jan Göbel
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</Description>
       <Copyright/>
       <Packager/>
       <URL/>
@@ -311,7 +323,7 @@ Features return of LabVIEW Images. If you wire a labview picture indicator to th
         <Path>..\builds\MCP Toolkit Source Distribution\Handle Server Request.vi</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>51D24BCA8ADDB785AEA94E3F9EFFF800</GUID>
+      <GUID>2A53C9484BF093C63536DB31708EBA76</GUID>
     </Functions_Palette_Data>
     <Controls_Palette_Data>
       <Parent_Palette_Index>-1</Parent_Palette_Index>
@@ -584,7 +596,7 @@ Features return of LabVIEW Images. If you wire a labview picture indicator to th
         <Path>..\builds\MCP Toolkit Source Distribution\User Events.ctl</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>A4E4A869AA0BAD94D84129698700E601</GUID>
+      <GUID>0BCD1C423057A4A8FEFCAA1040C616C4</GUID>
     </Controls_Palette_Data>
   </Library_Palette_Definition>
 </VI_Package_Builder_Settings>
