@@ -58,3 +58,7 @@ Currently not all datatypes are fully supported.
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
 https://www.vipm.io/package/illuminatedg_lib_ig_http_server/
 https://www.vipm.io/package/jdp_science_jsontext/
+
+## VI-Scripting-Server
+Main purpouse to develop this toolkit is to use it for my vi-scripting-server project which can generate LabVIEW code using LLMs. Have a look at it here:
+https://github.com/JanGoebel/labview_assistant

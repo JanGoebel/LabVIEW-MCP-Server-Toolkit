@@ -38,9 +38,7 @@
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
 		<Item Name="Add Resource (File).vi" Type="VI" URL="../Add Resource (File).vi"/>
 		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
-		<Item Name="Clear Tools.vi" Type="VI" URL="../Clear Tools.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
-		<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
 		<Property Name="NI.LibItem.Scope" Type="Int">2</Property>
@@ -57,16 +55,9 @@
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
-				<Item Name="FGVs" Type="Folder">
-					<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
-				</Item>
 				<Item Name="Log.vi" Type="VI" URL="../Log.vi"/>
-				<Item Name="Send onToolsList.vi" Type="VI" URL="../Send onToolsList.vi"/>
 				<Item Name="Send onRpc.vi" Type="VI" URL="../Send onRpc.vi"/>
 				<Item Name="Send onError.vi" Type="VI" URL="../Send onError.vi"/>
-				<Item Name="Send onTool.vi" Type="VI" URL="../Send onTool.vi"/>
-				<Item Name="Send onNotification.vi" Type="VI" URL="../Send onNotification.vi"/>
-				<Item Name="Send onConnect.vi" Type="VI" URL="../Send onConnect.vi"/>
 				<Item Name="Set Parameters.vi" Type="VI" URL="../Set Parameters.vi"/>
 				<Item Name="Get ID from name.vi" Type="VI" URL="../Get ID from name.vi"/>
 				<Item Name="Get Tools.vi" Type="VI" URL="../Get Tools.vi"/>
@@ -74,6 +65,9 @@
 				<Item Name="Get Server Name from ID.vi" Type="VI" URL="../Get Server Name from ID.vi"/>
 				<Item Name="Get Resources.vi" Type="VI" URL="../Get Resources.vi"/>
 				<Item Name="Get Prompts.vi" Type="VI" URL="../Get Prompts.vi"/>
+				<Item Name="Server FGV.vi" Type="VI" URL="../Server FGV.vi"/>
+				<Item Name="Clear Tools.vi" Type="VI" URL="../Clear Tools.vi"/>
+				<Item Name="Get Parameter.vi" Type="VI" URL="../Get Parameter.vi"/>
 			</Item>
 			<Item Name="Get ID from JSON.vi" Type="VI" URL="../Get ID from JSON.vi"/>
 			<Item Name="Convert Image To Base64.vi" Type="VI" URL="../Convert Image To Base64.vi"/>
@@ -86,8 +80,12 @@
 			<Item Name="Build Picture JSON.vi" Type="VI" URL="../Build Picture JSON.vi"/>
 			<Item Name="Build Text JSON for MCP.vi" Type="VI" URL="../Build Text JSON for MCP.vi"/>
 			<Item Name="Build Response Message.vi" Type="VI" URL="../Build Response Message.vi"/>
+			<Item Name="Create Events.vi" Type="VI" URL="../Create Events.vi"/>
+			<Item Name="Generate Unique Server ID.vi" Type="VI" URL="../Generate Unique Server ID.vi"/>
+			<Item Name="Remove Server.vi" Type="VI" URL="../Remove Server.vi"/>
+			<Item Name="Create Server.vi" Type="VI" URL="../Create Server.vi"/>
+			<Item Name="Get Server.vi" Type="VI" URL="../Get Server.vi"/>
 		</Item>
-		<Item Name="ctls" Type="Folder"/>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
 		</Item>
