@@ -1,7 +1,7 @@
-<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-02-26 22:20:02" Creator="jgoebel" Comments="" ID="6298fa2674984f8fc3d0ab86e3bfb779">
+<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-03-01 19:46:07" Creator="jgoebel" Comments="" ID="94691ccbf1d8e9ac88c9f21256afe805">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
-    <Library_Version>2.2.3.27</Library_Version>
+    <Library_Version>2.2.4.28</Library_Version>
     <Auto_Increment_Version>false</Auto_Increment_Version>
     <Library_Source_Folder>..\builds\MCP Toolkit Source Distribution</Library_Source_Folder>
     <Library_Output_Folder>..\builds\vip</Library_Output_Folder>
@@ -53,7 +53,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <Copyright/>
       <Packager/>
       <URL/>
-      <Release_Notes>Verified OutputSchema confilict bugfix, works for now. OutputSchema might be implemented later if needed.</Release_Notes>
+      <Release_Notes>Fixed empty images (e.g. due to error in tool) crashing response.</Release_Notes>
     </Description>
     <Destinations>
       <Toolkit_VIs>
@@ -323,7 +323,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>..\builds\MCP Toolkit Source Distribution\Handle Server Request.vi</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>1D19696E9924FF60E762BD79E9FCFEB0</GUID>
+      <GUID>DF1D035B150114771CEA771F3F2AC275</GUID>
     </Functions_Palette_Data>
     <Controls_Palette_Data>
       <Parent_Palette_Index>-1</Parent_Palette_Index>
@@ -596,7 +596,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>..\builds\MCP Toolkit Source Distribution\User Events.ctl</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>52BCC1B2BC17A84E19B0619581D1ABDC</GUID>
+      <GUID>759D333F4F8EBC06C8ABECDEB2305B28</GUID>
     </Controls_Palette_Data>
   </Library_Palette_Definition>
 </VI_Package_Builder_Settings>
