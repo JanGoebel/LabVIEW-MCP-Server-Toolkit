@@ -1,7 +1,7 @@
-<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-03-01 19:46:07" Creator="jgoebel" Comments="" ID="94691ccbf1d8e9ac88c9f21256afe805">
+<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-04-07 21:49:10" Creator="jgoebel" Comments="" ID="571ef5fa789938ef687ca6afedfb67da">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
-    <Library_Version>2.2.4.28</Library_Version>
+    <Library_Version>2.2.6.30</Library_Version>
     <Auto_Increment_Version>false</Auto_Increment_Version>
     <Library_Source_Folder>..\builds\MCP Toolkit Source Distribution</Library_Source_Folder>
     <Library_Output_Folder>..\builds\vip</Library_Output_Folder>
@@ -53,7 +53,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <Copyright/>
       <Packager/>
       <URL/>
-      <Release_Notes>Fixed empty images (e.g. due to error in tool) crashing response.</Release_Notes>
+      <Release_Notes>replaced "toolsProvider" with "tools" for proper usage with github copilot and other more strict MPC implementations.</Release_Notes>
     </Description>
     <Destinations>
       <Toolkit_VIs>
@@ -323,7 +323,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>..\builds\MCP Toolkit Source Distribution\Handle Server Request.vi</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>DF1D035B150114771CEA771F3F2AC275</GUID>
+      <GUID>B6B481731AAB6903C87FB0E045B4BBBD</GUID>
     </Functions_Palette_Data>
     <Controls_Palette_Data>
       <Parent_Palette_Index>-1</Parent_Palette_Index>
@@ -596,7 +596,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>..\builds\MCP Toolkit Source Distribution\User Events.ctl</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>759D333F4F8EBC06C8ABECDEB2305B28</GUID>
+      <GUID>C1297DAC5CD2B7E93F32E3B44EA5435C</GUID>
     </Controls_Palette_Data>
   </Library_Palette_Definition>
 </VI_Package_Builder_Settings>
