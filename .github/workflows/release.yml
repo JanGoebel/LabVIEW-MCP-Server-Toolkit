@@ -18,11 +18,24 @@ jobs:
 
       - name: Build VI Package via VIPM CLI
         run: |
+          # 1. Kill any existing VIPM background instances so the command doesn't detach
+          Get-Process "VI Package Manager" -ErrorAction SilentlyContinue | Stop-Process -Force
+          
           $vipmPath = "C:\Program Files\JKI\VI Package Manager\VI Package Manager.exe"
+          # Ensure this matches your actual filename
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
-          Write-Host "Building VI Package..."
-          & $vipmPath build $vipbFile
+          Write-Host "Building VI Package... (This will take a few minutes)"
+          
+          # 2. Use Start-Process with -Wait to force GitHub to pause until compilation finishes
+          # 3. Explicitly wrap the $vipbFile variable in escaped quotes (`" `"`) to protect the spaces
+          $process = Start-Process -FilePath $vipmPath -ArgumentList "build `"$vipbFile`"" -Wait -PassThru
+          
+          if ($process.ExitCode -ne 0) {
+            Write-Error "VIPM exited with error code $($process.ExitCode)"
+            exit 1
+          }
+          Write-Host "Build completed successfully."
 
       - name: Locate Built VIP Artifact
         id: find_vip
