@@ -27,7 +27,7 @@ jobs:
       - name: Locate Built VIP Artifact
         id: find_vip
         run: |
-          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Filter "*.vip" -Recurse | Select-Object -First 1
+          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE\builds" | Where-Object { $_.Extension -eq ".vip" } | Select-Object -First 1
           echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
 
       - name: Upload Artifact for Testing
