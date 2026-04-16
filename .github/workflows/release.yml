@@ -20,7 +20,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build VI Package via VIPM CLI
-        timeout-minutes: 20 
+        timeout-minutes: 25 
+        env:
+          # This tells VIPM's internal LabVIEW API connection to wait 20 minutes before timing out
+          VIPM_CLI_TIMEOUT: 1200
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
