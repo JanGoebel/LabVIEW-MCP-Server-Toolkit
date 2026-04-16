@@ -5,7 +5,7 @@ on:
     # Trigger ONLY when a tag is pushed. Ignore standard branch pushes.
     tags:
       - 'v*.*.*'       # Matches official releases like v2.3.0
-      - 'build*'       # Matches test builds like build-test-1
+      - 'test*'       # Matches test builds like test-1
 
 permissions:
   contents: write
