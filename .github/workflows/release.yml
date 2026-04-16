@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build VI Package via VIPM CLI
-        timeout-minutes: 10 
+        timeout-minutes: 20 
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
