@@ -22,36 +22,29 @@ jobs:
       - name: Build VI Package via VIPM CLI
         timeout-minutes: 25 
         env:
-          # This tells VIPM's internal LabVIEW API connection to wait 20 minutes before timing out
           VIPM_CLI_TIMEOUT: 1200
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
-          # 1. Grab the Git tag (e.g., 'v1.2.3' or '1.2.3')
           $gitTag = "${{ github.ref_name }}"
           Write-Host "Detected Git Tag: $gitTag"
           
-          # 2. Extract the numbers using Regex (handles v1.2.3 and 1.2.3.4 formats)
           if ($gitTag -match "v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?") {
             $major = $matches[1]
             $minor = $matches[2]
             $patch = $matches[3]
             $build = if ($matches[4]) { $matches[4] } else { 0 }
             
-            Write-Host "Updating VIPB to version: $major.$minor.$patch.$build"
+            $newVersion = "$major.$minor.$patch.$build"
+            Write-Host "Updating VIPB to version: $newVersion"
             
-            # 3. Read the VIPB file, replace the XML tags, and save it back
             $vipbContent = Get-Content $vipbFile
-            $vipbContent = $vipbContent -replace "<Version_Major>\d+</Version_Major>", "<Version_Major>$major</Version_Major>"
-            $vipbContent = $vipbContent -replace "<Version_Minor>\d+</Version_Minor>", "<Version_Minor>$minor</Version_Minor>"
-            $vipbContent = $vipbContent -replace "<Version_Patch>\d+</Version_Patch>", "<Version_Patch>$patch</Version_Patch>"
-            $vipbContent = $vipbContent -replace "<Version_Build>\d+</Version_Build>", "<Version_Build>$build</Version_Build>"
+            $vipbContent = $vipbContent -replace "<Library_Version>.*?</Library_Version>", "<Library_Version>$newVersion</Library_Version>"
             Set-Content -Path $vipbFile -Value $vipbContent
           } else {
             Write-Warning "Git tag '$gitTag' does not look like a version number (e.g. v1.2.3). Using default VIPB version."
           }
 
-          # 4. Run the build (VIPM will now see the updated XML)
           Write-Host "Building VI Package..."
           vipm build "$vipbFile"
           
