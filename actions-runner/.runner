@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 2,
+  "agentName": "DE-MUN-F8QCGY3",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus21.actions.githubusercontent.com/g74iBjukizY0SSeRWfBRWxLW2zxYN6DzFSs3zk8OR9VklI6Ty6/",
+  "gitHubUrl": "https://github.com/JanGoebel/LabVIEW-MCP-Server-Toolkit",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}

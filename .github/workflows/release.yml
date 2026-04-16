@@ -1,0 +1,45 @@
+name: Build and Release MCP Toolkit
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Build VI Package via VIPM CLI
+        run: |
+          $vipmPath = "C:\Program Files\JKI\VI Package Manager\VI Package Manager.exe"
+          $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
+          
+          Write-Host "Building VI Package..."
+          & $vipmPath build $vipbFile
+
+      - name: Locate Built VIP Artifact
+        id: find_vip
+        run: |
+          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Filter "*.vip" -Recurse | Select-Object -First 1
+          echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
+
+      - name: Upload Artifact for Testing
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-vip-package
+          path: ${{ env.VIP_PATH }}
+
+      - name: Create GitHub Release and Upload VIP
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.VIP_PATH }}
+          generate_release_notes: true

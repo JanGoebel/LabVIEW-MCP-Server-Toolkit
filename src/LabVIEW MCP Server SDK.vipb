@@ -1,10 +1,10 @@
-<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-04-07 21:49:10" Creator="jgoebel" Comments="" ID="571ef5fa789938ef687ca6afedfb67da">
+<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-04-16 11:02:44" Creator="jgoebel" Comments="" ID="d482b2067fd38f03faee47d66d08799b">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
-    <Library_Version>2.2.6.30</Library_Version>
+    <Library_Version>2.2.6.31</Library_Version>
     <Auto_Increment_Version>false</Auto_Increment_Version>
-    <Library_Source_Folder>..\builds\MCP Toolkit Source Distribution</Library_Source_Folder>
-    <Library_Output_Folder>..\builds\vip</Library_Output_Folder>
+    <Library_Source_Folder>.</Library_Source_Folder>
+    <Library_Output_Folder>..\builds</Library_Output_Folder>
     <Company_Name>jgoebel</Company_Name>
     <Library_Summary/>
     <Library_License/>
@@ -119,24 +119,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <Destination_Overrides>
         <Path>.</Path>
         <Destination>0</Destination>
-        <Additional_Destination>false</Additional_Destination>
-        <Additional_Destination_Index>0</Additional_Destination_Index>
-      </Destination_Overrides>
-      <Destination_Overrides>
-        <Path>examples</Path>
-        <Destination>1</Destination>
-        <Additional_Destination>false</Additional_Destination>
-        <Additional_Destination_Index>0</Additional_Destination_Index>
-      </Destination_Overrides>
-      <Destination_Overrides>
-        <Path>examples/Full Featured MCP Server</Path>
-        <Destination>1</Destination>
-        <Additional_Destination>false</Additional_Destination>
-        <Additional_Destination_Index>0</Additional_Destination_Index>
-      </Destination_Overrides>
-      <Destination_Overrides>
-        <Path>examples/Simple MCP Server</Path>
-        <Destination>1</Destination>
         <Additional_Destination>false</Additional_Destination>
         <Additional_Destination_Index>0</Additional_Destination_Index>
       </Destination_Overrides>
@@ -323,7 +305,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>..\builds\MCP Toolkit Source Distribution\Handle Server Request.vi</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>B6B481731AAB6903C87FB0E045B4BBBD</GUID>
+      <GUID>DB8D0F86190C8CFB04C5425FB19D4B32</GUID>
     </Functions_Palette_Data>
     <Controls_Palette_Data>
       <Parent_Palette_Index>-1</Parent_Palette_Index>
@@ -596,7 +578,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>..\builds\MCP Toolkit Source Distribution\User Events.ctl</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>C1297DAC5CD2B7E93F32E3B44EA5435C</GUID>
+      <GUID>F662B845447FA024A62037F8E9488584</GUID>
     </Controls_Palette_Data>
   </Library_Palette_Definition>
 </VI_Package_Builder_Settings>
