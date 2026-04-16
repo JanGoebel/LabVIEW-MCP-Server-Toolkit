@@ -17,21 +17,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build VI Package via VIPM CLI
+        timeout-minutes: 10 
         run: |
-          Get-Process "VI Package Manager" -ErrorAction SilentlyContinue | Stop-Process -Force
+          # 1. Clean Slate
+          Get-Process "LabVIEW", "VI Package Manager" -ErrorAction SilentlyContinue | Stop-Process -Force
           
-          $vipmPath = "C:\Program Files\JKI\VI Package Manager\support\VIPM File Handler.exe"
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
+          Write-Host "Building VI Package..."
           
-          Write-Host "Building VI Package... (This will take a few minutes)"
+          # 2. Call it exactly like you do in your local CMD
+          vipm build "$vipbFile"
           
-          $process = Start-Process -FilePath $vipmPath -ArgumentList "--", "/command:build", "/source:`"$vipbFile`"", "/QUIET:T" -Wait -PassThru
-          
-          if ($process.ExitCode -ne 0) {
-            Write-Error "VIPM exited with error code $($process.ExitCode)"
+          # 3. Catch errors
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "VIPM exited with error code $LASTEXITCODE. You definitely have a hidden LabVIEW popup."
             exit 1
           }
-          Write-Host "Build completed successfully."
 
       - name: Locate Built VIP Artifact
         id: find_vip
