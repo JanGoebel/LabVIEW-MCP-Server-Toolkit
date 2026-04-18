@@ -48,6 +48,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true   # <--- CRITICAL: Tells GitHub to download the tag annotations!
 
       - name: Build VI Package via VIPM CLI
         timeout-minutes: 25 
@@ -57,10 +59,22 @@ jobs:
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
           $gitTag = "${{ github.ref_name }}"
-          $commitMsg = "${{ github.event.head_commit.message }}"
-          
           Write-Host "Detected Tag: $gitTag"
           
+          # 1. Extract the Annotated Tag Message using the Git CLI
+          $tagMsg = (git tag -l --format='%(contents)' $gitTag) -join "`n"
+          
+          # 2. Fallback to the commit message if the tag was left blank
+          if ([string]::IsNullOrWhiteSpace($tagMsg)) {
+            $tagMsg = "${{ github.event.head_commit.message }}"
+            Write-Host "No tag message found. Falling back to commit message."
+          } else {
+            Write-Host "Found annotated tag message!"
+          }
+          
+          Write-Host "Release Notes to use:`n$tagMsg"
+          
+          # 3. Update the Version Number (Only if it's a 'v' release tag)
           $vipbContent = Get-Content $vipbFile
           
           if ($gitTag -match "v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?") {
@@ -73,12 +87,14 @@ jobs:
             Write-Host "Updating VIPB to version: $newVersion"
             $vipbContent = $vipbContent -replace "<Library_Version>.*?</Library_Version>", "<Library_Version>$newVersion</Library_Version>"
           }
-
-          $safeMsg = [System.Security.SecurityElement]::Escape($commitMsg)
+          
+          # 4. Inject the Release Notes into the VIPB
+          $safeMsg = [System.Security.SecurityElement]::Escape($tagMsg)
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$safeMsg</Release_Notes>"
           
           Set-Content -Path $vipbFile -Value $vipbContent
 
+          # 5. Run the build
           Write-Host "Building VI Package..."
           vipm build "$vipbFile"
           
@@ -105,5 +121,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.VIP_PATH }}
-          body: ${{ github.event.head_commit.message }}
-          generate_release_notes: false
+          generate_release_notes: true
