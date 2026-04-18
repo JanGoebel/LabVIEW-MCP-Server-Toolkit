@@ -13,9 +13,12 @@
 		<Property Name="server.vi.callsEnabled" Type="Bool">true</Property>
 		<Property Name="server.vi.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
+		<Item Name="tests" Type="Folder">
+			<Item Name="MCP Server tests.lvlib" Type="Library" URL="../../tests/MCP Server tests.lvlib"/>
+			<Item Name="Run_Tests_CLI.vi" Type="VI" URL="../../tests/Run_Tests_CLI.vi"/>
+		</Item>
 		<Item Name="MCP Server.lvlib" Type="Library" URL="../MCP Server/MCP Server.lvlib"/>
 		<Item Name="LICENSE" Type="Document" URL="../../LICENSE"/>
-		<Item Name="MCP Server tests.lvlib" Type="Library" URL="../../tests/MCP Server tests.lvlib"/>
 		<Item Name="Dependencies" Type="Dependencies"/>
 		<Item Name="Build Specifications" Type="Build">
 			<Item Name="MCP Toolkit Source Distribution" Type="Source Distribution">

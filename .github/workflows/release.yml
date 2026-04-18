@@ -1,19 +1,50 @@
-name: Build and Release MCP Toolkit
+name: Test, Build and Release MCP Toolkit
 
 on:
   push:
-    # Trigger ONLY when a tag is pushed. Ignore standard branch pushes.
+    branches:
+      - main
     tags:
-      - 'v*.*.*'       # Matches official releases like v2.3.0
-      - 'test*'       # Matches test builds like test-1
+      - 'v*.*.*'
+      - 'test-*'
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  # ==========================================
+  # JOB 1: TEST (Runs on EVERY push)
+  # ==========================================
+  test:
     runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
+      - name: Run Caraya Test Suite
+        run: |
+          Write-Host "Starting LabVIEW CLI to run tests..."
+          $testVI = "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi"
+          
+          # LabVIEW CLI is a native tool installed with LabVIEW
+          LabVIEWCLI -OperationName RunVI -VIPath "$testVI"
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Tests FAILED! Blocking build."
+            exit 1
+          } else {
+            Write-Host "All tests PASSED!"
+          }
+
+  # ==========================================
+  # JOB 2: BUILD (Runs ONLY on Tags, and ONLY if Tests pass)
+  # ==========================================
+  build-and-release:
+    needs: test    # <--- This is the magic line. It waits for JOB 1.
+    if: startsWith(github.ref, 'refs/tags/') # <--- Only build if it's a tag!
+    runs-on: self-hosted
+    
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -25,14 +56,11 @@ jobs:
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
-          # 1. Grab the Git tag and the Commit Message
           $gitTag = "${{ github.ref_name }}"
           $commitMsg = "${{ github.event.head_commit.message }}"
           
           Write-Host "Detected Tag: $gitTag"
-          Write-Host "Commit Message to use for Release Notes: $commitMsg"
           
-          # 2. Update the Version Number (Only if it's a 'v' release tag)
           $vipbContent = Get-Content $vipbFile
           
           if ($gitTag -match "v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?") {
@@ -44,19 +72,13 @@ jobs:
             $newVersion = "$major.$minor.$patch.$build"
             Write-Host "Updating VIPB to version: $newVersion"
             $vipbContent = $vipbContent -replace "<Library_Version>.*?</Library_Version>", "<Library_Version>$newVersion</Library_Version>"
-          } else {
-            Write-Host "Tag '$gitTag' is not a version number. Keeping default VIPB version."
           }
 
-          # 3. Inject the Commit Message into Release Notes
-          # We use regex to replace everything between the <Release_Notes> tags
-          # We also escape XML special characters in the commit message just in case
           $safeMsg = [System.Security.SecurityElement]::Escape($commitMsg)
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$safeMsg</Release_Notes>"
           
           Set-Content -Path $vipbFile -Value $vipbContent
 
-          # 4. Run the build
           Write-Host "Building VI Package..."
           vipm build "$vipbFile"
           
@@ -71,7 +93,6 @@ jobs:
           $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE\builds" | Where-Object { $_.Extension -eq ".vip" } | Select-Object -First 1
           echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
 
-      # Upload as a workflow artifact if it's just a 'build' tag
       - name: Upload Artifact for Testing
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v4
@@ -79,12 +100,10 @@ jobs:
           name: test-vip-package
           path: ${{ env.VIP_PATH }}
 
-      # Publish a GitHub Release ONLY if it's a 'v' tag
       - name: Create GitHub Release and Upload VIP
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.VIP_PATH }}
-          # Use the commit message for the GitHub Release body as well
           body: ${{ github.event.head_commit.message }}
           generate_release_notes: false
