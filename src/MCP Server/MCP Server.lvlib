@@ -93,4 +93,7 @@
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
 		</Item>
 	</Item>
+	<Item Name="Build Response Error.vi" Type="VI" URL="../Build Response Error.vi">
+		<Property Name="NI.LibItem.Scope" Type="Int">4</Property>
+	</Item>
 </Library>

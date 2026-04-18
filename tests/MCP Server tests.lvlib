@@ -33,5 +33,7 @@
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 	</Item>
+	<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
+	<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
 	<Item Name="Test_MCP_Server.vi" Type="VI" URL="../Test_MCP_Server.vi"/>
 </Library>
