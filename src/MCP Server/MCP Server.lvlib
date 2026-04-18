@@ -7,6 +7,9 @@
 </Property>
 	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
 	<Property Name="NI.SortType" Type="Int">3</Property>
+	<Item Name="Friends List" Type="Friends List">
+		<Item Name="MCP Server tests.lvlib" Type="Friended Library" URL="../../../tests/MCP Server tests.lvlib"/>
+	</Item>
 	<Item Name="Public API" Type="Folder">
 		<Item Name="Server" Type="Folder">
 			<Item Name="Handle Server Request.vi" Type="VI" URL="../Handle Server Request.vi"/>
@@ -37,11 +40,11 @@
 		<Item Name="Start.vi" Type="VI" URL="../Start.vi"/>
 		<Item Name="Add Tool.vi" Type="VI" URL="../Add Tool.vi"/>
 		<Item Name="Add Resource (File).vi" Type="VI" URL="../Add Resource (File).vi"/>
-		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
+		<Item Name="Add Prompt.vi" Type="VI" URL="/&lt;vilib&gt;/jgoebel/LabVIEW MCP Server SDK/src/MCP Server/Add Prompt.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
-		<Property Name="NI.LibItem.Scope" Type="Int">2</Property>
+		<Property Name="NI.LibItem.Scope" Type="Int">4</Property>
 		<Item Name="RPC Methods" Type="Folder">
 			<Item Name="initialize.vi" Type="VI" URL="../initialize.vi"/>
 			<Item Name="tool list.vi" Type="VI" URL="../tool list.vi"/>
