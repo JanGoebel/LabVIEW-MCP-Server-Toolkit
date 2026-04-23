@@ -31,7 +31,7 @@ jobs:
           $lv2020Path = "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe"
           
           # Force CLI to use LabVIEW 2020 and its specific VI Server port
-          LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber 6363 -LabVIEWPath "$lv2020Path"
+          LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber 3363 -LabVIEWPath "$lv2020Path"
           
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Tests FAILED! Blocking build."
