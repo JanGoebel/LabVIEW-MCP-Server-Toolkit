@@ -28,7 +28,7 @@ jobs:
           $testVI = "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi"
           
           # Path to LabVIEW 2020 executable
-          $lv2020Path = "C:\Program Files (x86)\National Instruments\LabVIEW 2020\LabVIEW.exe"
+          $lv2020Path = "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe"
           
           # Force CLI to use LabVIEW 2020 and its specific VI Server port
           LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber 6363 -LabVIEWPath "$lv2020Path"
