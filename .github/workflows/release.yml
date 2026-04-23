@@ -28,7 +28,7 @@ jobs:
           $testVI = "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi"
           
           # LabVIEW CLI is a native tool installed with LabVIEW
-          LabVIEWCLI -OperationName RunVI -VIPath "$testVI"
+          LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber 6363
           
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Tests FAILED! Blocking build."
