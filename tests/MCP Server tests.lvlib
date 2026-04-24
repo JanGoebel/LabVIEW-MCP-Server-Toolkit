@@ -15,6 +15,7 @@
 		</Item>
 		<Item Name="tools" Type="Folder">
 			<Item Name="fake tool add.vi" Type="VI" URL="../fake tool add.vi"/>
+			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
 			<Item Name="fake tool ignored.vi" Type="VI" URL="../fake tool ignored.vi"/>
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
@@ -27,14 +28,15 @@
 		<Item Name="Send HTTP request.vi" Type="VI" URL="../Send HTTP request.vi"/>
 	</Item>
 	<Item Name="tests" Type="Folder">
+		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
+		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
 		<Item Name="Test Initialize.vi" Type="VI" URL="../Test Initialize.vi"/>
 		<Item Name="Test Initialized.vi" Type="VI" URL="../Test Initialized.vi"/>
 		<Item Name="test prompts list.vi" Type="VI" URL="../test prompts list.vi"/>
 		<Item Name="test resources list.vi" Type="VI" URL="../test resources list.vi"/>
+		<Item Name="test tools call array.vi" Type="VI" URL="../test tools call array.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 	</Item>
-	<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
-	<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
 	<Item Name="Test_MCP_Server.vi" Type="VI" URL="../Test_MCP_Server.vi"/>
 </Library>
