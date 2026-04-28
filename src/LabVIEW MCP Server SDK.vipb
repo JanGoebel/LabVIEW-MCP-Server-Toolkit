@@ -1,4 +1,4 @@
-<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-04-24 00:00:03" Creator="jgoebel" Comments="" ID="16e8f0fa56025f6a787c74d3fb798fbb">
+<VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-04-29 00:51:32" Creator="jgoebel" Comments="" ID="4c52463302ca6bc882b57637dfdf635b">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
     <Library_Version>2.2.6.37</Library_Version>
@@ -195,6 +195,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <Exclusions>
         <Path>src/.LabVIEW MCP Server SDK.UserState</Path>
       </Exclusions>
+      <Exclusions>
+        <Path>examples/Datalogger MCP Server/.Datalogger MCP Server.UserState</Path>
+      </Exclusions>
       <Place_Folder_Contents>
         <Path/>
       </Place_Folder_Contents>
@@ -368,7 +371,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>MCP Server\Stop.vi</Path>
         <VI_Title/>
       </Items_Data>
-      <GUID>4A4A5E47AB69484F567AE5233CE02F07</GUID>
+      <GUID>DD7B0CFE8D33DFDEA2AF8E777D06C2A8</GUID>
     </Functions_Palette_Data>
   </Library_Palette_Definition>
 </VI_Package_Builder_Settings>
