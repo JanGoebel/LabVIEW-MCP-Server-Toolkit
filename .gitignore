@@ -1,3 +1,5 @@
 src/.LabVIEW MCP Server SDK.UserState/
 builds/
-actions-runner/
+examples/Datalogger MCP Server/.Datalogger MCP Server.UserState
+examples/Full Featured MCP Server/.Full Featured MCP Server.UserState
+examples/Simple MCP Server/.Simple MCP Server.UserState
