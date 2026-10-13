@@ -25,18 +25,26 @@
 		</Item>
 	</Item>
 	<Item Name="SubVIs" Type="Folder">
+		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
 		<Item Name="Send HTTP request.vi" Type="VI" URL="../Send HTTP request.vi"/>
 	</Item>
 	<Item Name="tests" Type="Folder">
 		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
 		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
+		<Item Name="test http origin.vi" Type="VI" URL="../test http origin.vi"/>
+		<Item Name="test http protocol version.vi" Type="VI" URL="../test http protocol version.vi"/>
 		<Item Name="Test Initialize.vi" Type="VI" URL="../Test Initialize.vi"/>
 		<Item Name="Test Initialized.vi" Type="VI" URL="../Test Initialized.vi"/>
+		<Item Name="test notification accepted.vi" Type="VI" URL="../test notification accepted.vi"/>
 		<Item Name="test prompts list.vi" Type="VI" URL="../test prompts list.vi"/>
+		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
 		<Item Name="test resources list.vi" Type="VI" URL="../test resources list.vi"/>
 		<Item Name="test tools call array.vi" Type="VI" URL="../test tools call array.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
+		<Item Name="test http get rejected.vi" Type="VI" URL="../test http get rejected.vi"/>
+		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
+		<Item Name="test unknown notification.vi" Type="VI" URL="../test unknown notification.vi"/>
 	</Item>
 	<Item Name="Test_MCP_Server.vi" Type="VI" URL="../Test_MCP_Server.vi"/>
 </Library>
