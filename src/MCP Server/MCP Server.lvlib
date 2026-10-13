@@ -55,6 +55,7 @@
 			<Item Name="prompts get.vi" Type="VI" URL="../prompts get.vi"/>
 			<Item Name="shutdown.vi" Type="VI" URL="../shutdown.vi"/>
 			<Item Name="exit.vi" Type="VI" URL="../exit.vi"/>
+			<Item Name="ping.vi" Type="VI" URL="../ping.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
@@ -92,6 +93,8 @@
 			<Item Name="Validate HTTP Request.vi" Type="VI" URL="../Validate HTTP Request.vi"/>
 			<Item Name="Process HTTP Request.vi" Type="VI" URL="../Process HTTP Request.vi"/>
 			<Item Name="Build Method Not Found Response.vi" Type="VI" URL="../Build Method Not Found Response.vi"/>
+			<Item Name="Build Error Response.vi" Type="VI" URL="../Build Error Response.vi"/>
+			<Item Name="Restore Request ID.vi" Type="VI" URL="../Restore Request ID.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>

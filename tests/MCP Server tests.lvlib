@@ -31,6 +31,7 @@
 	<Item Name="tests" Type="Folder">
 		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
 		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
+		<Item Name="test http get rejected.vi" Type="VI" URL="../test http get rejected.vi"/>
 		<Item Name="test http origin.vi" Type="VI" URL="../test http origin.vi"/>
 		<Item Name="test http protocol version.vi" Type="VI" URL="../test http protocol version.vi"/>
 		<Item Name="Test Initialize.vi" Type="VI" URL="../Test Initialize.vi"/>
@@ -42,9 +43,12 @@
 		<Item Name="test tools call array.vi" Type="VI" URL="../test tools call array.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
-		<Item Name="test http get rejected.vi" Type="VI" URL="../test http get rejected.vi"/>
 		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
 		<Item Name="test unknown notification.vi" Type="VI" URL="../test unknown notification.vi"/>
+		<Item Name="test ping.vi" Type="VI" URL="../test ping.vi"/>
+		<Item Name="test string id.vi" Type="VI" URL="../test string id.vi"/>
+		<Item Name="test unknown prompt.vi" Type="VI" URL="../test unknown prompt.vi"/>
+		<Item Name="test unknown resource.vi" Type="VI" URL="../test unknown resource.vi"/>
 	</Item>
 	<Item Name="Test_MCP_Server.vi" Type="VI" URL="../Test_MCP_Server.vi"/>
 </Library>
