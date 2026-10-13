@@ -56,6 +56,7 @@
 			<Item Name="shutdown.vi" Type="VI" URL="../shutdown.vi"/>
 			<Item Name="exit.vi" Type="VI" URL="../exit.vi"/>
 			<Item Name="ping.vi" Type="VI" URL="../ping.vi"/>
+			<Item Name="resources templates list.vi" Type="VI" URL="../resources templates list.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
@@ -95,6 +96,14 @@
 			<Item Name="Build Method Not Found Response.vi" Type="VI" URL="../Build Method Not Found Response.vi"/>
 			<Item Name="Build Error Response.vi" Type="VI" URL="../Build Error Response.vi"/>
 			<Item Name="Restore Request ID.vi" Type="VI" URL="../Restore Request ID.vi"/>
+			<Item Name="Clean Error Message.vi" Type="VI" URL="../Clean Error Message.vi"/>
+			<Item Name="Read Resource Contents.vi" Type="VI" URL="../Read Resource Contents.vi"/>
+			<Item Name="Finish Tool Call Response.vi" Type="VI" URL="../Finish Tool Call Response.vi"/>
+			<Item Name="Check Prompt Arguments.vi" Type="VI" URL="../Check Prompt Arguments.vi"/>
+			<Item Name="Negotiate Protocol Version.vi" Type="VI" URL="../Negotiate Protocol Version.vi"/>
+			<Item Name="Reject Invalid Request.vi" Type="VI" URL="../Reject Invalid Request.vi"/>
+			<Item Name="Add Array Items To Schema.vi" Type="VI" URL="../Add Array Items To Schema.vi"/>
+			<Item Name="Null Id For Parse Error.vi" Type="VI" URL="../Null Id For Parse Error.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
