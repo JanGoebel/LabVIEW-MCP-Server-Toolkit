@@ -29,9 +29,15 @@ $extensions = @('.vi', '.vim', '.ctl')
 $utf8 = New-Object System.Text.UTF8Encoding $false
 
 function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
+    # LabVIEW CLI writes its error text to stderr; keep it for the report.
+    # Windows PowerShell turns redirected stderr lines into errors, so they
+    # must not stop the script here.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $output = & LabVIEWCLI -OperationName CreateComparisonReport -VI1 $Vi1 -VI2 $Vi2 `
         -ReportType html -ReportPath $ReportPath -o -c -nobdcosm -nofppos `
-        -LabVIEWPath $LabVIEWPath -PortNumber $PortNumber | Out-String
+        -LabVIEWPath $LabVIEWPath -PortNumber $PortNumber 2>&1 | ForEach-Object { "$_" } | Out-String
+    $ErrorActionPreference = $previous
     return @{ Ok = (Test-Path $ReportPath); Output = $output.Trim() }
 }
 

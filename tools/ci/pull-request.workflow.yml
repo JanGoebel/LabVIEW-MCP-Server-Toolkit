@@ -24,6 +24,12 @@ env:
   # repository variable LABVIEW_PORT to override the default.
   LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
   LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3363' }}
+  # LabVIEW used for the VI comparison. The comparison operation belongs to
+  # the installed LabVIEW CLI and needs a LabVIEW at least as new as that CLI;
+  # with LabVIEW 2020 it fails to load. Set these two repository variables to
+  # a newer LabVIEW on the runner. Empty means: use the test LabVIEW.
+  LABVIEW_COMPARE_PATH: ${{ vars.LABVIEW_COMPARE_PATH }}
+  LABVIEW_COMPARE_PORT: ${{ vars.LABVIEW_COMPARE_PORT }}
 
 jobs:
   # ==========================================
@@ -80,11 +86,13 @@ jobs:
       - name: Build VI Diff Report
         if: always()
         run: |
+          $compareLabVIEW = if ($env:LABVIEW_COMPARE_PATH) { $env:LABVIEW_COMPARE_PATH } else { $env:LABVIEW_PATH }
+          $comparePort = if ($env:LABVIEW_COMPARE_PORT) { $env:LABVIEW_COMPARE_PORT } else { $env:LABVIEW_PORT }
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\New-ViDiffReport.ps1" `
             -BaseRef "origin/${{ github.event.pull_request.base.ref }}" `
             -HeadDir "$env:GITHUB_WORKSPACE" `
             -OutDir "$env:RUNNER_TEMP\vi-diff" `
-            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
+            -LabVIEWPath "$compareLabVIEW" -PortNumber $comparePort
 
       - name: Upload Reports
         if: always()

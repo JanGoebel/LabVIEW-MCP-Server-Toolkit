@@ -63,6 +63,17 @@ Select-String 'server.tcp.port' "C:\Program Files\National Instruments\LabVIEW 2
 The workflows read it from the repository variable `LABVIEW_PORT`
 (Settings > Secrets and variables > Actions > Variables) and fall back to 3363.
 
+## LabVIEW for the VI comparison
+
+The pull request workflow compares VIs with the LabVIEW CLI operation
+`CreateComparisonReport`. That operation belongs to the installed LabVIEW CLI
+and cannot be loaded by a LabVIEW older than the CLI: with LabVIEW 2020 and
+the CLI that came with LabVIEW 2026 every comparison fails. Tests and the
+package build stay on LabVIEW 2020. For the comparison, point the repository
+variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT` at a newer LabVIEW
+on the runner (for example LabVIEW 2026 and its VI Server port). Comparing
+saves nothing, so the newer version does not touch the sources.
+
 ## Checking the setup
 
 ```powershell
