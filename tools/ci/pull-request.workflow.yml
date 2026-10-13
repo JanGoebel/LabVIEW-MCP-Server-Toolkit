@@ -20,8 +20,10 @@ concurrency:
 
 env:
   # LabVIEW used for the comparison and the tests on the self-hosted runner.
+  # The VI Server port differs per machine (see tools/setup/README.md); set the
+  # repository variable LABVIEW_PORT to override the default.
   LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
-  LABVIEW_PORT: 3363
+  LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3363' }}
 
 jobs:
   # ==========================================
