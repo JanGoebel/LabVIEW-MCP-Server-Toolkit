@@ -1,0 +1,166 @@
+name: Pull Request Review
+
+# For every pull request against main: runs the Caraya suite, creates a
+# graphical diff of the changed VIs, posts both as one comment on the pull
+# request, and builds an installable test package.
+# Publishing stays in release.yml.
+#
+# Lives in tools/ci as pull-request.workflow.yml; copy it to
+# .github/workflows/pull-request.yml on main to activate it.
+
+on:
+  pull_request:
+    branches:
+      - main
+
+# A new push to the same pull request cancels the run that is still going.
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # LabVIEW used for the comparison and the tests on the self-hosted runner.
+  LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
+  LABVIEW_PORT: 3363
+
+jobs:
+  # ==========================================
+  # JOB 1: TESTS + DIFF REPORT
+  # ==========================================
+  review:
+    # The runner is self-hosted and the repo is public: only run for branches
+    # of this repository, never for pull requests from forks.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: self-hosted
+    timeout-minutes: 30
+    permissions:
+      contents: write        # pushes the diff images to pr-assets/pr-<number>
+      pull-requests: write   # posts the report comment
+    steps:
+      - name: Checkout Pull Request
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # the diff needs the history of both branches
+
+      # The report scripts come from main, not from the pull request, so a
+      # pull request cannot change how its own report is produced.
+      - name: Checkout Report Scripts from main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: _ci
+          sparse-checkout: tools/ci
+
+      - name: Run Caraya Test Suite
+        id: tests
+        continue-on-error: true
+        run: |
+          $report = "$env:GITHUB_WORKSPACE\tests\results\caraya-report.txt"
+          if (Test-Path $report) { Remove-Item $report }
+
+          $testVI = "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi"
+          LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber $env:LABVIEW_PORT -LabVIEWPath "$env:LABVIEW_PATH"
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Tests FAILED!"
+            exit 1
+          }
+          Write-Host "All tests PASSED!"
+
+      - name: Build Test Report
+        if: always()
+        run: |
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Convert-CarayaReport.ps1" `
+            -ReportPath "$env:GITHUB_WORKSPACE\tests\results\caraya-report.txt" `
+            -OutFile "$env:RUNNER_TEMP\test-report.md"
+          Get-Content "$env:RUNNER_TEMP\test-report.md" | Add-Content $env:GITHUB_STEP_SUMMARY
+
+      - name: Build VI Diff Report
+        if: always()
+        run: |
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\New-ViDiffReport.ps1" `
+            -BaseRef "origin/${{ github.event.pull_request.base.ref }}" `
+            -HeadDir "$env:GITHUB_WORKSPACE" `
+            -OutDir "$env:RUNNER_TEMP\vi-diff" `
+            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-reports-pr-${{ github.event.pull_request.number }}
+          path: |
+            ${{ runner.temp }}/test-report.md
+            ${{ runner.temp }}/vi-diff
+          retention-days: 14
+
+      - name: Post Report on the Pull Request
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Publish-PrReport.ps1" `
+            -PrNumber ${{ github.event.pull_request.number }} `
+            -Repo "${{ github.repository }}" `
+            -RepoDir "$env:GITHUB_WORKSPACE" `
+            -TestReport "$env:RUNNER_TEMP\test-report.md" `
+            -DiffDir "$env:RUNNER_TEMP\vi-diff" `
+            -Footer "Report for commit ${{ github.event.pull_request.head.sha }}. The installable test package is under Artifacts of [this run]($runUrl) once the build job has finished."
+
+      - name: Fail if the Tests Failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
+
+  # ==========================================
+  # JOB 2: TEST BUILD (only if the tests pass)
+  # ==========================================
+  test-build:
+    needs: review
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Pull Request
+        uses: actions/checkout@v4
+
+      - name: Build VI Package via VIPM CLI
+        timeout-minutes: 25
+        env:
+          VIPM_CLI_TIMEOUT: 1200
+        run: |
+          $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
+          $vipbContent = Get-Content $vipbFile
+
+          # Keep major.minor.patch from the .vipb and use the run number as the
+          # build number, so every test build gets its own installable version.
+          $current = ($vipbContent | Select-String "<Library_Version>(\d+)\.(\d+)\.(\d+)\.\d+</Library_Version>").Matches[0]
+          $newVersion = "$($current.Groups[1].Value).$($current.Groups[2].Value).$($current.Groups[3].Value).${{ github.run_number }}"
+          Write-Host "Test build version: $newVersion"
+          $vipbContent = $vipbContent -replace "<Library_Version>.*?</Library_Version>", "<Library_Version>$newVersion</Library_Version>"
+
+          $notes = "Test build of pull request #${{ github.event.pull_request.number }} (commit ${{ github.event.pull_request.head.sha }}). Not a release."
+          $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$notes</Release_Notes>"
+
+          Set-Content -Path $vipbFile -Value $vipbContent
+
+          Write-Host "Building VI Package..."
+          vipm build "$vipbFile"
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
+            exit 1
+          }
+          "### Test package built: version $newVersion" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Locate Built VIP Artifact
+        run: |
+          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE\builds" | Where-Object { $_.Extension -eq ".vip" } | Select-Object -First 1
+          echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
+
+      - name: Upload Test Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-vip-package-pr-${{ github.event.pull_request.number }}
+          path: ${{ env.VIP_PATH }}
+          retention-days: 14
