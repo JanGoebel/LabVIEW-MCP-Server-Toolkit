@@ -74,6 +74,20 @@ It should end with "RunVI operation succeeded" and write
 `tests\results\caraya-report.txt`. Error 1003 means a VI is broken, which on a
 fresh machine means a package above is missing.
 
+If error 1003 stays after the packages are installed, LabVIEW is probably
+using compiled code it cached while the packages were still missing (the
+sources are saved without compiled code, so LabVIEW keeps it in a per-user
+cache). Rebuild it once by mass compiling the checkout:
+
+```powershell
+LabVIEWCLI -OperationName MassCompile -DirectoryToCompile "$PWD\tests" `
+    -LabVIEWPath "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe" -PortNumber <port>
+git checkout -- .
+```
+
+The three `fake ... broken vi.vi` files are reported as bad on purpose; the
+`git checkout` undoes the files the mass compile saved.
+
 ## Self-hosted runner
 
 - The runner must run in a logged-in desktop session (`run.cmd`), not as a
