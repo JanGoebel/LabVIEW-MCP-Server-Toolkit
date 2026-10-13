@@ -104,6 +104,13 @@
 			<Item Name="Reject Invalid Request.vi" Type="VI" URL="../Reject Invalid Request.vi"/>
 			<Item Name="Add Array Items To Schema.vi" Type="VI" URL="../Add Array Items To Schema.vi"/>
 			<Item Name="Null Id For Parse Error.vi" Type="VI" URL="../Null Id For Parse Error.vi"/>
+			<Item Name="Default Tool Arguments.vi" Type="VI" URL="../Default Tool Arguments.vi"/>
+			<Item Name="Mark Tool Error Result.vi" Type="VI" URL="../Mark Tool Error Result.vi"/>
+			<Item Name="Strip Error Details.vi" Type="VI" URL="../Strip Error Details.vi"/>
+			<Item Name="Reject Non Object Message.vi" Type="VI" URL="../Reject Non Object Message.vi"/>
+			<Item Name="Build Prompt List JSON.vi" Type="VI" URL="../Build Prompt List JSON.vi"/>
+			<Item Name="Handle Server Request Batch.vi" Type="VI" URL="../Handle Server Request Batch.vi"/>
+			<Item Name="Reinitialize VI Inputs.vi" Type="VI" URL="../Reinitialize VI Inputs.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
