@@ -1,0 +1,36 @@
+13/10/2026 7:17:37 pm - PASS - suite_runner.vi - 
+13/10/2026 7:17:37 pm - PASS - MCP Server tests.lvlib:Test_MCP_Server - MCP Server tests.lvlib:Test Initialize.vi
+13/10/2026 7:17:37 pm - PASS -         Test 1: Initialize - MCP Server tests.lvlib:Test Initialize.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 2: Initialized - MCP Server tests.lvlib:Test Initialized.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 3: tools/list - MCP Server tests.lvlib:Test tools list.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 4: prompts/list - MCP Server tests.lvlib:test prompts list.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 5: resources/list - MCP Server tests.lvlib:test resources list.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 6: tools call - MCP Server tests.lvlib:test tools call.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 7: empty json message - MCP Server tests.lvlib:test empty msg.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 8: call broken tool - MCP Server tests.lvlib:test broken tool.vi
+13/10/2026 7:17:37 pm - PASS -           Assert True
+13/10/2026 7:17:37 pm - PASS -         Test 6: tools call - MCP Server tests.lvlib:test tools call array.vi
+13/10/2026 7:17:38 pm - PASS -           Assert True
+13/10/2026 7:17:38 pm - PASS -         Test 9: GET is rejected with 405 - MCP Server tests.lvlib:test http get rejected.vi
+13/10/2026 7:17:38 pm - PASS -           GET -> 405 with Allow: POST and error -32600
+13/10/2026 7:17:38 pm - PASS -         Test 10: Origin validation - MCP Server tests.lvlib:test http origin.vi
+13/10/2026 7:17:38 pm - PASS -           Origin http://evil.example -> 403 with error -32600
+13/10/2026 7:17:38 pm - PASS -           Origin http://localhost:6274 -> 200 with result
+13/10/2026 7:17:38 pm - PASS -         Test 11: MCP-Protocol-Version validation - MCP Server tests.lvlib:test http protocol version.vi
+13/10/2026 7:17:38 pm - PASS -           MCP-Protocol-Version 1999-01-01 -> 400 with error -32600
+13/10/2026 7:17:38 pm - PASS -           MCP-Protocol-Version 2025-06-18 -> 200 with result
+13/10/2026 7:17:38 pm - PASS -         Test 12: notification answered with 202 - MCP Server tests.lvlib:test notification accepted.vi
+13/10/2026 7:17:38 pm - PASS -           notifications/initialized -> 202 with empty body
+13/10/2026 7:17:38 pm - PASS -         Test 13: request with id answered with 200 - MCP Server tests.lvlib:test request status.vi
+13/10/2026 7:17:38 pm - PASS -           tools/list with id 1 -> 200 with result and id 1
+13/10/2026 7:17:38 pm - PASS -         Test 14: unknown method - MCP Server tests.lvlib:test unknown method.vi
+13/10/2026 7:17:38 pm - PASS -           does/not/exist with id 5 -> 200 with error -32601 and id 5
+13/10/2026 7:17:38 pm - PASS -         Test 15: unknown notification - MCP Server tests.lvlib:test unknown notification.vi
+13/10/2026 7:17:39 pm - PASS -           notifications/cancelled -> 202 with empty body
