@@ -130,7 +130,8 @@ jobs:
           VIPM_CLI_TIMEOUT: 1200
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
-          $vipbContent = Get-Content $vipbFile
+          # Read and write the .vipb as UTF-8: VIPM rejects a file that is not valid UTF-8.
+          $vipbContent = [System.IO.File]::ReadAllLines($vipbFile)
 
           # Keep major.minor.patch from the .vipb and use the run number as the
           # build number, so every test build gets its own installable version.
@@ -142,10 +143,10 @@ jobs:
           $notes = "Test build of pull request #${{ github.event.pull_request.number }} (commit ${{ github.event.pull_request.head.sha }}). Not a release."
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$notes</Release_Notes>"
 
-          Set-Content -Path $vipbFile -Value $vipbContent
+          [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
 
           Write-Host "Building VI Package..."
-          vipm build "$vipbFile"
+          vipm build "$vipbFile" --labview-version 2020 --labview-bitness 64
 
           if ($LASTEXITCODE -ne 0) {
             Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
