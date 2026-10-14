@@ -89,6 +89,9 @@
 			<Item Name="Create Server.vi" Type="VI" URL="../Create Server.vi"/>
 			<Item Name="Get Server.vi" Type="VI" URL="../Get Server.vi"/>
 			<Item Name="Build Response Error.vi" Type="VI" URL="../Build Response Error.vi"/>
+			<Item Name="Validate HTTP Request.vi" Type="VI" URL="../Validate HTTP Request.vi"/>
+			<Item Name="Process HTTP Request.vi" Type="VI" URL="../Process HTTP Request.vi"/>
+			<Item Name="Build Method Not Found Response.vi" Type="VI" URL="../Build Method Not Found Response.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
