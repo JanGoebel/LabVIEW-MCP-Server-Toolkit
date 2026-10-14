@@ -11,33 +11,44 @@ on:
 permissions:
   contents: write
 
+env:
+  # LabVIEW 2020 on the self-hosted runner and its VI Server port
+  # (server.tcp.port in its LabVIEW.ini, see tools/setup/README.md). The
+  # repository variable LABVIEW_PORT overrides the default; pull-request.yml
+  # reads the same variable.
+  LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
+  LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3365' }}
+
 jobs:
   # ==========================================
   # JOB 1: TEST (Runs on EVERY push)
   # ==========================================
   test:
     runs-on: self-hosted
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      # Invoke-CliTest.ps1 exits 1 when tests failed and 2 when LabVIEW could
+      # not be reached, so the log says which of the two happened.
       - name: Run Caraya Test Suite
         run: |
-          Write-Host "Starting LabVIEW CLI to run tests..."
-          $testVI = "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi"
-          
-          # Path to LabVIEW 2020 executable
-          $lv2020Path = "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe"
-          
-          # Force CLI to use LabVIEW 2020 and its specific VI Server port
-          LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber 3365 -LabVIEWPath "$lv2020Path"
-          
+          & "$env:GITHUB_WORKSPACE\tools\ci\Invoke-CliTest.ps1" `
+            -VIPath "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi" `
+            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
+          if ($LASTEXITCODE -ne 0) { Write-Error "Blocking the build."; exit 1 }
+
+      # tools\test\Test-McpServer.ps1 against the toolkit's test server.
+      - name: Run Protocol Tests
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\ci\Invoke-CliTest.ps1" `
+            -VIPath "$env:GITHUB_WORKSPACE\tests\Run_Protocol_Tests_CLI.vi" `
+            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "Tests FAILED! Blocking build."
+            Get-Content "$env:GITHUB_WORKSPACE\tests\results\protocol-report.txt" -ErrorAction SilentlyContinue
+            Write-Error "Blocking the build."
             exit 1
-          } else {
-            Write-Host "All tests PASSED!"
           }
   # ==========================================
   # JOB 2: BUILD (Runs ONLY on Tags, and ONLY if Tests pass)
@@ -54,30 +65,47 @@ jobs:
           fetch-tags: true   # <--- CRITICAL: Tells GitHub to download the tag annotations!
 
       - name: Build VI Package via VIPM CLI
-        timeout-minutes: 25 
+        timeout-minutes: 25
         env:
           VIPM_CLI_TIMEOUT: 1200
+          # Passed through the environment, not pasted into the script: a
+          # commit message with quotes or $ would otherwise break or change it.
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           
           $gitTag = "${{ github.ref_name }}"
           Write-Host "Detected Tag: $gitTag"
           
-          # 1. Extract the Annotated Tag Message using the Git CLI
-          $tagMsg = (git tag -l --format='%(contents)' $gitTag) -join "`n"
+          # 1. Extract the Annotated Tag Message using the Git CLI.
+          #    actions/checkout recreates the tag as a lightweight tag on the
+          #    commit, so %(contents) would return the commit message. Fetch
+          #    the real tag object first.
+          git fetch --quiet --force --no-tags origin "refs/tags/${gitTag}:refs/tags/${gitTag}"
+          $tagMsg = ""
+          if ((git cat-file -t "refs/tags/$gitTag") -eq "tag") {
+            $tagMsg = (git tag -l --format='%(contents)' $gitTag) -join "`n"
+          }
           
           # 2. Fallback to the commit message if the tag was left blank
           if ([string]::IsNullOrWhiteSpace($tagMsg)) {
-            $tagMsg = "${{ github.event.head_commit.message }}"
+            $tagMsg = "$env:HEAD_COMMIT_MESSAGE"
             Write-Host "No tag message found. Falling back to commit message."
           } else {
             Write-Host "Found annotated tag message!"
           }
           
           Write-Host "Release Notes to use:`n$tagMsg"
+
+          # Hand the same text to the GitHub release step (UTF-8 without BOM)
+          $notesFile = Join-Path $env:RUNNER_TEMP "release-notes.md"
+          [System.IO.File]::WriteAllText($notesFile, $tagMsg, (New-Object System.Text.UTF8Encoding $false))
           
           # 3. Update the Version Number (Only if it's a 'v' release tag)
-          $vipbContent = Get-Content $vipbFile
+          # Read and write the .vipb as UTF-8: VIPM rejects a file that is not
+          # valid UTF-8, and Get-Content/Set-Content use the ANSI code page in
+          # Windows PowerShell.
+          $vipbContent = [System.IO.File]::ReadAllLines($vipbFile)
           
           if ($gitTag -match "v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?") {
             $major = $matches[1]
@@ -94,11 +122,11 @@ jobs:
           $safeMsg = [System.Security.SecurityElement]::Escape($tagMsg)
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$safeMsg</Release_Notes>"
           
-          Set-Content -Path $vipbFile -Value $vipbContent
+          [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
 
-          # 5. Run the build
+          # 5. Run the build, for the same LabVIEW as the pull request test builds
           Write-Host "Building VI Package..."
-          vipm build "$vipbFile"
+          vipm build "$vipbFile" --labview-version 2020 --labview-bitness 64
           
           if ($LASTEXITCODE -ne 0) {
             Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
@@ -123,4 +151,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.VIP_PATH }}
+          body_path: ${{ runner.temp }}/release-notes.md
           generate_release_notes: true
