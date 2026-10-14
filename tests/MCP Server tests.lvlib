@@ -22,12 +22,14 @@
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
 			<Item Name="fake tool no inputs outputs.vi" Type="VI" URL="../fake tool no inputs outputs.vi"/>
 			<Item Name="fake tool return error.vi" Type="VI" URL="../fake tool return error.vi"/>
+			<Item Name="fake tool required input.vi" Type="VI" URL="../fake tool required input.vi"/>
 			<Item Name="fake_tool_say_hello.vi" Type="VI" URL="../fake_tool_say_hello.vi"/>
 		</Item>
 	</Item>
 	<Item Name="SubVIs" Type="Folder">
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
+		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
 		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
 		<Item Name="Send HTTP request.vi" Type="VI" URL="../Send HTTP request.vi"/>
 	</Item>
@@ -42,6 +44,7 @@
 		<Item Name="Test Initialize.vi" Type="VI" URL="../Test Initialize.vi"/>
 		<Item Name="Test Initialized.vi" Type="VI" URL="../Test Initialized.vi"/>
 		<Item Name="test internal error message.vi" Type="VI" URL="../test internal error message.vi"/>
+		<Item Name="test labview version.vi" Type="VI" URL="../test labview version.vi"/>
 		<Item Name="test malformed json.vi" Type="VI" URL="../test malformed json.vi"/>
 		<Item Name="test non object message.vi" Type="VI" URL="../test non object message.vi"/>
 		<Item Name="test notification accepted.vi" Type="VI" URL="../test notification accepted.vi"/>
@@ -51,16 +54,18 @@
 		<Item Name="test prompts list required.vi" Type="VI" URL="../test prompts list required.vi"/>
 		<Item Name="test prompts list.vi" Type="VI" URL="../test prompts list.vi"/>
 		<Item Name="test protocol version negotiation.vi" Type="VI" URL="../test protocol version negotiation.vi"/>
+		<Item Name="test protocol version fallback.vi" Type="VI" URL="../test protocol version fallback.vi"/>
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
 		<Item Name="test request without method.vi" Type="VI" URL="../test request without method.vi"/>
 		<Item Name="test resource blob.vi" Type="VI" URL="../test resource blob.vi"/>
 		<Item Name="test resource templates list.vi" Type="VI" URL="../test resource templates list.vi"/>
-		<Item Name="test tool call default arguments.vi" Type="VI" URL="../test tool call default arguments.vi"/>
 		<Item Name="test resource text utf8.vi" Type="VI" URL="../test resource text utf8.vi"/>
 		<Item Name="test resources list.vi" Type="VI" URL="../test resources list.vi"/>
 		<Item Name="test string id.vi" Type="VI" URL="../test string id.vi"/>
+		<Item Name="test tool call default arguments.vi" Type="VI" URL="../test tool call default arguments.vi"/>
 		<Item Name="test tool call without arguments.vi" Type="VI" URL="../test tool call without arguments.vi"/>
 		<Item Name="test tool error result.vi" Type="VI" URL="../test tool error result.vi"/>
+		<Item Name="test tool required arguments.vi" Type="VI" URL="../test tool required arguments.vi"/>
 		<Item Name="test tools call array.vi" Type="VI" URL="../test tools call array.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="test tools list array items.vi" Type="VI" URL="../test tools list array items.vi"/>
