@@ -28,11 +28,15 @@ env:
   LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3365' }}
   # LabVIEW used for the VI comparison. The comparison operation belongs to
   # the installed LabVIEW CLI and needs a LabVIEW at least as new as that CLI;
-  # with LabVIEW 2020 it fails to load, so there is no fallback to the test
-  # LabVIEW. Without these two repository variables the diff is skipped and
-  # the report says so.
-  LABVIEW_COMPARE_PATH: ${{ vars.LABVIEW_COMPARE_PATH }}
-  LABVIEW_COMPARE_PORT: ${{ vars.LABVIEW_COMPARE_PORT }}
+  # with LabVIEW 2020 it fails to load. It must also not be a LabVIEW anyone
+  # develops in: a LabVIEW that has MCP Server.lvlib loaded from another
+  # checkout refuses the pull request's copy (error 1051, "already exists in
+  # memory"). The default is the 32-bit LabVIEW 2026 on the runner, which is
+  # used for nothing else; the repository variables override it.
+  # A pull request needs the diff: when it cannot be produced for every
+  # changed VI, the run fails (after posting the report).
+  LABVIEW_COMPARE_PATH: ${{ vars.LABVIEW_COMPARE_PATH || 'C:\Program Files (x86)\National Instruments\LabVIEW 2026\LabVIEW.exe' }}
+  LABVIEW_COMPARE_PORT: ${{ vars.LABVIEW_COMPARE_PORT || '3363' }}
 
 jobs:
   # ==========================================
@@ -108,22 +112,20 @@ jobs:
             -ProtocolStatus "${{ steps.protocol.outputs.status }}"
           Get-Content "$env:RUNNER_TEMP\test-report.md" | Add-Content $env:GITHUB_STEP_SUMMARY
 
+      # Exits 1 when a changed VI could not be compared (LabVIEW not
+      # reachable, comparison error). The report is still written and posted;
+      # the last step then fails the run.
       - name: Build VI Diff Report
+        id: diff
         if: always()
+        continue-on-error: true
         run: |
-          $outDir = "$env:RUNNER_TEMP\vi-diff"
-          if (-not $env:LABVIEW_COMPARE_PATH -or -not $env:LABVIEW_COMPARE_PORT) {
-            New-Item -ItemType Directory -Force $outDir | Out-Null
-            $note = "## VI diff report`n`nSkipped: no LabVIEW for the comparison is configured. Set the repository variables LABVIEW_COMPARE_PATH and LABVIEW_COMPARE_PORT (a LabVIEW at least as new as the LabVIEW CLI, see tools/setup/README.md).`n"
-            [System.IO.File]::WriteAllText("$outDir\report.md", $note, (New-Object System.Text.UTF8Encoding $false))
-            Write-Host "::warning::VI diff skipped: LABVIEW_COMPARE_PATH / LABVIEW_COMPARE_PORT are not set."
-            exit 0
-          }
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\New-ViDiffReport.ps1" `
             -BaseRef "origin/${{ github.event.pull_request.base.ref }}" `
             -HeadDir "$env:GITHUB_WORKSPACE" `
-            -OutDir $outDir `
+            -OutDir "$env:RUNNER_TEMP\vi-diff" `
             -LabVIEWPath "$env:LABVIEW_COMPARE_PATH" -PortNumber $env:LABVIEW_COMPARE_PORT
+          exit $LASTEXITCODE
 
       - name: Upload Reports
         if: always()
@@ -149,14 +151,16 @@ jobs:
             -DiffDir "$env:RUNNER_TEMP\vi-diff" `
             -Footer "Report for commit ${{ github.event.pull_request.head.sha }}. The installable test package is under Artifacts of [this run]($runUrl) once the build job has finished."
 
-      - name: Fail if the Tests Failed
-        if: steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure'
+      - name: Fail if the Tests or the VI Diff Failed
+        if: steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure' || steps.diff.outcome == 'failure'
         run: |
           if ("${{ steps.tests.outputs.status }}" -eq '2') {
-            Write-Error "LabVIEW was not reachable on port $env:LABVIEW_PORT; no tests ran."
-          } else {
-            Write-Error "Caraya suite: ${{ steps.tests.outcome }}, protocol tests: ${{ steps.protocol.outcome }}."
+            Write-Host "::error::LabVIEW was not reachable on port $env:LABVIEW_PORT; no tests ran."
           }
+          if ("${{ steps.diff.outcome }}" -eq 'failure') {
+            Write-Host "::error::The VI diff could not be produced for every changed VI (LabVIEW $env:LABVIEW_COMPARE_PATH, port $env:LABVIEW_COMPARE_PORT). A pull request needs it; see the report."
+          }
+          Write-Host "::error::Caraya suite: ${{ steps.tests.outcome }}, protocol tests: ${{ steps.protocol.outcome }}, VI diff: ${{ steps.diff.outcome }}."
           exit 1
 
   # ==========================================

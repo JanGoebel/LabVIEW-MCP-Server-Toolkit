@@ -72,16 +72,21 @@ The pull request workflow compares VIs with the LabVIEW CLI operation
 `CreateComparisonReport`. That operation belongs to the installed LabVIEW CLI
 and cannot be loaded by a LabVIEW older than the CLI: with LabVIEW 2020 and
 the CLI that came with LabVIEW 2026 every comparison fails. Tests and the
-package build stay on LabVIEW 2020. For the comparison, point the repository
-variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT` at a newer LabVIEW
-on the runner (for example LabVIEW 2026 and its VI Server port). Comparing
-saves nothing, so the newer version does not touch the sources. Without the
-two variables the diff is skipped and the report says so; there is no
-fallback to LabVIEW 2020.
+package build stay on LabVIEW 2020. Comparing saves nothing, so the newer
+version does not touch the sources.
 
-The comparison loads the VIs of the pull request into that LabVIEW. If it is
-the instance you develop in, a running comparison can lock `MCP Server.lvlib`
-while you edit; a separate instance on its own port avoids that.
+The comparison LabVIEW must not be one you develop in. LabVIEW holds one
+library of a name at a time: when `MCP Server.lvlib` is loaded there from your
+working copy, every VI of the library from the pull request's checkout fails
+with error 1051 ("A LabVIEW file of that name already exists in memory"),
+reported by the CLI as "Memory is full". The workflow therefore uses the
+32-bit LabVIEW 2026 (`C:\Program Files (x86)\National Instruments\LabVIEW
+2026\LabVIEW.exe`, VI Server port 3363), which nothing else uses. It does not
+need the toolkit's dependencies to draw the diagrams. The repository
+variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT` override it.
+
+The diff is required: when a changed VI cannot be compared, the pull request
+run fails after posting the report.
 
 ## Checking the setup
 

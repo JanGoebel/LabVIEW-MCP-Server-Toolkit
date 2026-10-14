@@ -112,11 +112,18 @@ change does, like a commit subject. Description, in this order:
 2. **Changes** - per VI or file: new or modified, and what it does. GitHub
    cannot diff VIs, so this text carries the reasoning; the generated diff
    comment (see below) carries the exact changes.
-3. **Verified** - what was run, where, with which result.
-4. **Not verified** - what was not run or could not be checked.
-5. **Known rough edges** - auto-arranged diagrams, overlapping nodes, anything
+3. **Code summary** - required when VIs change: for every modified VI, the
+   screenshot of each changed spot of its block diagram (the "now" image of
+   the diff report, linked from the `pr-assets/pr-<number>` branch) and one
+   or two sentences on what happens there and why. Added VIs get their whole
+   block diagram and a short walk through it. The images exist only after the
+   diff has run, so add this section once the report is posted, and refresh
+   it when later pushes change the diagrams.
+4. **Verified** - what was run, where, with which result.
+5. **Not verified** - what was not run or could not be checked.
+6. **Known rough edges** - auto-arranged diagrams, overlapping nodes, anything
    the reviewer should tidy or should know.
-6. Maintainer steps, if any (workflow edits, settings, variables).
+7. Maintainer steps, if any (workflow edits, settings, variables).
 
 End the description with the "Generated with Claude Code" line.
 
@@ -136,6 +143,14 @@ run, produce the same comment locally with `tools/ci/New-ViDiffReport.ps1`,
 `tools/ci/Convert-CarayaReport.ps1` and `tools/ci/Publish-PrReport.ps1`, and
 say in its footer that it was produced locally. After every push to the
 branch, refresh the report so it shows the latest block diagrams.
+
+The diff is required. A pull request whose report shows a VI as "comparison
+failed" or "not compared" is not ready for review, and the workflow fails on
+it. Find the cause and fix it before asking for review; do not explain the
+gap away. Compare in a LabVIEW nobody develops in (the 32-bit LabVIEW 2026 on
+port 3363): a LabVIEW that has `MCP Server.lvlib` loaded from another
+checkout cannot compare the library's VIs (error 1051, reported as "Memory is
+full").
 
 Whenever new commits are pushed to an open pull request, also post a new,
 short comment in its conversation: which commits, what changed in a few
