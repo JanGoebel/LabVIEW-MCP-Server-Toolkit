@@ -116,6 +116,7 @@
 			<Item Name="Choose Protocol Version.vi" Type="VI" URL="../Choose Protocol Version.vi"/>
 			<Item Name="Set LabVIEW Version.vi" Type="VI" URL="../Set LabVIEW Version.vi"/>
 			<Item Name="Check Tool Arguments.vi" Type="VI" URL="../Check Tool Arguments.vi"/>
+			<Item Name="Check MCP Names.vi" Type="VI" URL="../Check MCP Names.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
