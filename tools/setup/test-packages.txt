@@ -1,0 +1,10 @@
+# VIPM packages needed to develop and test the toolkit, in addition to the
+# runtime dependencies in src/LabVIEW MCP Server SDK.vipc.
+#
+# One package per line as <package name>@<version>, as accepted by
+# `vipm install`. Lines starting with # are ignored.
+# Installed by tools/setup/Install-Dependencies.ps1.
+
+# Unit test framework used by tests/ (pulls in its own dependencies:
+# JKI State Machine, OpenG array/error/file/lvdata/string, Epoch Date & Time).
+jki_lib_caraya@1.4.4.148

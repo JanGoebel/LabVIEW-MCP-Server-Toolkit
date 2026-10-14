@@ -29,9 +29,15 @@ $extensions = @('.vi', '.vim', '.ctl')
 $utf8 = New-Object System.Text.UTF8Encoding $false
 
 function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
+    # LabVIEW CLI writes its error text to stderr; keep it for the report.
+    # Windows PowerShell turns redirected stderr lines into errors, so they
+    # must not stop the script here.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $output = & LabVIEWCLI -OperationName CreateComparisonReport -VI1 $Vi1 -VI2 $Vi2 `
         -ReportType html -ReportPath $ReportPath -o -c -nobdcosm -nofppos `
-        -LabVIEWPath $LabVIEWPath -PortNumber $PortNumber | Out-String
+        -LabVIEWPath $LabVIEWPath -PortNumber $PortNumber 2>&1 | ForEach-Object { "$_" } | Out-String
+    $ErrorActionPreference = $previous
     return @{ Ok = (Test-Path $ReportPath); Output = $output.Trim() }
 }
 
@@ -71,9 +77,13 @@ $md = New-Object System.Text.StringBuilder
 [void]$md.AppendLine('## VI diff report')
 [void]$md.AppendLine()
 
+# One entry per compared VI, for the short summary (summary.md).
+$summary = @()
+
 if ($changes.Count -eq 0) {
     [void]$md.AppendLine('No VI, VIM or CTL files changed in this pull request.')
     [System.IO.File]::WriteAllText((Join-Path $OutDir 'report.md'), $md.ToString(), $utf8)
+    [System.IO.File]::WriteAllText((Join-Path $OutDir 'summary.md'), "No VI, VIM or CTL files changed.`n", $utf8)
     Write-Host 'No LabVIEW files changed.'
     return
 }
@@ -116,6 +126,7 @@ try {
             [void]$md.AppendLine($result.Output)
             [void]$md.AppendLine('```')
             [void]$md.AppendLine()
+            $summary += [pscustomobject]@{ Path = $change.NewPath; Status = $change.Status; Count = -1; Image = $null }
             continue
         }
 
@@ -129,8 +140,10 @@ try {
         if ($change.Status -eq 'A') {
             if ($bd1) { [void]$md.AppendLine("Block diagram (case structures show their visible frame only):`n`n![block diagram]($bd1)`n") }
             if ($fp1) { [void]$md.AppendLine("<details><summary>Front panel</summary>`n`n![front panel]($fp1)`n`n</details>`n") }
+            $summary += [pscustomobject]@{ Path = $change.NewPath; Status = 'A'; Count = 0; Image = $bd1 }
             continue
         }
+        $firstChange = $null
 
         # One <details open> block per reported difference.
         $sections = [regex]::Matches($html, '(?s)<details open>(.*?)</details>')
@@ -158,9 +171,14 @@ try {
             for ($i = 0; $i -lt [Math]::Max($before.Count, $after.Count); $i++) {
                 $b = if ($i -lt $before.Count) { Copy-ReportImage $report $before[$i] $slug } else { $null }
                 $a = if ($i -lt $after.Count) { Copy-ReportImage $report $after[$i] $slug } else { $null }
+                if (-not $firstChange -and $a) { $firstChange = $a }
                 [void]$md.AppendLine((Format-ImageRow $b $a))
             }
         }
+        # The summary shows the first changed spot as it is now, or the whole
+        # diagram when LabVIEW reported no spot.
+        $thumb = if ($firstChange) { $firstChange } else { $bd2 }
+        $summary += [pscustomobject]@{ Path = $change.NewPath; Status = $change.Status; Count = $sections.Count; Image = $thumb }
 
         [void]$md.AppendLine('<details><summary>Whole block diagram and front panel</summary>')
         [void]$md.AppendLine()
@@ -183,4 +201,58 @@ finally {
 }
 
 [System.IO.File]::WriteAllText((Join-Path $OutDir 'report.md'), $md.ToString(), $utf8)
-Write-Host "Report written to $(Join-Path $OutDir 'report.md')"
+
+# Short summary for the pull request comment: one row per modified VI with a
+# small picture of its first changed spot, added VIs folded away. Image links
+# are relative (images/...), like in report.md.
+function Format-Thumb([string]$Image, [int]$Width) {
+    if ($Image) { return "<img src=""$Image"" width=""$Width"">" }
+    return ''
+}
+$sm = New-Object System.Text.StringBuilder
+[void]$sm.AppendLine("**VIs:** $($modified.Count) modified, $($added.Count) added, $($deleted.Count) deleted")
+[void]$sm.AppendLine()
+$changedRows = @($summary | Where-Object { $_.Status -ne 'A' })
+$visibleRows = 6   # more modified VIs than this are folded away
+function Add-ChangedTable($Rows) {
+    [void]$sm.AppendLine('| VI | Changes | Changed spot, now |')
+    [void]$sm.AppendLine('|---|---|---|')
+    foreach ($row in $Rows) {
+        $name = [System.IO.Path]::GetFileName($row.Path)
+        $folder = [System.IO.Path]::GetDirectoryName($row.Path) -replace '\\', '/'
+        $count = if ($row.Count -lt 0) { 'comparison failed' } elseif ($row.Count -eq 0) { 'cosmetic only' } else { "$($row.Count)" }
+        [void]$sm.AppendLine("| ``$name``<br><sub>$folder</sub> | $count | $(Format-Thumb $row.Image 220) |")
+    }
+    [void]$sm.AppendLine()
+}
+if ($changedRows.Count -gt 0) {
+    Add-ChangedTable @($changedRows | Select-Object -First $visibleRows)
+    if ($changedRows.Count -gt $visibleRows) {
+        [void]$sm.AppendLine("<details><summary>$($changedRows.Count - $visibleRows) more modified VIs</summary>")
+        [void]$sm.AppendLine()
+        Add-ChangedTable @($changedRows | Select-Object -Skip $visibleRows)
+        [void]$sm.AppendLine('</details>')
+        [void]$sm.AppendLine()
+    }
+}
+$addedRows = @($summary | Where-Object { $_.Status -eq 'A' })
+if ($addedRows.Count -gt 0) {
+    [void]$sm.AppendLine("<details><summary>Added VIs ($($addedRows.Count))</summary>")
+    [void]$sm.AppendLine()
+    [void]$sm.AppendLine('| VI | Block diagram |')
+    [void]$sm.AppendLine('|---|---|')
+    foreach ($row in $addedRows) {
+        $name = [System.IO.Path]::GetFileName($row.Path)
+        $folder = [System.IO.Path]::GetDirectoryName($row.Path) -replace '\\', '/'
+        [void]$sm.AppendLine("| ``$name``<br><sub>$folder</sub> | $(Format-Thumb $row.Image 200) |")
+    }
+    [void]$sm.AppendLine()
+    [void]$sm.AppendLine('</details>')
+    [void]$sm.AppendLine()
+}
+if ($deleted.Count -gt 0) {
+    [void]$sm.AppendLine("Deleted: $(($deleted | ForEach-Object { '`' + $_.OldPath + '`' }) -join ', ')")
+    [void]$sm.AppendLine()
+}
+[System.IO.File]::WriteAllText((Join-Path $OutDir 'summary.md'), $sm.ToString(), $utf8)
+Write-Host "Report written to $(Join-Path $OutDir 'report.md') and summary.md"
