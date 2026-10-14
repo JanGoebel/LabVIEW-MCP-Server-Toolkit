@@ -111,6 +111,11 @@
 			<Item Name="Build Prompt List JSON.vi" Type="VI" URL="../Build Prompt List JSON.vi"/>
 			<Item Name="Handle Server Request Batch.vi" Type="VI" URL="../Handle Server Request Batch.vi"/>
 			<Item Name="Reinitialize VI Inputs.vi" Type="VI" URL="../Reinitialize VI Inputs.vi"/>
+			<Item Name="Supported Protocol Versions.vi" Type="VI" URL="../Supported Protocol Versions.vi"/>
+			<Item Name="Is Supported Protocol Version.vi" Type="VI" URL="../Is Supported Protocol Version.vi"/>
+			<Item Name="Choose Protocol Version.vi" Type="VI" URL="../Choose Protocol Version.vi"/>
+			<Item Name="Set LabVIEW Version.vi" Type="VI" URL="../Set LabVIEW Version.vi"/>
+			<Item Name="Check Tool Arguments.vi" Type="VI" URL="../Check Tool Arguments.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
