@@ -17,7 +17,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $utf8 = New-Object System.Text.UTF8Encoding $false
 $md = New-Object System.Text.StringBuilder
-[void]$md.AppendLine('## Test report')
+[void]$md.AppendLine('### Tests')
 [void]$md.AppendLine()
 
 if (-not (Test-Path $ReportPath)) {
@@ -76,12 +76,18 @@ if ($failed.Count -eq 0) {
     [void]$md.AppendLine(":x: $($failed.Count) of $($tests.Count) tests did not pass. Tests run in a chain, so a failure can mark the tests after it as failed too.")
 }
 [void]$md.AppendLine()
+# The per-test table is folded away; it opens by itself when a test failed.
+$open = if ($failed.Count -gt 0) { ' open' } else { '' }
+[void]$md.AppendLine("<details$open><summary>Per-test results</summary>")
+[void]$md.AppendLine()
 [void]$md.AppendLine('| Test | VI | Result | Checks |')
 [void]$md.AppendLine('|---|---|---|---|')
 foreach ($test in $tests) {
     $checks = ($test.Asserts | ForEach-Object { "$($_.Label): $($_.Result.ToLower())" }) -join '<br>'
     [void]$md.AppendLine("| $($test.Label) | ``$($test.Vi)`` | $(Format-Result $test.Result) | $checks |")
 }
+[void]$md.AppendLine()
+[void]$md.AppendLine('</details>')
 [void]$md.AppendLine()
 
 [System.IO.File]::WriteAllText($OutFile, $md.ToString(), $utf8)
