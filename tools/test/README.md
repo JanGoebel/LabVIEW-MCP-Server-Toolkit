@@ -26,6 +26,19 @@ tools, so it is safe to run against any server.
 "required" checks are demanded by the specification, "advisory" ones are
 recommendations. The exit code is the number of failed required checks.
 
+### In CI
+
+`tests\Run_Protocol_Tests_CLI.vi` starts the test server of the Caraya suite
+(port 36987, one fixture tool, prompt and two resources), runs this script
+against it, writes its output to `tests\results\protocol-report.txt` and stops
+the server again. Exit Code is 0 when every required check passed. Both
+workflows run it after the Caraya suite:
+
+```powershell
+LabVIEWCLI -OperationName RunVI -VIPath "$PWD\tests\Run_Protocol_Tests_CLI.vi" `
+    -LabVIEWPath "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe" -PortNumber <port>
+```
+
 ## Official conformance suite
 
 The MCP project publishes its own suite. Needs Node.js.

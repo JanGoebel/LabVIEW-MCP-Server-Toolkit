@@ -76,5 +76,6 @@
 		<Item Name="test unknown resource.vi" Type="VI" URL="../test unknown resource.vi"/>
 		<Item Name="test unknown tool.vi" Type="VI" URL="../test unknown tool.vi"/>
 	</Item>
+	<Item Name="Run_Protocol_Tests_CLI.vi" Type="VI" URL="../Run_Protocol_Tests_CLI.vi"/>
 	<Item Name="Test_MCP_Server.vi" Type="VI" URL="../Test_MCP_Server.vi"/>
 </Library>
