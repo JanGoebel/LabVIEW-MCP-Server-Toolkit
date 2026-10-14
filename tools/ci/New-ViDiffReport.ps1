@@ -15,13 +15,16 @@ VI finds its own library and subVIs and only real differences are reported.
 Position and size changes are left out of the comparison.
 
 A failed comparison is noted in the report; it does not fail the script.
+When LabVIEW cannot be reached at all (LabVIEW CLI error -350000), the
+remaining comparisons are skipped instead of each waiting for the same
+connection timeout, and the report says so. The exit code stays 0 either way.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$BaseRef,
     [Parameter(Mandatory = $true)][string]$OutDir,
     [string]$HeadDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,
     [string]$LabVIEWPath = 'C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe',
-    [int]$PortNumber = 3363
+    [int]$PortNumber = 3365
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,7 +41,14 @@ function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
         -ReportType html -ReportPath $ReportPath -o -c -nobdcosm -nofppos `
         -LabVIEWPath $LabVIEWPath -PortNumber $PortNumber 2>&1 | ForEach-Object { "$_" } | Out-String
     $ErrorActionPreference = $previous
-    return @{ Ok = (Test-Path $ReportPath); Output = $output.Trim() }
+    $output = $output.Trim()
+    return @{
+        Ok          = (Test-Path $ReportPath)
+        Output      = $output
+        # -350000: the CLI could not connect to LabVIEW. Every further
+        # comparison would wait for the same timeout.
+        Unreachable = ($output -match '-350000')
+    }
 }
 
 function Copy-ReportImage([string]$ReportPath, [string]$Source, [string]$Slug) {
@@ -79,6 +89,8 @@ $md = New-Object System.Text.StringBuilder
 
 # One entry per compared VI, for the short summary (summary.md).
 $summary = @()
+# Set when LabVIEW could not be reached; the remaining VIs are not compared.
+$unreachable = $false
 
 if ($changes.Count -eq 0) {
     [void]$md.AppendLine('No VI, VIM or CTL files changed in this pull request.')
@@ -101,6 +113,10 @@ try {
     $index = 0
     foreach ($change in ($modified + $added)) {
         $index++
+        if ($unreachable) {
+            $summary += [pscustomobject]@{ Path = $change.NewPath; Status = $change.Status; Count = -2; Image = $null }
+            continue
+        }
         $name = [System.IO.Path]::GetFileNameWithoutExtension($change.NewPath)
         $slug = ('{0:d2}-{1}' -f $index, ($name -replace '[^A-Za-z0-9]+', '-')).Trim('-')
         $report = Join-Path $htmlDir "$slug.html"
@@ -127,6 +143,12 @@ try {
             [void]$md.AppendLine('```')
             [void]$md.AppendLine()
             $summary += [pscustomobject]@{ Path = $change.NewPath; Status = $change.Status; Count = -1; Image = $null }
+            if ($result.Unreachable) {
+                $unreachable = $true
+                Write-Warning "LabVIEW at port $PortNumber ($LabVIEWPath) is not reachable; the remaining VIs are not compared."
+                [void]$md.AppendLine("**LabVIEW could not be reached on port $PortNumber, so the remaining VIs were not compared.** Check the VI Server port of ``$LabVIEWPath`` (repository variables ``LABVIEW_COMPARE_PATH`` / ``LABVIEW_COMPARE_PORT``).")
+                [void]$md.AppendLine()
+            }
             continue
         }
 
@@ -212,6 +234,10 @@ function Format-Thumb([string]$Image, [int]$Width) {
 $sm = New-Object System.Text.StringBuilder
 [void]$sm.AppendLine("**VIs:** $($modified.Count) modified, $($added.Count) added, $($deleted.Count) deleted")
 [void]$sm.AppendLine()
+if ($unreachable) {
+    [void]$sm.AppendLine("**No VI comparison:** LabVIEW could not be reached on port $PortNumber. Check the repository variables ``LABVIEW_COMPARE_PATH`` and ``LABVIEW_COMPARE_PORT``.")
+    [void]$sm.AppendLine()
+}
 $changedRows = @($summary | Where-Object { $_.Status -ne 'A' })
 $visibleRows = 6   # more modified VIs than this are folded away
 function Add-ChangedTable($Rows) {
@@ -220,7 +246,7 @@ function Add-ChangedTable($Rows) {
     foreach ($row in $Rows) {
         $name = [System.IO.Path]::GetFileName($row.Path)
         $folder = [System.IO.Path]::GetDirectoryName($row.Path) -replace '\\', '/'
-        $count = if ($row.Count -lt 0) { 'comparison failed' } elseif ($row.Count -eq 0) { 'cosmetic only' } else { "$($row.Count)" }
+        $count = if ($row.Count -eq -2) { 'not compared' } elseif ($row.Count -lt 0) { 'comparison failed' } elseif ($row.Count -eq 0) { 'cosmetic only' } else { "$($row.Count)" }
         [void]$sm.AppendLine("| ``$name``<br><sub>$folder</sub> | $count | $(Format-Thumb $row.Image 220) |")
     }
     [void]$sm.AppendLine()

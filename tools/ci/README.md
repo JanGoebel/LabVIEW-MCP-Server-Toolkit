@@ -7,10 +7,11 @@ generated and posted as a comment on the pull request.
 | File | Purpose |
 |---|---|
 | `New-ViDiffReport.ps1` | Compares every changed `.vi`/`.vim`/`.ctl` with its version on the base branch, using LabVIEW's own comparison (`LabVIEWCLI -OperationName CreateComparisonReport`), and writes a Markdown report with before/after images. Added VIs are shown with their block diagram and front panel. |
-| `Convert-CarayaReport.ps1` | Turns `tests\results\caraya-report.txt`, written by `tests\Run_Tests_CLI.vi`, into a table with one row per test. |
+| `Invoke-CliTest.ps1` | Runs a test entry VI (`tests\Run_Tests_CLI.vi`, `tests\Run_Protocol_Tests_CLI.vi`) through `LabVIEWCLI -OperationName RunVI`. Exit code 0 passed, 1 tests failed, 2 LabVIEW not reachable (CLI error -350000), 3 entry VI missing on the branch. Used by both workflows. |
+| `Convert-CarayaReport.ps1` | Turns `tests\results\caraya-report.txt`, written by `tests\Run_Tests_CLI.vi`, into a table with one row per test, and adds the protocol tester's result from `tests\results\protocol-report.txt`. Says "did not run" instead of showing failures when LabVIEW was not reachable. |
 | `Publish-PrReport.ps1` | Pushes the diff images to the branch `pr-assets/pr-<number>` and posts or updates one comment on the pull request containing both reports. |
 | `pull-request.workflow.yml` | The GitHub Actions workflow that runs the above and builds a test package. |
-| `release.workflow.yml` | Proposed version of `.github/workflows/release.yml`: the annotated tag message becomes the text of the GitHub release, above the generated notes. |
+| `release.workflow.yml` | Proposed version of `.github/workflows/release.yml`: runs the Caraya suite and the protocol tests before a build, uses the annotated tag message as release text, writes the `.vipb` as UTF-8 and builds for LabVIEW 2020 64-bit like the pull request builds. |
 
 ## Activating the workflow
 
@@ -25,8 +26,8 @@ request cannot change how its own report is produced.
 ### Release workflow
 
 `release.workflow.yml` is a full copy of `.github/workflows/release.yml` with
-the proposed change applied. Copy it over the live file on `main`. Once it is
-active, this copy can be deleted.
+the proposed changes applied. Copy it over the live file on `main`. Keep both
+copies in step afterwards: the templates are where changes are proposed.
 
 ## Running locally
 
@@ -36,7 +37,9 @@ active, this copy can be deleted.
 ```
 
 LabVIEW must have VI Server TCP access enabled on the given port. A comparison
-takes roughly 15 seconds per VI.
+takes roughly 15 seconds per VI. When LabVIEW cannot be reached (error
+-350000), the script stops after the first VI instead of waiting for the same
+timeout on every VI, and the report says so.
 
 ## Housekeeping
 
