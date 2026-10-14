@@ -1,8 +1,9 @@
 name: Pull Request Review
 
-# For every pull request against main: runs the Caraya suite, creates a
-# graphical diff of the changed VIs, posts both as one comment on the pull
-# request, and builds an installable test package.
+# For every pull request against main: runs the Caraya suite and the
+# protocol tester against a running test server, creates a graphical diff of
+# the changed VIs, posts all of it as one comment on the pull request, and
+# builds an installable test package.
 # Publishing stays in release.yml.
 #
 # Lives in tools/ci as pull-request.workflow.yml; copy it to
@@ -19,15 +20,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # LabVIEW used for the comparison and the tests on the self-hosted runner.
-  # The VI Server port differs per machine (see tools/setup/README.md); set the
-  # repository variable LABVIEW_PORT to override the default.
+  # LabVIEW used for the tests on the self-hosted runner. The VI Server port
+  # differs per machine (see tools/setup/README.md): it is server.tcp.port in
+  # that LabVIEW's LabVIEW.ini. The repository variable LABVIEW_PORT overrides
+  # the default; release.yml reads the same variable.
   LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
-  LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3363' }}
+  LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3365' }}
   # LabVIEW used for the VI comparison. The comparison operation belongs to
   # the installed LabVIEW CLI and needs a LabVIEW at least as new as that CLI;
-  # with LabVIEW 2020 it fails to load. Set these two repository variables to
-  # a newer LabVIEW on the runner. Empty means: use the test LabVIEW.
+  # with LabVIEW 2020 it fails to load, so there is no fallback to the test
+  # LabVIEW. Without these two repository variables the diff is skipped and
+  # the report says so.
   LABVIEW_COMPARE_PATH: ${{ vars.LABVIEW_COMPARE_PATH }}
   LABVIEW_COMPARE_PORT: ${{ vars.LABVIEW_COMPARE_PORT }}
 
@@ -59,40 +62,68 @@ jobs:
           path: _ci
           sparse-checkout: tools/ci
 
+      # Invoke-CliTest.ps1 exits 0 (passed), 1 (tests failed), 2 (LabVIEW not
+      # reachable, nothing ran) or 3 (entry VI missing on this branch). The
+      # status goes into the report, so an unreachable LabVIEW is not reported
+      # as failed tests.
       - name: Run Caraya Test Suite
         id: tests
         continue-on-error: true
         run: |
           $report = "$env:GITHUB_WORKSPACE\tests\results\caraya-report.txt"
           if (Test-Path $report) { Remove-Item $report }
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Invoke-CliTest.ps1" `
+            -VIPath "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi" `
+            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
+          $status = $LASTEXITCODE
+          "status=$status" >> $env:GITHUB_OUTPUT
+          if ($status -ne 0) { exit 1 }
 
-          $testVI = "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi"
-          LabVIEWCLI -OperationName RunVI -VIPath "$testVI" -PortNumber $env:LABVIEW_PORT -LabVIEWPath "$env:LABVIEW_PATH"
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Tests FAILED!"
-            exit 1
-          }
-          Write-Host "All tests PASSED!"
+      # Starts the toolkit's test server and runs tools\test\Test-McpServer.ps1
+      # against it over HTTP. Skipped when LabVIEW was not reachable above.
+      - name: Run Protocol Tests
+        id: protocol
+        if: always() && steps.tests.outputs.status != '2'
+        continue-on-error: true
+        run: |
+          $report = "$env:GITHUB_WORKSPACE\tests\results\protocol-report.txt"
+          if (Test-Path $report) { Remove-Item $report }
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Invoke-CliTest.ps1" `
+            -VIPath "$env:GITHUB_WORKSPACE\tests\Run_Protocol_Tests_CLI.vi" `
+            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
+          $status = $LASTEXITCODE
+          "status=$status" >> $env:GITHUB_OUTPUT
+          # A branch without the entry VI is not a failure.
+          if ($status -ne 0 -and $status -ne 3) { exit 1 }
+          exit 0
 
       - name: Build Test Report
         if: always()
         run: |
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Convert-CarayaReport.ps1" `
             -ReportPath "$env:GITHUB_WORKSPACE\tests\results\caraya-report.txt" `
-            -OutFile "$env:RUNNER_TEMP\test-report.md"
+            -OutFile "$env:RUNNER_TEMP\test-report.md" `
+            -TestStatus "${{ steps.tests.outputs.status }}" `
+            -ProtocolReportPath "$env:GITHUB_WORKSPACE\tests\results\protocol-report.txt" `
+            -ProtocolStatus "${{ steps.protocol.outputs.status }}"
           Get-Content "$env:RUNNER_TEMP\test-report.md" | Add-Content $env:GITHUB_STEP_SUMMARY
 
       - name: Build VI Diff Report
         if: always()
         run: |
-          $compareLabVIEW = if ($env:LABVIEW_COMPARE_PATH) { $env:LABVIEW_COMPARE_PATH } else { $env:LABVIEW_PATH }
-          $comparePort = if ($env:LABVIEW_COMPARE_PORT) { $env:LABVIEW_COMPARE_PORT } else { $env:LABVIEW_PORT }
+          $outDir = "$env:RUNNER_TEMP\vi-diff"
+          if (-not $env:LABVIEW_COMPARE_PATH -or -not $env:LABVIEW_COMPARE_PORT) {
+            New-Item -ItemType Directory -Force $outDir | Out-Null
+            $note = "## VI diff report`n`nSkipped: no LabVIEW for the comparison is configured. Set the repository variables LABVIEW_COMPARE_PATH and LABVIEW_COMPARE_PORT (a LabVIEW at least as new as the LabVIEW CLI, see tools/setup/README.md).`n"
+            [System.IO.File]::WriteAllText("$outDir\report.md", $note, (New-Object System.Text.UTF8Encoding $false))
+            Write-Host "::warning::VI diff skipped: LABVIEW_COMPARE_PATH / LABVIEW_COMPARE_PORT are not set."
+            exit 0
+          }
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\New-ViDiffReport.ps1" `
             -BaseRef "origin/${{ github.event.pull_request.base.ref }}" `
             -HeadDir "$env:GITHUB_WORKSPACE" `
-            -OutDir "$env:RUNNER_TEMP\vi-diff" `
-            -LabVIEWPath "$compareLabVIEW" -PortNumber $comparePort
+            -OutDir $outDir `
+            -LabVIEWPath "$env:LABVIEW_COMPARE_PATH" -PortNumber $env:LABVIEW_COMPARE_PORT
 
       - name: Upload Reports
         if: always()
@@ -119,8 +150,14 @@ jobs:
             -Footer "Report for commit ${{ github.event.pull_request.head.sha }}. The installable test package is under Artifacts of [this run]($runUrl) once the build job has finished."
 
       - name: Fail if the Tests Failed
-        if: steps.tests.outcome == 'failure'
-        run: exit 1
+        if: steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure'
+        run: |
+          if ("${{ steps.tests.outputs.status }}" -eq '2') {
+            Write-Error "LabVIEW was not reachable on port $env:LABVIEW_PORT; no tests ran."
+          } else {
+            Write-Error "Caraya suite: ${{ steps.tests.outcome }}, protocol tests: ${{ steps.protocol.outcome }}."
+          }
+          exit 1
 
   # ==========================================
   # JOB 2: TEST BUILD (only if the tests pass)

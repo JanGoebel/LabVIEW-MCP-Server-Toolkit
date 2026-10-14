@@ -60,8 +60,11 @@ LabVIEW CLI must be given the same port:
 Select-String 'server.tcp.port' "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.ini"
 ```
 
-The workflows read it from the repository variable `LABVIEW_PORT`
-(Settings > Secrets and variables > Actions > Variables) and fall back to 3363.
+Both workflows read it from the repository variable `LABVIEW_PORT`
+(Settings > Secrets and variables > Actions > Variables) and fall back to
+3365, the port of LabVIEW 2020 on the current runner. With a wrong port every
+LabVIEW CLI call ends in error -350000 after a timeout; the workflows then
+report "LabVIEW not reachable" instead of failed tests.
 
 ## LabVIEW for the VI comparison
 
@@ -72,7 +75,13 @@ the CLI that came with LabVIEW 2026 every comparison fails. Tests and the
 package build stay on LabVIEW 2020. For the comparison, point the repository
 variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT` at a newer LabVIEW
 on the runner (for example LabVIEW 2026 and its VI Server port). Comparing
-saves nothing, so the newer version does not touch the sources.
+saves nothing, so the newer version does not touch the sources. Without the
+two variables the diff is skipped and the report says so; there is no
+fallback to LabVIEW 2020.
+
+The comparison loads the VIs of the pull request into that LabVIEW. If it is
+the instance you develop in, a running comparison can lock `MCP Server.lvlib`
+while you edit; a separate instance on its own port avoids that.
 
 ## Checking the setup
 
