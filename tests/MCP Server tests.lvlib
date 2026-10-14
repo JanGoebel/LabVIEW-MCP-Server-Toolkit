@@ -7,6 +7,7 @@
 		<Item Name="prompts" Type="Folder">
 			<Item Name="fake prompt broken vi.vi" Type="VI" URL="../fake prompt broken vi.vi"/>
 			<Item Name="fake prompt concatanate strings.vi" Type="VI" URL="../fake prompt concatanate strings.vi"/>
+			<Item Name="fake prompt name clash.vi" Type="VI" URL="../fake prompt name clash.vi"/>
 			<Item Name="fake prompt required argument.vi" Type="VI" URL="../fake prompt required argument.vi"/>
 		</Item>
 		<Item Name="ressources" Type="Folder">
@@ -19,21 +20,26 @@
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
 			<Item Name="fake tool ignored.vi" Type="VI" URL="../fake tool ignored.vi"/>
+			<Item Name="fake tool name clash.vi" Type="VI" URL="../fake tool name clash.vi"/>
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
 			<Item Name="fake tool no inputs outputs.vi" Type="VI" URL="../fake tool no inputs outputs.vi"/>
 			<Item Name="fake tool return error.vi" Type="VI" URL="../fake tool return error.vi"/>
 			<Item Name="fake tool required input.vi" Type="VI" URL="../fake tool required input.vi"/>
+			<Item Name="fake tool special labels.vi" Type="VI" URL="../fake tool special labels.vi"/>
 			<Item Name="fake_tool_say_hello.vi" Type="VI" URL="../fake_tool_say_hello.vi"/>
 		</Item>
 	</Item>
 	<Item Name="SubVIs" Type="Folder">
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
+		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
 		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
 		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
 		<Item Name="Send HTTP request.vi" Type="VI" URL="../Send HTTP request.vi"/>
 	</Item>
 	<Item Name="tests" Type="Folder">
+		<Item Name="test add prompt name clash.vi" Type="VI" URL="../test add prompt name clash.vi"/>
+		<Item Name="test add tool name clash.vi" Type="VI" URL="../test add tool name clash.vi"/>
 		<Item Name="test batch.vi" Type="VI" URL="../test batch.vi"/>
 		<Item Name="test broken tool message.vi" Type="VI" URL="../test broken tool message.vi"/>
 		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
@@ -67,8 +73,10 @@
 		<Item Name="test tool error result.vi" Type="VI" URL="../test tool error result.vi"/>
 		<Item Name="test tool required arguments.vi" Type="VI" URL="../test tool required arguments.vi"/>
 		<Item Name="test tools call array.vi" Type="VI" URL="../test tools call array.vi"/>
+		<Item Name="test tools call mcp names.vi" Type="VI" URL="../test tools call mcp names.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="test tools list array items.vi" Type="VI" URL="../test tools list array items.vi"/>
+		<Item Name="test tools list mcp names.vi" Type="VI" URL="../test tools list mcp names.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
 		<Item Name="test unknown notification.vi" Type="VI" URL="../test unknown notification.vi"/>
