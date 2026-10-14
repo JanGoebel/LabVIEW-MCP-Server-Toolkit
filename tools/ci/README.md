@@ -10,6 +10,7 @@ generated and posted as a comment on the pull request.
 | `Convert-CarayaReport.ps1` | Turns `tests\results\caraya-report.txt`, written by `tests\Run_Tests_CLI.vi`, into a table with one row per test. |
 | `Publish-PrReport.ps1` | Pushes the diff images to the branch `pr-assets/pr-<number>` and posts or updates one comment on the pull request containing both reports. |
 | `pull-request.workflow.yml` | The GitHub Actions workflow that runs the above and builds a test package. |
+| `release.workflow.yml` | Proposed version of `.github/workflows/release.yml`: the annotated tag message becomes the text of the GitHub release, above the generated notes. |
 
 ## Activating the workflow
 
@@ -20,6 +21,12 @@ permission that automation tokens for this repository deliberately do not have.
 The workflow runs on the self-hosted runner, only for branches of this
 repository (never for forks), and takes the scripts from `main`, so a pull
 request cannot change how its own report is produced.
+
+### Release workflow
+
+`release.workflow.yml` is a full copy of `.github/workflows/release.yml` with
+the proposed change applied. Copy it over the live file on `main`. Once it is
+active, this copy can be deleted.
 
 ## Running locally
 
