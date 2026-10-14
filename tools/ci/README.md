@@ -35,3 +35,14 @@ takes roughly 15 seconds per VI.
 
 `pr-assets/pr-<number>` branches hold only images and can be deleted once the
 pull request is closed.
+
+## The review report comment
+
+`Publish-PrReport.ps1` keeps the pull request conversation short. The comment
+holds the test result in one line (per-test table folded), one row per
+modified VI with a small picture of its first changed spot (the first six
+visible, the rest folded), the added VIs folded, and a button that opens the
+full graphical diff. The full diff (`report.md` and its images) is pushed to
+the branch `pr-assets/pr-<number>` and opened from there, where GitHub renders
+it as a page. GitHub does not let a link in a comment force a new tab; use
+Ctrl+click or the middle mouse button.

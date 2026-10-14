@@ -36,11 +36,16 @@ if ($TestReport -and (Test-Path $TestReport)) {
 $diffReport = if ($DiffDir) { Join-Path $DiffDir 'report.md' } else { $null }
 if ($diffReport -and (Test-Path $diffReport)) {
     $diff = [System.IO.File]::ReadAllText($diffReport)
+    $summaryFile = Join-Path $DiffDir 'summary.md'
+    $summary = if (Test-Path $summaryFile) { [System.IO.File]::ReadAllText($summaryFile) } else { $null }
     $imageDir = Join-Path $DiffDir 'images'
+    $sha = $null
 
     if (Test-Path $imageDir) {
-        # Commit the images on an orphan branch through a temporary worktree,
-        # so the main checkout and its credentials are reused untouched.
+        # Commit the full report and its images on an orphan branch through a
+        # temporary worktree, so the main checkout and its credentials are
+        # reused untouched. GitHub renders report.md there with its images,
+        # which is the "full diff" page the comment links to.
         $branch = "pr-assets/pr-$PrNumber"
         $tree = Join-Path ([System.IO.Path]::GetTempPath()) ("assets_" + [guid]::NewGuid().ToString('N').Substring(0, 8))
         & git -C $RepoDir worktree add --detach $tree HEAD | Out-Null
@@ -48,27 +53,40 @@ if ($diffReport -and (Test-Path $diffReport)) {
             & git -C $tree checkout --quiet --orphan assets-tmp
             & git -C $tree rm -rf --quiet . | Out-Null
             Copy-Item $imageDir (Join-Path $tree 'images') -Recurse
-            [System.IO.File]::WriteAllText((Join-Path $tree 'README.md'), "Images for the review report of pull request #$PrNumber. Safe to delete after the pull request is closed.`n", $utf8)
+            [System.IO.File]::WriteAllText((Join-Path $tree 'report.md'), $diff, $utf8)
+            [System.IO.File]::WriteAllText((Join-Path $tree 'README.md'), "Review report of pull request #$PrNumber, see report.md. Safe to delete after the pull request is closed.`n", $utf8)
             & git -C $tree add -A | Out-Null
             & git -C $tree -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' `
-                commit --quiet -m "Review images for pull request #$PrNumber" | Out-Null
+                commit --quiet -m "Review report for pull request $PrNumber" | Out-Null
             $sha = (& git -C $tree rev-parse HEAD).Trim()
             & git -C $tree push --force --quiet origin "HEAD:refs/heads/$branch"
-            if ($LASTEXITCODE -ne 0) { throw "Pushing the images to $branch failed." }
+            if ($LASTEXITCODE -ne 0) { throw "Pushing the report to $branch failed." }
         }
         finally {
             & git -C $RepoDir worktree remove --force $tree | Out-Null
             & git -C $RepoDir branch --quiet -D assets-tmp
         }
-        $diff = $diff.Replace('](images/', "](https://raw.githubusercontent.com/$Repo/$sha/images/")
     }
 
-    if ($body.Length + $diff.Length -gt $maxLength) {
-        $diff = $diff.Substring(0, [Math]::Max(0, $maxLength - $body.Length))
-        $diff = $diff.Substring(0, [Math]::Max(0, $diff.LastIndexOf("`n### ")))
-        $diff += "`n`n_The diff report was cut here because it is too long for one comment. The full report is in the run's artifacts._`n"
+    $raw = "https://raw.githubusercontent.com/$Repo/$sha/images/"
+    if ($summary -and $sha) {
+        # Short form: counts, one picture per modified VI, and a button to the
+        # full report. The full report never goes into the comment.
+        [void]$body.AppendLine('### VI changes')
+        [void]$body.AppendLine()
+        [void]$body.AppendLine("[![Open the full VI diff](https://img.shields.io/badge/Open%20the%20full%20VI%20diff-0969da?style=for-the-badge)](https://github.com/$Repo/blob/$sha/report.md)")
+        [void]$body.AppendLine()
+        [void]$body.AppendLine($summary.Replace('src="images/', "src=""$raw").Replace('](images/', "]($raw"))
+    } else {
+        # Older diff folders without summary.md: the full report, cut to size.
+        if ($sha) { $diff = $diff.Replace('](images/', "]($raw") }
+        if ($body.Length + $diff.Length -gt $maxLength) {
+            $diff = $diff.Substring(0, [Math]::Max(0, $maxLength - $body.Length))
+            $diff = $diff.Substring(0, [Math]::Max(0, $diff.LastIndexOf("`n### ")))
+            $diff += "`n`n_The diff report was cut here because it is too long for one comment._`n"
+        }
+        [void]$body.AppendLine($diff)
     }
-    [void]$body.AppendLine($diff)
 }
 
 if ($Footer) { [void]$body.AppendLine($Footer) }
