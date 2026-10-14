@@ -43,7 +43,8 @@ resources). Built on the IG HTTP Server Toolkit and JSONtext.
   branch and say so in the description.
 - VIs are binary and cannot be merged. Do not open two pull requests that edit
   the same VI; if two tasks need the same VI, say so and ask which goes first.
-- Follow-up changes to an open pull request are new commits on its branch.
+- Follow-up changes to an open pull request are new commits on its branch,
+  announced with a short update comment (see "Pull requests").
   The pull request updates itself; do not open a new one.
 
 ## Changing LabVIEW code
@@ -119,11 +120,27 @@ change does, like a commit subject. Description, in this order:
 
 End the description with the "Generated with Claude Code" line.
 
-The pull request workflow posts one comment with the test report and a
-graphical VI diff, and builds a test package. If it is not active or has not
+Every pull request that changes VIs carries one review report comment, kept
+short:
+
+- the test result in one line, with the per-test table folded away;
+- one row per modified VI with a small screenshot of its latest block diagram
+  change;
+- added VIs folded away;
+- a button that opens the full graphical diff as its own page (the report is
+  pushed to the `pr-assets/pr-<number>` branch and rendered by GitHub).
+
+The full diff never goes into the comment itself. The pull request workflow
+posts this report and builds a test package. If it is not active or has not
 run, produce the same comment locally with `tools/ci/New-ViDiffReport.ps1`,
 `tools/ci/Convert-CarayaReport.ps1` and `tools/ci/Publish-PrReport.ps1`, and
-say in its footer that it was produced locally.
+say in its footer that it was produced locally. After every push to the
+branch, refresh the report so it shows the latest block diagrams.
+
+Whenever new commits are pushed to an open pull request, also post a new,
+short comment in its conversation: which commits, what changed in a few
+bullets, test result, and what is still open. Update the description too if
+it has become inaccurate.
 
 ## Reporting back
 
