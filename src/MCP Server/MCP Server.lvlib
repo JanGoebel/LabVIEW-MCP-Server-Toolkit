@@ -55,6 +55,8 @@
 			<Item Name="prompts get.vi" Type="VI" URL="../prompts get.vi"/>
 			<Item Name="shutdown.vi" Type="VI" URL="../shutdown.vi"/>
 			<Item Name="exit.vi" Type="VI" URL="../exit.vi"/>
+			<Item Name="ping.vi" Type="VI" URL="../ping.vi"/>
+			<Item Name="resources templates list.vi" Type="VI" URL="../resources templates list.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
@@ -92,6 +94,28 @@
 			<Item Name="Validate HTTP Request.vi" Type="VI" URL="../Validate HTTP Request.vi"/>
 			<Item Name="Process HTTP Request.vi" Type="VI" URL="../Process HTTP Request.vi"/>
 			<Item Name="Build Method Not Found Response.vi" Type="VI" URL="../Build Method Not Found Response.vi"/>
+			<Item Name="Build Error Response.vi" Type="VI" URL="../Build Error Response.vi"/>
+			<Item Name="Restore Request ID.vi" Type="VI" URL="../Restore Request ID.vi"/>
+			<Item Name="Clean Error Message.vi" Type="VI" URL="../Clean Error Message.vi"/>
+			<Item Name="Read Resource Contents.vi" Type="VI" URL="../Read Resource Contents.vi"/>
+			<Item Name="Finish Tool Call Response.vi" Type="VI" URL="../Finish Tool Call Response.vi"/>
+			<Item Name="Check Prompt Arguments.vi" Type="VI" URL="../Check Prompt Arguments.vi"/>
+			<Item Name="Negotiate Protocol Version.vi" Type="VI" URL="../Negotiate Protocol Version.vi"/>
+			<Item Name="Reject Invalid Request.vi" Type="VI" URL="../Reject Invalid Request.vi"/>
+			<Item Name="Add Array Items To Schema.vi" Type="VI" URL="../Add Array Items To Schema.vi"/>
+			<Item Name="Null Id For Parse Error.vi" Type="VI" URL="../Null Id For Parse Error.vi"/>
+			<Item Name="Default Tool Arguments.vi" Type="VI" URL="../Default Tool Arguments.vi"/>
+			<Item Name="Mark Tool Error Result.vi" Type="VI" URL="../Mark Tool Error Result.vi"/>
+			<Item Name="Strip Error Details.vi" Type="VI" URL="../Strip Error Details.vi"/>
+			<Item Name="Reject Non Object Message.vi" Type="VI" URL="../Reject Non Object Message.vi"/>
+			<Item Name="Build Prompt List JSON.vi" Type="VI" URL="../Build Prompt List JSON.vi"/>
+			<Item Name="Handle Server Request Batch.vi" Type="VI" URL="../Handle Server Request Batch.vi"/>
+			<Item Name="Reinitialize VI Inputs.vi" Type="VI" URL="../Reinitialize VI Inputs.vi"/>
+			<Item Name="Supported Protocol Versions.vi" Type="VI" URL="../Supported Protocol Versions.vi"/>
+			<Item Name="Is Supported Protocol Version.vi" Type="VI" URL="../Is Supported Protocol Version.vi"/>
+			<Item Name="Choose Protocol Version.vi" Type="VI" URL="../Choose Protocol Version.vi"/>
+			<Item Name="Set LabVIEW Version.vi" Type="VI" URL="../Set LabVIEW Version.vi"/>
+			<Item Name="Check Tool Arguments.vi" Type="VI" URL="../Check Tool Arguments.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>

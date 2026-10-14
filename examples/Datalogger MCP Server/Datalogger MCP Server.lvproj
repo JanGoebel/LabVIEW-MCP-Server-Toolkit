@@ -16,6 +16,7 @@
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
 		<Item Name="sub VIs" Type="Folder">
 			<Item Name="Acquire Signals.vi" Type="VI" URL="../sub VIs/Acquire Signals.vi"/>
+			<Item Name="Add Readme Resource.vi" Type="VI" URL="../sub VIs/Add Readme Resource.vi"/>
 			<Item Name="Get Log Path.vi" Type="VI" URL="../sub VIs/Get Log Path.vi"/>
 			<Item Name="Globals.vi" Type="VI" URL="../sub VIs/Globals.vi"/>
 			<Item Name="Log Data.vi" Type="VI" URL="../sub VIs/Log Data.vi"/>

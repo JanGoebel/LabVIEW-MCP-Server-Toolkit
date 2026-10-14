@@ -1,0 +1,3 @@
+Grüße – naïve café ✓ 📊
+Second line	with a tab, "quotes" and a \ backslash
+last line without line ending
