@@ -14,10 +14,14 @@ The old versions are taken from a temporary full checkout of BaseRef, so an old
 VI finds its own library and subVIs and only real differences are reported.
 Position and size changes are left out of the comparison.
 
-A failed comparison is noted in the report; it does not fail the script.
-When LabVIEW cannot be reached at all (LabVIEW CLI error -350000), the
-remaining comparisons are skipped instead of each waiting for the same
-connection timeout, and the report says so. The exit code stays 0 either way.
+A failed comparison is noted in the report, and the reports are always
+written. When LabVIEW cannot be reached at all (LabVIEW CLI error -350000),
+the remaining comparisons are skipped instead of each waiting for the same
+connection timeout, and the report says so.
+
+Exit code: 0 when every changed VI was compared, 1 when at least one
+comparison failed or was skipped. A pull request needs the diff, so the
+workflow fails on 1.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$BaseRef,
@@ -97,7 +101,7 @@ if ($changes.Count -eq 0) {
     [System.IO.File]::WriteAllText((Join-Path $OutDir 'report.md'), $md.ToString(), $utf8)
     [System.IO.File]::WriteAllText((Join-Path $OutDir 'summary.md'), "No VI, VIM or CTL files changed.`n", $utf8)
     Write-Host 'No LabVIEW files changed.'
-    return
+    exit 0
 }
 
 $modified = @($changes | Where-Object { $_.Status -eq 'M' -or $_.Status -eq 'R' })
@@ -282,3 +286,10 @@ if ($deleted.Count -gt 0) {
 }
 [System.IO.File]::WriteAllText((Join-Path $OutDir 'summary.md'), $sm.ToString(), $utf8)
 Write-Host "Report written to $(Join-Path $OutDir 'report.md') and summary.md"
+
+$notCompared = @($summary | Where-Object { $_.Count -lt 0 })
+if ($notCompared.Count -gt 0) {
+    Write-Host "::error::$($notCompared.Count) of $($summary.Count) changed VIs could not be compared: $(($notCompared | ForEach-Object { $_.Path }) -join ', ')"
+    exit 1
+}
+exit 0

@@ -32,14 +32,20 @@ copies in step afterwards: the templates are where changes are proposed.
 ## Running locally
 
 ```powershell
-.\tools\ci\New-ViDiffReport.ps1 -BaseRef main -OutDir C:\temp\vi-diff `
-    -LabVIEWPath "C:\Program Files\National Instruments\LabVIEW 2026\LabVIEW.exe" -PortNumber 3364
+.\tools\ci\New-ViDiffReport.ps1 -BaseRef origin/main -OutDir C:\temp\vi-diff `
+    -LabVIEWPath "C:\Program Files (x86)\National Instruments\LabVIEW 2026\LabVIEW.exe" -PortNumber 3363
 ```
 
-LabVIEW must have VI Server TCP access enabled on the given port. A comparison
-takes roughly 15 seconds per VI. When LabVIEW cannot be reached (error
--350000), the script stops after the first VI instead of waiting for the same
-timeout on every VI, and the report says so.
+Use a LabVIEW you do not develop in (see tools/setup/README.md, "LabVIEW for
+the VI comparison"): one that has `MCP Server.lvlib` loaded from another
+checkout cannot compare the library's VIs. LabVIEW must have VI Server TCP
+access enabled on the given port. A comparison takes roughly 10 seconds per
+VI. When LabVIEW cannot be reached (error -350000), the script stops after the
+first VI instead of waiting for the same timeout on every VI.
+
+The exit code is 1 when any changed VI could not be compared, and the pull
+request workflow fails on it: a pull request without its diff is not ready
+for review.
 
 ## Housekeeping
 
