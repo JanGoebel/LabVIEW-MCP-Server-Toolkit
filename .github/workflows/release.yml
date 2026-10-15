@@ -11,13 +11,23 @@ on:
 permissions:
   contents: write
 
+# Every run step goes through Windows PowerShell with the execution policy
+# bypassed for that process only, so the runner needs no Set-ExecutionPolicy.
+# Same as in pull-request.workflow.yml.
+defaults:
+  run:
+    shell: powershell -NoProfile -ExecutionPolicy Bypass -Command ". '{0}'"
+
 env:
-  # LabVIEW 2020 on the self-hosted runner and its VI Server port
-  # (server.tcp.port in its LabVIEW.ini, see tools/setup/README.md). The
-  # repository variable LABVIEW_PORT overrides the default; pull-request.yml
-  # reads the same variable.
-  LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
-  LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3365' }}
+  # The LabVIEW for tests and build is chosen per job by
+  # tools/ci/Resolve-CiEnvironment.ps1 (step "Find LabVIEW and Tools"): the
+  # oldest LabVIEW of at least 2020 on the runner, 64-bit preferred, with its
+  # VI Server port from its LabVIEW.ini or the running instance. It writes
+  # LABVIEW_PATH, LABVIEW_PORT, LABVIEW_VERSION and LABVIEW_BITNESS for the
+  # following steps. The repository variables are requests; one that does not
+  # fit the runner is reported and replaced. Same as pull-request.yml.
+  REQUESTED_LABVIEW_PATH: ${{ vars.LABVIEW_PATH }}
+  REQUESTED_LABVIEW_PORT: ${{ vars.LABVIEW_PORT }}
 
 jobs:
   # ==========================================
@@ -25,10 +35,23 @@ jobs:
   # ==========================================
   test:
     runs-on: self-hosted
-    timeout-minutes: 15
+    # The first run on a fresh runner installs the VIPM packages.
+    timeout-minutes: 60
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+
+      - name: Find LabVIEW and Tools
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix
+
+      # Installs src\*.vipc and tools\setup\test-packages.txt into the LabVIEW
+      # chosen above, which runs the tests here and builds the package in the
+      # next job on the same runner. VIPM skips packages already installed.
+      - name: Install VIPM Dependencies
+        timeout-minutes: 45
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\setup\Install-Dependencies.ps1" -LabVIEWVersion $env:LABVIEW_VERSION -Bitness $env:LABVIEW_BITNESS
 
       # Invoke-CliTest.ps1 exits 1 when tests failed and 2 when LabVIEW could
       # not be reached, so the log says which of the two happened.
@@ -63,6 +86,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true   # <--- CRITICAL: Tells GitHub to download the tag annotations!
+
+      # Same LabVIEW as the test job (a job starts with a fresh environment).
+      - name: Find LabVIEW and Tools
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test
 
       - name: Build VI Package via VIPM CLI
         timeout-minutes: 25
@@ -124,9 +152,11 @@ jobs:
           
           [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
 
-          # 5. Run the build, for the same LabVIEW as the pull request test builds
-          Write-Host "Building VI Package..."
-          vipm build "$vipbFile" --labview-version 2020 --labview-bitness 64
+          # 5. Run the build with the LabVIEW chosen above (as the pull request
+          # test builds do). Its version becomes the package's minimum LabVIEW
+          # version; the step above warns when that is not LabVIEW 2020 64-bit.
+          Write-Host "Building VI Package with LabVIEW $env:LABVIEW_VERSION $env:LABVIEW_BITNESS-bit..."
+          vipm build "$vipbFile" --labview-version $env:LABVIEW_VERSION --labview-bitness $env:LABVIEW_BITNESS
           
           if ($LASTEXITCODE -ne 0) {
             Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
@@ -136,7 +166,12 @@ jobs:
       - name: Locate Built VIP Artifact
         id: find_vip
         run: |
-          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE\builds" | Where-Object { $_.Extension -eq ".vip" } | Select-Object -First 1
+          # builds\ is where the .vipb puts it; search the whole checkout in case
+          # the output folder was changed, and fail clearly if there is none.
+          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Filter *.vip -Recurse -File -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $vipFile) { Write-Host '::error::The build produced no .vip file.'; exit 1 }
+          Write-Host "Package: $($vipFile.FullName)"
           echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
 
       - name: Upload Artifact for Testing
