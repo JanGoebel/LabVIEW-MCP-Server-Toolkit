@@ -50,6 +50,15 @@ LabVIEW you work with.
 If VIPM answers that the LabVIEW version is "not found", VIPM has not detected
 that installation yet: start VIPM Desktop once and try again.
 
+On the CI runner the workflows run this script themselves before the tests:
+the pull request workflow for LabVIEW 2020 64-bit and for the comparison
+LabVIEW (version and bitness read from `LABVIEW_COMPARE_PATH`), the release
+workflow for LabVIEW 2020 64-bit. The package lists come from the commit
+under test. VIPM skips what is already installed, so only the first run on a
+fresh runner is slow. What the runner still needs by hand: LabVIEW, the
+LabVIEW CLI, VIPM with its command line (`vipm`) on the `PATH`, and VIPM
+Desktop started once so it has detected every LabVIEW installation.
+
 ## VI Server port
 
 VIPM gives every LabVIEW installation its own VI Server TCP port when it first
@@ -81,9 +90,15 @@ working copy, every VI of the library from the pull request's checkout fails
 with error 1051 ("A LabVIEW file of that name already exists in memory"),
 reported by the CLI as "Memory is full". The workflow therefore uses the
 32-bit LabVIEW 2026 (`C:\Program Files (x86)\National Instruments\LabVIEW
-2026\LabVIEW.exe`, VI Server port 3363), which nothing else uses. It does not
-need the toolkit's dependencies to draw the diagrams. The repository
-variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT` override it.
+2026\LabVIEW.exe`, VI Server port 3363), which nothing else uses. The
+repository variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT`
+override it; on a machine used only for CI, the 64-bit LabVIEW 2026 works as
+well, because nothing loads the toolkit there.
+
+The comparison LabVIEW needs the same packages as the others. Without them
+the diagrams are still drawn, but every JSONtext, Caraya or IG HTTP Server
+subVI shows as a "?" placeholder. The pull request workflow installs them
+there too.
 
 The diff is required: when a changed VI cannot be compared, the pull request
 run fails after posting the report.
@@ -117,8 +132,10 @@ The three `fake ... broken vi.vi` files are reported as bad on purpose; the
 
 - The runner must run in a logged-in desktop session (`run.cmd`), not as a
   Windows service: LabVIEW needs a desktop.
-- Windows PowerShell must be allowed to run scripts
-  (`Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`), because every
-  workflow step is executed as a script.
+- The workflows run every step with `-ExecutionPolicy Bypass` for that
+  process, so the machine's execution policy does not matter. Workflows from
+  before that change need `Set-ExecutionPolicy RemoteSigned -Scope
+  CurrentUser` for the runner user; otherwise every step fails with
+  `PSSecurityException`.
 - Only one runner should carry the `self-hosted` label unless all of them are
   set up as described here.

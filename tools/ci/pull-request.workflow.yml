@@ -19,6 +19,16 @@ concurrency:
   group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Every run step goes through Windows PowerShell with the execution policy
+# bypassed for that process only. A fresh Windows machine allows no scripts
+# (policy Restricted), which stopped every step with PSSecurityException; this
+# way the runner needs no Set-ExecutionPolicy. The runner still writes the step
+# as a .ps1 file, stops on errors and passes $LASTEXITCODE on, as with the
+# built-in "powershell" shell.
+defaults:
+  run:
+    shell: powershell -NoProfile -ExecutionPolicy Bypass -Command ". '{0}'"
+
 env:
   # LabVIEW used for the tests on the self-hosted runner. The VI Server port
   # differs per machine (see tools/setup/README.md): it is server.tcp.port in
@@ -47,7 +57,9 @@ jobs:
     # of this repository, never for pull requests from forks.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: self-hosted
-    timeout-minutes: 30
+    # The first run on a fresh runner installs the VIPM packages into two
+    # LabVIEW versions, which takes far longer than a normal run.
+    timeout-minutes: 75
     permissions:
       contents: write        # pushes the diff images to pr-assets/pr-<number>
       pull-requests: write   # posts the report comment
@@ -64,7 +76,31 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: _ci
-          sparse-checkout: tools/ci
+          sparse-checkout: |
+            tools/ci
+            tools/setup
+
+      # Installs the packages the toolkit and its tests need into the LabVIEW
+      # for the tests (LABVIEW_PATH, LabVIEW 2020 64-bit) and into the LabVIEW
+      # for the VI comparison, so a fresh runner needs no manual setup and the
+      # diff draws JSONtext, Caraya and IG subVIs instead of "?" placeholders.
+      # The script comes from main; the package lists (src\*.vipc and
+      # tools\setup\test-packages.txt) come from the pull request, so a pull
+      # request that adds a dependency is tested with it. VIPM skips packages
+      # that are already installed. VIPM Desktop must have detected both
+      # LabVIEW installations once (see tools/setup/README.md).
+      - name: Install VIPM Dependencies
+        timeout-minutes: 45
+        run: |
+          $install = "$env:GITHUB_WORKSPACE\_ci\tools\setup\Install-Dependencies.ps1"
+          & $install -LabVIEWVersion 2020 -Bitness 64 -RepoDir "$env:GITHUB_WORKSPACE"
+          if ($env:LABVIEW_COMPARE_PATH -match 'LabVIEW (\d{4})') {
+            $version = $Matches[1]
+            $bitness = if ($env:LABVIEW_COMPARE_PATH -like '*(x86)*') { '32' } else { '64' }
+            & $install -LabVIEWVersion $version -Bitness $bitness -RepoDir "$env:GITHUB_WORKSPACE"
+          } else {
+            Write-Host "::warning::Cannot read a LabVIEW version from $env:LABVIEW_COMPARE_PATH; no packages installed for the VI comparison."
+          }
 
       # Invoke-CliTest.ps1 exits 0 (passed), 1 (tests failed), 2 (LabVIEW not
       # reachable, nothing ran) or 3 (entry VI missing on this branch). The

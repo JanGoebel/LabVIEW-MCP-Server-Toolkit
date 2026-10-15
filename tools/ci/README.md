@@ -23,6 +23,12 @@ The workflow runs on the self-hosted runner, only for branches of this
 repository (never for forks), and takes the scripts from `main`, so a pull
 request cannot change how its own report is produced.
 
+Every step runs in Windows PowerShell with `-ExecutionPolicy Bypass`, and the
+first step after the checkouts installs the VIPM packages
+(`tools/setup/Install-Dependencies.ps1`) into the test LabVIEW and the
+comparison LabVIEW. A new runner therefore needs only LabVIEW, the LabVIEW
+CLI and VIPM; see `tools/setup/README.md`.
+
 ### Release workflow
 
 `release.workflow.yml` is a full copy of `.github/workflows/release.yml` with

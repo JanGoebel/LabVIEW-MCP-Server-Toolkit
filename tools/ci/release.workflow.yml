@@ -11,6 +11,13 @@ on:
 permissions:
   contents: write
 
+# Every run step goes through Windows PowerShell with the execution policy
+# bypassed for that process only, so the runner needs no Set-ExecutionPolicy.
+# Same as in pull-request.workflow.yml.
+defaults:
+  run:
+    shell: powershell -NoProfile -ExecutionPolicy Bypass -Command ". '{0}'"
+
 env:
   # LabVIEW 2020 on the self-hosted runner and its VI Server port
   # (server.tcp.port in its LabVIEW.ini, see tools/setup/README.md). The
@@ -25,10 +32,19 @@ jobs:
   # ==========================================
   test:
     runs-on: self-hosted
-    timeout-minutes: 15
+    # The first run on a fresh runner installs the VIPM packages.
+    timeout-minutes: 60
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+
+      # Installs src\*.vipc and tools\setup\test-packages.txt into LabVIEW 2020
+      # 64-bit, which runs the tests here and builds the package in the next
+      # job on the same runner. VIPM skips packages that are already installed.
+      - name: Install VIPM Dependencies
+        timeout-minutes: 45
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\setup\Install-Dependencies.ps1" -LabVIEWVersion 2020 -Bitness 64
 
       # Invoke-CliTest.ps1 exits 1 when tests failed and 2 when LabVIEW could
       # not be reached, so the log says which of the two happened.
