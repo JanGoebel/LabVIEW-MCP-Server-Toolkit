@@ -1,0 +1,217 @@
+<#
+Shared helpers for the CI scripts: finding the LabVIEW installations on a
+runner, the VI Server port each of them listens on, and the command-line tools
+the workflows call. Used by Resolve-CiEnvironment.ps1, Invoke-CliTest.ps1 and
+New-ViDiffReport.ps1.
+#>
+
+$script:IniSection = 'LabVIEW'
+
+function Get-ExeBitness([string]$Path) {
+    # Machine type in the PE header: 0x8664 is x64, 0x14C is x86.
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $reader = New-Object System.IO.BinaryReader $stream
+        [void]$stream.Seek(0x3C, 'Begin')
+        $peOffset = $reader.ReadInt32()
+        [void]$stream.Seek($peOffset + 4, 'Begin')
+        $machine = $reader.ReadUInt16()
+    }
+    finally { $stream.Dispose() }
+    switch ($machine) { 0x8664 { return '64' } 0x14C { return '32' } default { return $null } }
+}
+
+function Get-LabVIEWInstall {
+    <# Every LabVIEW.exe in the default folders and in the registry, with its
+       year (from the file version: 20.x is 2020) and bitness. #>
+    $dirs = New-Object System.Collections.Generic.List[string]
+    $roots = @($env:ProgramW6432, $env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ } | Select-Object -Unique
+    foreach ($root in $roots) {
+        Get-ChildItem (Join-Path $root 'National Instruments') -Directory -Filter 'LabVIEW *' -ErrorAction SilentlyContinue |
+            ForEach-Object { $dirs.Add($_.FullName) }
+    }
+    foreach ($key in 'HKLM:\SOFTWARE\National Instruments\LabVIEW', 'HKLM:\SOFTWARE\WOW6432Node\National Instruments\LabVIEW') {
+        Get-ChildItem $key -ErrorAction SilentlyContinue | ForEach-Object {
+            $p = (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).PATH
+            if ($p) { $dirs.Add($p.TrimEnd('\')) }
+        }
+    }
+    $seen = @{}
+    foreach ($dir in $dirs) {
+        $exe = Join-Path $dir 'LabVIEW.exe'
+        if (-not (Test-Path -LiteralPath $exe)) { continue }
+        $full = (Resolve-Path -LiteralPath $exe).Path
+        if ($seen.ContainsKey($full.ToLowerInvariant())) { continue }
+        $seen[$full.ToLowerInvariant()] = $true
+        $fileVersion = (Get-Item -LiteralPath $full).VersionInfo.FileVersion
+        if ($fileVersion -notmatch '^(\d+)\.') { continue }
+        $major = [int]$Matches[1]
+        # From LabVIEW 2017 on, the major version is the year minus 2000.
+        $year = if ($major -ge 2000) { $major } elseif ($major -ge 17) { 2000 + $major } else { $null }
+        if (-not $year) { continue }
+        [pscustomobject]@{
+            Path    = $full
+            Year    = $year
+            Bitness = Get-ExeBitness $full
+            Version = $fileVersion
+        }
+    }
+}
+
+function Get-IniValue([string]$Ini, [string]$Key) {
+    if (-not (Test-Path -LiteralPath $Ini)) { return $null }
+    $pattern = '^\s*' + [regex]::Escape($Key) + '\s*=(.*)$'
+    foreach ($line in [System.IO.File]::ReadAllLines($Ini)) {
+        if ($line -match $pattern) { return $Matches[1].Trim().Trim('"') }
+    }
+    return $null
+}
+
+function Set-IniValue([string]$Ini, [string]$Key, [string]$Value) {
+    <# Sets key=value in the [LabVIEW] section of a LabVIEW.ini. Only call it
+       while that LabVIEW is not running: LabVIEW rewrites the file on exit. #>
+    $encoding = [System.Text.Encoding]::Default
+    # Not "$lines = if (...) { list }": PowerShell would unroll the list into a
+    # fixed-size array, and Insert would fail.
+    $lines = New-Object System.Collections.Generic.List[string]
+    if (Test-Path -LiteralPath $Ini) { $lines.AddRange([string[]][System.IO.File]::ReadAllLines($Ini, $encoding)) }
+    $pattern = '^\s*' + [regex]::Escape($Key) + '\s*='
+    $index = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match $pattern) { $index = $i; break } }
+    if ($index -ge 0) {
+        $lines[$index] = "$Key=$Value"
+    } else {
+        $section = -1
+        for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i].Trim() -eq "[$script:IniSection]") { $section = $i; break } }
+        if ($section -lt 0) { $lines.Insert(0, "[$script:IniSection]"); $section = 0 }
+        $lines.Insert($section + 1, "$Key=$Value")
+    }
+    [System.IO.File]::WriteAllLines($Ini, $lines, $encoding)
+}
+
+function Get-ListeningPort([int]$ProcessId) {
+    @(Get-NetTCPConnection -State Listen -OwningProcess $ProcessId -ErrorAction SilentlyContinue |
+        ForEach-Object { [int]$_.LocalPort } | Sort-Object -Unique)
+}
+
+function Get-PortOwner([int]$Port) {
+    Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty OwningProcess
+}
+
+function Get-FreePort([int]$Start, [int[]]$Avoid) {
+    for ($p = $Start; $p -lt $Start + 200; $p++) {
+        if ($Avoid -contains $p) { continue }
+        if (-not (Get-PortOwner $p)) { return $p }
+    }
+    throw "No free TCP port between $Start and $($Start + 199)."
+}
+
+function Get-LabVIEWProcess([string]$Path) {
+    Get-Process -Name LabVIEW -ErrorAction SilentlyContinue |
+        Where-Object { $_.Path -and ($_.Path -ieq $Path) } | Select-Object -First 1
+}
+
+function Resolve-ViServerPort {
+    <#
+    Returns the VI Server port LabVIEW CLI must use for the LabVIEW at Path,
+    plus notes on what was found or changed. Order: a running instance's
+    actual listening port (its LabVIEW.ini port or the requested one), then
+    the LabVIEW.ini port, then the requested port, then 3363.
+    With -Fix it repairs what is easy to repair: VI Server disabled or without
+    a port in LabVIEW.ini, a port taken by another program or by the other
+    LabVIEW of the run (Avoid), and an instance that runs but does not listen
+    on its port (it is closed so that LabVIEW CLI starts it again).
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [int]$Requested,
+        [int[]]$Avoid = @(),
+        [switch]$Fix
+    )
+    $notes = New-Object System.Collections.Generic.List[string]
+    $ini = Join-Path (Split-Path $Path) 'LabVIEW.ini'
+    $enabled = Get-IniValue $ini 'server.tcp.enabled'
+    $iniPort = 0
+    [void][int]::TryParse([string](Get-IniValue $ini 'server.tcp.port'), [ref]$iniPort)
+
+    $process = Get-LabVIEWProcess $Path
+    if ($process) {
+        $listening = Get-ListeningPort $process.Id
+        foreach ($candidate in @($iniPort, $Requested)) {
+            if ($candidate -and ($listening -contains $candidate)) {
+                if ($Requested -and $Requested -ne $candidate) { $notes.Add("Requested port $Requested ignored: the running LabVIEW listens on $candidate.") }
+                return [pscustomobject]@{ Port = $candidate; Notes = $notes; Changed = $false }
+            }
+        }
+        if ($Fix) {
+            $notes.Add("LabVIEW (process $($process.Id)) was running but not listening on its VI Server port; closed it so LabVIEW CLI starts it with the settings below.")
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            Wait-Process -Id $process.Id -Timeout 60 -ErrorAction SilentlyContinue
+        } else {
+            $notes.Add("LabVIEW (process $($process.Id)) is running but not listening on its VI Server port ($iniPort); LabVIEW CLI will probably not reach it. Close it, or run with -Fix.")
+        }
+    }
+
+    $port = if ($iniPort) { $iniPort } elseif ($Requested) { $Requested } else { 3363 }
+    $changes = @{}
+    if ("$enabled" -ine 'TRUE') { $changes['server.tcp.enabled'] = 'True' }
+    $owner = Get-PortOwner $port
+    if (($Avoid -contains $port) -or $owner) {
+        $why = if ($owner) { "is taken by process $owner" } else { 'is used by the other LabVIEW of this run' }
+        $newPort = Get-FreePort ([Math]::Max($port + 1, 3363)) $Avoid
+        $notes.Add("Port $port $why; using $newPort.")
+        $port = $newPort
+    }
+    if ($port -ne $iniPort) { $changes['server.tcp.port'] = "$port" }
+    $access = Get-IniValue $ini 'server.tcp.access'
+    if ($access -and ($access -notmatch '\+(127\.0\.0\.1|localhost|\*)')) {
+        $changes['server.tcp.access'] = '"+127.0.0.1;+localhost;' + $access + '"'
+    }
+
+    $changed = $false
+    if ($changes.Count -gt 0) {
+        $list = ($changes.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', '
+        if ($Fix) {
+            try {
+                foreach ($entry in $changes.GetEnumerator()) { Set-IniValue $ini $entry.Key $entry.Value }
+                $notes.Add("Set $list in $ini.")
+                $changed = $true
+            } catch {
+                $notes.Add("Could not write $ini ($($_.Exception.Message)); it needs $list.")
+            }
+        } else {
+            $notes.Add("$ini needs $list (run with -Fix to write it).")
+        }
+    }
+    if ($Requested -and $Requested -ne $port) { $notes.Add("Requested port $Requested ignored: this LabVIEW uses $port.") }
+    return [pscustomobject]@{ Port = $port; Notes = $notes; Changed = $changed }
+}
+
+function Find-Tool {
+    <# Path of a command-line tool: from PATH, else from its default install
+       folders, in which case its folder is added to PATH for this process and,
+       inside GitHub Actions, for the following steps. #>
+    param([Parameter(Mandatory = $true)][string]$Name, [string[]]$Candidates = @())
+    $command = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($command) { return $command.Source }
+    foreach ($candidate in $Candidates) {
+        $hit = Resolve-Path $candidate -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $hit) { continue }
+        $dir = Split-Path $hit.Path
+        $env:PATH = "$dir;$env:PATH"
+        if ($env:GITHUB_PATH) { Add-Content -LiteralPath $env:GITHUB_PATH -Value $dir }
+        return $hit.Path
+    }
+    return $null
+}
+
+function Get-LabVIEWCliPath {
+    Find-Tool 'LabVIEWCLI' @(
+        "${env:ProgramFiles(x86)}\National Instruments\Shared\LabVIEW CLI\LabVIEWCLI.exe",
+        "$env:ProgramW6432\National Instruments\Shared\LabVIEW CLI\LabVIEWCLI.exe",
+        "$env:ProgramFiles\National Instruments\Shared\LabVIEW CLI\LabVIEWCLI.exe")
+}
+
+Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
+    Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness

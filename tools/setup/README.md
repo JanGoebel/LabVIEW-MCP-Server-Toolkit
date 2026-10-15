@@ -50,30 +50,53 @@ LabVIEW you work with.
 If VIPM answers that the LabVIEW version is "not found", VIPM has not detected
 that installation yet: start VIPM Desktop once and try again.
 
-On the CI runner the workflows run this script themselves before the tests:
-the pull request workflow for LabVIEW 2020 64-bit and for the comparison
-LabVIEW (version and bitness read from `LABVIEW_COMPARE_PATH`), the release
-workflow for LabVIEW 2020 64-bit. The package lists come from the commit
-under test. VIPM skips what is already installed, so only the first run on a
-fresh runner is slow. What the runner still needs by hand: LabVIEW, the
-LabVIEW CLI, VIPM with its command line (`vipm`) on the `PATH`, and VIPM
-Desktop started once so it has detected every LabVIEW installation.
+On the CI runner the workflows run this script themselves before the tests,
+for the LabVIEW versions chosen by `tools/ci/Resolve-CiEnvironment.ps1` (see
+"What CI finds by itself"). The package lists come from the commit under
+test. VIPM skips what is already installed, so only the first run on a fresh
+runner is slow. What the runner still needs by hand: LabVIEW, the LabVIEW CLI,
+VIPM, and VIPM Desktop started once so it has detected every LabVIEW
+installation.
+
+## What CI finds by itself
+
+Every workflow job starts with `tools/ci/Resolve-CiEnvironment.ps1`, which
+lists its findings in the job summary. Run it on a machine to see what CI
+would use there (without `-Fix` it changes nothing):
+
+```powershell
+.\tools\ci\Resolve-CiEnvironment.ps1 -For All
+```
+
+| What | How it is found | What is repaired (`-Fix`, in CI) |
+|---|---|---|
+| LabVIEW for tests and build | repository variable `LABVIEW_PATH` if that file exists, otherwise the **oldest** LabVIEW of at least 2020 in the default folders or the registry, 64-bit preferred. The package is built with it, so its version is the package's minimum LabVIEW version; anything other than 2020 64-bit gives a warning | - |
+| LabVIEW for the VI comparison | `LABVIEW_COMPARE_PATH` if it exists, otherwise the **newest** LabVIEW, 32-bit preferred at equal version; warns when it is older than the LabVIEW CLI | - |
+| VI Server port of each | the port the running LabVIEW listens on, else `server.tcp.port` in its `LabVIEW.ini`, else `LABVIEW_PORT` / `LABVIEW_COMPARE_PORT`, else 3363 | VI Server switched on; a missing port written; a port held by another program, or by the other LabVIEW, moved to a free one; localhost added to `server.tcp.access` if it is missing; a LabVIEW that runs without listening on its port is closed so LabVIEW CLI restarts it |
+| LabVIEW CLI, `vipm`, `gh` | `PATH`, then their default install folders, which are then added to `PATH` | LabVIEW CLI processes left from a cancelled run are ended |
+
+When LabVIEW CLI still cannot connect (error -350000), the test and diff
+scripts look up the port again and retry once. Without `gh`, the report is
+posted through the GitHub REST API with the same token.
+
+The repository variables (Settings > Secrets and variables > Actions >
+Variables) are therefore optional. Set them only to pin a particular LabVIEW
+or port; a value that does not fit the runner is reported and replaced.
 
 ## VI Server port
 
 VIPM gives every LabVIEW installation its own VI Server TCP port when it first
 connects (written to that LabVIEW's `LabVIEW.ini` as `server.tcp.port`). The
-LabVIEW CLI must be given the same port:
+LabVIEW CLI must be given the same port, which CI reads from there (see
+above). To look it up by hand:
 
 ```powershell
 Select-String 'server.tcp.port' "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.ini"
 ```
 
-Both workflows read it from the repository variable `LABVIEW_PORT`
-(Settings > Secrets and variables > Actions > Variables) and fall back to
-3365, the port of LabVIEW 2020 on the current runner. With a wrong port every
-LabVIEW CLI call ends in error -350000 after a timeout; the workflows then
-report "LabVIEW not reachable" instead of failed tests.
+With a wrong port every LabVIEW CLI call ends in error -350000 after a
+timeout; the workflows then report "LabVIEW not reachable" instead of failed
+tests.
 
 ## LabVIEW for the VI comparison
 
@@ -88,12 +111,10 @@ The comparison LabVIEW must not be one you develop in. LabVIEW holds one
 library of a name at a time: when `MCP Server.lvlib` is loaded there from your
 working copy, every VI of the library from the pull request's checkout fails
 with error 1051 ("A LabVIEW file of that name already exists in memory"),
-reported by the CLI as "Memory is full". The workflow therefore uses the
-32-bit LabVIEW 2026 (`C:\Program Files (x86)\National Instruments\LabVIEW
-2026\LabVIEW.exe`, VI Server port 3363), which nothing else uses. The
-repository variables `LABVIEW_COMPARE_PATH` and `LABVIEW_COMPARE_PORT`
-override it; on a machine used only for CI, the 64-bit LabVIEW 2026 works as
-well, because nothing loads the toolkit there.
+reported by the CLI as "Memory is full". That is why CI prefers the 32-bit
+LabVIEW of the newest version where both exist: on a development machine the
+64-bit one is where the toolkit is open. On a machine used only for CI, the
+64-bit LabVIEW 2026 works as well, because nothing loads the toolkit there.
 
 The comparison LabVIEW needs the same packages as the others. Without them
 the diagrams are still drawn, but every JSONtext, Caraya or IG HTTP Server

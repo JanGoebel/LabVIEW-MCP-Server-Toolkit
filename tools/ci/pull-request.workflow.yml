@@ -30,23 +30,25 @@ defaults:
     shell: powershell -NoProfile -ExecutionPolicy Bypass -Command ". '{0}'"
 
 env:
-  # LabVIEW used for the tests on the self-hosted runner. The VI Server port
-  # differs per machine (see tools/setup/README.md): it is server.tcp.port in
-  # that LabVIEW's LabVIEW.ini. The repository variable LABVIEW_PORT overrides
-  # the default; release.yml reads the same variable.
-  LABVIEW_PATH: C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe
-  LABVIEW_PORT: ${{ vars.LABVIEW_PORT || '3365' }}
-  # LabVIEW used for the VI comparison. The comparison operation belongs to
-  # the installed LabVIEW CLI and needs a LabVIEW at least as new as that CLI;
-  # with LabVIEW 2020 it fails to load. It must also not be a LabVIEW anyone
-  # develops in: a LabVIEW that has MCP Server.lvlib loaded from another
+  # Which LabVIEW runs what is decided per job by tools/ci/Resolve-CiEnvironment.ps1
+  # (step "Find LabVIEW and Tools"), which writes LABVIEW_PATH/_PORT/_VERSION/
+  # _BITNESS and LABVIEW_COMPARE_PATH/_PORT/_VERSION/_BITNESS for the following
+  # steps. Without repository variables it picks:
+  #   tests and build: the oldest LabVIEW of at least 2020, 64-bit preferred;
+  #   VI comparison:   the newest LabVIEW, 32-bit preferred at equal version.
+  # The comparison needs a LabVIEW at least as new as LabVIEW CLI, and one
+  # nobody develops in: a LabVIEW that has MCP Server.lvlib loaded from another
   # checkout refuses the pull request's copy (error 1051, "already exists in
-  # memory"). The default is the 32-bit LabVIEW 2026 on the runner, which is
-  # used for nothing else; the repository variables override it.
+  # memory"). The ports come from each LabVIEW.ini, or from the running
+  # instance; VI Server is enabled and port clashes are repaired.
+  # The repository variables below are requests: a path that does not exist
+  # on the runner, or a port LabVIEW does not use, is reported and replaced.
   # A pull request needs the diff: when it cannot be produced for every
   # changed VI, the run fails (after posting the report).
-  LABVIEW_COMPARE_PATH: ${{ vars.LABVIEW_COMPARE_PATH || 'C:\Program Files (x86)\National Instruments\LabVIEW 2026\LabVIEW.exe' }}
-  LABVIEW_COMPARE_PORT: ${{ vars.LABVIEW_COMPARE_PORT || '3363' }}
+  REQUESTED_LABVIEW_PATH: ${{ vars.LABVIEW_PATH }}
+  REQUESTED_LABVIEW_PORT: ${{ vars.LABVIEW_PORT }}
+  REQUESTED_COMPARE_PATH: ${{ vars.LABVIEW_COMPARE_PATH }}
+  REQUESTED_COMPARE_PORT: ${{ vars.LABVIEW_COMPARE_PORT }}
 
 jobs:
   # ==========================================
@@ -80,26 +82,29 @@ jobs:
             tools/ci
             tools/setup
 
-      # Installs the packages the toolkit and its tests need into the LabVIEW
-      # for the tests (LABVIEW_PATH, LabVIEW 2020 64-bit) and into the LabVIEW
-      # for the VI comparison, so a fresh runner needs no manual setup and the
-      # diff draws JSONtext, Caraya and IG subVIs instead of "?" placeholders.
+      # Picks the LabVIEW for the tests and the one for the VI comparison, their
+      # VI Server ports and the tools, repairs what is easy to repair (VI
+      # Server off, port clashes, leftover LabVIEW CLI processes) and lists it
+      # all in the job summary. See the comment at env above.
+      - name: Find LabVIEW and Tools
+        run: |
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Resolve-CiEnvironment.ps1" -For All -Fix
+
+      # Installs the packages the toolkit and its tests need into both LabVIEWs
+      # chosen above, so a fresh runner needs no manual setup and the diff
+      # draws JSONtext, Caraya and IG subVIs instead of "?" placeholders.
       # The script comes from main; the package lists (src\*.vipc and
       # tools\setup\test-packages.txt) come from the pull request, so a pull
       # request that adds a dependency is tested with it. VIPM skips packages
-      # that are already installed. VIPM Desktop must have detected both
+      # that are already installed. VIPM Desktop must have detected the
       # LabVIEW installations once (see tools/setup/README.md).
       - name: Install VIPM Dependencies
         timeout-minutes: 45
         run: |
           $install = "$env:GITHUB_WORKSPACE\_ci\tools\setup\Install-Dependencies.ps1"
-          & $install -LabVIEWVersion 2020 -Bitness 64 -RepoDir "$env:GITHUB_WORKSPACE"
-          if ($env:LABVIEW_COMPARE_PATH -match 'LabVIEW (\d{4})') {
-            $version = $Matches[1]
-            $bitness = if ($env:LABVIEW_COMPARE_PATH -like '*(x86)*') { '32' } else { '64' }
-            & $install -LabVIEWVersion $version -Bitness $bitness -RepoDir "$env:GITHUB_WORKSPACE"
-          } else {
-            Write-Host "::warning::Cannot read a LabVIEW version from $env:LABVIEW_COMPARE_PATH; no packages installed for the VI comparison."
+          & $install -LabVIEWVersion $env:LABVIEW_VERSION -Bitness $env:LABVIEW_BITNESS -RepoDir "$env:GITHUB_WORKSPACE"
+          if ($env:LABVIEW_COMPARE_PATH -ne $env:LABVIEW_PATH) {
+            & $install -LabVIEWVersion $env:LABVIEW_COMPARE_VERSION -Bitness $env:LABVIEW_COMPARE_BITNESS -RepoDir "$env:GITHUB_WORKSPACE"
           }
 
       # Invoke-CliTest.ps1 exits 0 (passed), 1 (tests failed), 2 (LabVIEW not
@@ -211,6 +216,19 @@ jobs:
       - name: Checkout Pull Request
         uses: actions/checkout@v4
 
+      - name: Checkout Report Scripts from main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: _ci
+          sparse-checkout: tools/ci
+
+      # Same choice of LabVIEW as in the review job (a job starts with a fresh
+      # environment): the build uses the test LabVIEW and finds vipm.
+      - name: Find LabVIEW and Tools
+        run: |
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Resolve-CiEnvironment.ps1" -For Test
+
       - name: Build VI Package via VIPM CLI
         timeout-minutes: 25
         env:
@@ -232,8 +250,10 @@ jobs:
 
           [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
 
-          Write-Host "Building VI Package..."
-          vipm build "$vipbFile" --labview-version 2020 --labview-bitness 64
+          # The build's LabVIEW version becomes the package's minimum version;
+          # the step above warns when that is not LabVIEW 2020 64-bit.
+          Write-Host "Building VI Package with LabVIEW $env:LABVIEW_VERSION $env:LABVIEW_BITNESS-bit..."
+          vipm build "$vipbFile" --labview-version $env:LABVIEW_VERSION --labview-bitness $env:LABVIEW_BITNESS
 
           if ($LASTEXITCODE -ne 0) {
             Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
@@ -243,7 +263,12 @@ jobs:
 
       - name: Locate Built VIP Artifact
         run: |
-          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE\builds" | Where-Object { $_.Extension -eq ".vip" } | Select-Object -First 1
+          # builds\ is where the .vipb puts it; search the whole checkout in case
+          # the output folder was changed, and fail clearly if there is none.
+          $vipFile = Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Filter *.vip -Recurse -File -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $vipFile) { Write-Host '::error::The build produced no .vip file.'; exit 1 }
+          Write-Host "Package: $($vipFile.FullName)"
           echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
 
       - name: Upload Test Package

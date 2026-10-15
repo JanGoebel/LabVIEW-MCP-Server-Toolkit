@@ -34,20 +34,44 @@ if (-not (Test-Path $VIPath)) {
     exit 3
 }
 
-# LabVIEW CLI writes its errors to stderr; Windows PowerShell turns redirected
-# stderr lines into errors, so they must not stop the script.
-$ErrorActionPreference = 'Continue'
-$output = & LabVIEWCLI -OperationName RunVI -VIPath $VIPath -PortNumber $PortNumber `
-    -LabVIEWPath $LabVIEWPath 2>&1 | ForEach-Object {
-        # An empty stderr line arrives as an error record whose text is its type name.
-        if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
-    } | Out-String
-$code = $LASTEXITCODE
+Import-Module (Join-Path $PSScriptRoot 'LabVIEWCi.psm1') -Force
+if (-not (Get-LabVIEWCliPath)) {
+    Write-Host '::error::LabVIEW CLI (LabVIEWCLI.exe) is not installed; the VI did not run.'
+    exit 2
+}
+
+function Invoke-RunVI([int]$Port) {
+    # LabVIEW CLI writes its errors to stderr; Windows PowerShell turns
+    # redirected stderr lines into errors, so they must not stop the script.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $out = & LabVIEWCLI -OperationName RunVI -VIPath $VIPath -PortNumber $Port `
+        -LabVIEWPath $LabVIEWPath 2>&1 | ForEach-Object {
+            # An empty stderr line arrives as an error record whose text is its type name.
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
+        } | Out-String
+    $script:code = $LASTEXITCODE
+    $ErrorActionPreference = $previous
+    return $out
+}
+
+$output = Invoke-RunVI $PortNumber
+if ($output -match '-350000') {
+    # Not reachable on that port: find the port this LabVIEW really uses
+    # (repairing LabVIEW.ini inside GitHub Actions) and try once more. A second
+    # try also covers a LabVIEW that was still starting.
+    Write-Host $output
+    $resolved = Resolve-ViServerPort -Path $LabVIEWPath -Requested $PortNumber -Fix:([bool]$env:GITHUB_ACTIONS)
+    $resolved.Notes | ForEach-Object { Write-Host "::warning::$_" }
+    Write-Host "LabVIEW not reachable on port $PortNumber; trying again on port $($resolved.Port)."
+    $PortNumber = $resolved.Port
+    $output = Invoke-RunVI $PortNumber
+}
 Write-Host $output
 Write-Log $output
 
 if ($output -match '-350000') {
-    Write-Host "::error::LabVIEW not reachable: LabVIEW CLI could not connect to $LabVIEWPath on port $PortNumber. The VI did not run. Check the repository variable LABVIEW_PORT against server.tcp.port in that LabVIEW's LabVIEW.ini."
+    Write-Host "::error::LabVIEW not reachable: LabVIEW CLI could not connect to $LabVIEWPath on port $PortNumber, also after a second try. The VI did not run. Check VI Server (server.tcp.enabled and server.tcp.port) in that LabVIEW's LabVIEW.ini, and whether a dialog is open in LabVIEW."
     exit 2
 }
 if ($code -ne 0) {

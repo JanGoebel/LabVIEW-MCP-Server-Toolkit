@@ -35,7 +35,11 @@ $ErrorActionPreference = 'Stop'
 $extensions = @('.vi', '.vim', '.ctl')
 $utf8 = New-Object System.Text.UTF8Encoding $false
 
-function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
+Import-Module (Join-Path $PSScriptRoot 'LabVIEWCi.psm1') -Force
+if (-not (Get-LabVIEWCliPath)) { Write-Warning 'LabVIEW CLI (LabVIEWCLI.exe) is not installed; no VI can be compared.' }
+$script:portRetried = $false
+
+function Invoke-CliComparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
     # LabVIEW CLI writes its error text to stderr; keep it for the report.
     # Windows PowerShell turns redirected stderr lines into errors, so they
     # must not stop the script here.
@@ -43,16 +47,31 @@ function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
     $ErrorActionPreference = 'Continue'
     $output = & LabVIEWCLI -OperationName CreateComparisonReport -VI1 $Vi1 -VI2 $Vi2 `
         -ReportType html -ReportPath $ReportPath -o -c -nobdcosm -nofppos `
-        -LabVIEWPath $LabVIEWPath -PortNumber $PortNumber 2>&1 | ForEach-Object { "$_" } | Out-String
+        -LabVIEWPath $LabVIEWPath -PortNumber $script:PortNumber 2>&1 | ForEach-Object { "$_" } | Out-String
     $ErrorActionPreference = $previous
     $output = $output.Trim()
     return @{
         Ok          = (Test-Path $ReportPath)
         Output      = $output
-        # -350000: the CLI could not connect to LabVIEW. Every further
-        # comparison would wait for the same timeout.
-        Unreachable = ($output -match '-350000')
+        # -350000: the CLI could not connect to LabVIEW (or the CLI is
+        # missing). Every further comparison would wait for the same timeout.
+        Unreachable = ($output -match '-350000') -or ($output -match 'LabVIEWCLI.*not recognized')
     }
+}
+
+function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
+    $result = Invoke-CliComparison $Vi1 $Vi2 $ReportPath
+    if ($result.Unreachable -and -not $script:portRetried) {
+        # Once per run: find the port this LabVIEW really uses (repairing
+        # LabVIEW.ini inside GitHub Actions) and try again.
+        $script:portRetried = $true
+        $resolved = Resolve-ViServerPort -Path $LabVIEWPath -Requested $script:PortNumber -Fix:([bool]$env:GITHUB_ACTIONS)
+        $resolved.Notes | ForEach-Object { Write-Warning $_ }
+        Write-Host "LabVIEW not reachable on port $($script:PortNumber); trying again on port $($resolved.Port)."
+        $script:PortNumber = $resolved.Port
+        $result = Invoke-CliComparison $Vi1 $Vi2 $ReportPath
+    }
+    return $result
 }
 
 function Copy-ReportImage([string]$ReportPath, [string]$Source, [string]$Slug) {
