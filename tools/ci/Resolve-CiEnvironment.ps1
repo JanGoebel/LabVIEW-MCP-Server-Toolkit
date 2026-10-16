@@ -147,14 +147,23 @@ if ($For -in 'Compare', 'All' -and $installs.Count -gt 0) {
 }
 
 # --- VI Server ports -----------------------------------------------------------
-# Ports configured in the LabVIEW.ini of every installed LabVIEW. A LabVIEW
-# that needs a port gets one none of the others is configured for, so a
-# working configuration (and VIPM's record of it) is never moved to make room.
+# The port each installed LabVIEW is meant to have: VIPM's record of it if
+# VIPM knows it (VIPM puts a LabVIEW back on that port whenever it starts it,
+# for example to install packages), otherwise its LabVIEW.ini port. A
+# LabVIEW that needs a port gets one none of the others is meant to have, so
+# a working configuration is never moved to make room, and the ports agree
+# with VIPM, whose settings are only read.
 $configuredPorts = @{}
+$vipmPorts = @{}
 foreach ($i in $installs) {
-    $p = 0
-    [void][int]::TryParse([string](Get-IniValue (Join-Path (Split-Path $i.Path) 'LabVIEW.ini') 'server.tcp.port'), [ref]$p)
+    $p = Get-VipmPort $i.Path
+    if ($p) { $vipmPorts[$i.Path.ToLowerInvariant()] = $p }
+    else { [void][int]::TryParse([string](Get-IniValue (Join-Path (Split-Path $i.Path) 'LabVIEW.ini') 'server.tcp.port'), [ref]$p) }
     if ($p) { $configuredPorts[$i.Path.ToLowerInvariant()] = $p }
+}
+function Get-VipmPortFor([string]$Path) {
+    $key = $Path.ToLowerInvariant()
+    if ($vipmPorts.ContainsKey($key)) { return $vipmPorts[$key] } else { return 0 }
 }
 function Get-OtherPort([string]$Path) {
     @($configuredPorts.GetEnumerator() | Where-Object { $_.Key -ne $Path.ToLowerInvariant() } | ForEach-Object { $_.Value })
@@ -162,7 +171,7 @@ function Get-OtherPort([string]$Path) {
 
 $testPort = $null
 if ($test) {
-    $r = Resolve-ViServerPort -Path $test.Path -Requested (Get-RequestedPort $env:REQUESTED_LABVIEW_PORT) -Avoid (Get-OtherPort $test.Path) -Fix:$Fix
+    $r = Resolve-ViServerPort -Path $test.Path -Requested (Get-RequestedPort $env:REQUESTED_LABVIEW_PORT) -Preferred (Get-VipmPortFor $test.Path) -Avoid (Get-OtherPort $test.Path) -Fix:$Fix
     $configuredPorts[$test.Path.ToLowerInvariant()] = $r.Port
     $testPort = $r.Port
     $r.Notes | ForEach-Object { $notes.Add("Test LabVIEW: $_") }
@@ -175,7 +184,7 @@ if ($compare) {
     if ($test -and $compare.Path -ieq $test.Path) {
         $comparePort = $testPort
     } else {
-        $r = Resolve-ViServerPort -Path $compare.Path -Requested (Get-RequestedPort $env:REQUESTED_COMPARE_PORT) -Avoid (Get-OtherPort $compare.Path) -Fix:$Fix
+        $r = Resolve-ViServerPort -Path $compare.Path -Requested (Get-RequestedPort $env:REQUESTED_COMPARE_PORT) -Preferred (Get-VipmPortFor $compare.Path) -Avoid (Get-OtherPort $compare.Path) -Fix:$Fix
         $comparePort = $r.Port
         $r.Notes | ForEach-Object { $notes.Add("Comparison LabVIEW: $_") }
     }

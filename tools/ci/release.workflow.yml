@@ -53,6 +53,12 @@ jobs:
         run: |
           & "$env:GITHUB_WORKSPACE\tools\setup\Install-Dependencies.ps1" -LabVIEWVersion $env:LABVIEW_VERSION -Bitness $env:LABVIEW_BITNESS
 
+      # VIPM may leave LabVIEW running on the port it has recorded for it;
+      # check again before the tests (same as pull-request.yml).
+      - name: Check LabVIEW after Package Install
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix
+
       # Invoke-CliTest.ps1 exits 1 when tests failed and 2 when LabVIEW could
       # not be reached, so the log says which of the two happened.
       - name: Run Caraya Test Suite

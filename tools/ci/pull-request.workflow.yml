@@ -120,6 +120,14 @@ jobs:
             & $install -LabVIEWVersion $env:LABVIEW_COMPARE_VERSION -Bitness $env:LABVIEW_COMPARE_BITNESS -RepoDir "$env:GITHUB_WORKSPACE"
           }
 
+      # VIPM starts a LabVIEW to install packages, on the port VIPM has
+      # recorded for it, and may leave it running. Look at the LabVIEWs and
+      # ports again, so the tests and the diff reach the LabVIEW they mean;
+      # the values written here replace the ones from the first check.
+      - name: Check LabVIEW after Package Install
+        run: |
+          & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Resolve-CiEnvironment.ps1" -For All -Fix
+
       # Invoke-CliTest.ps1 exits 0 (passed), 1 (tests failed), 2 (LabVIEW not
       # reachable, nothing ran) or 3 (entry VI missing on this branch). The
       # status goes into the report, so an unreachable LabVIEW is not reported
