@@ -17,6 +17,7 @@
 		</Item>
 		<Item Name="tools" Type="Folder">
 			<Item Name="fake tool add.vi" Type="VI" URL="../fake tool add.vi"/>
+			<Item Name="fake tool array shapes.vi" Type="VI" URL="../fake tool array shapes.vi"/>
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
 			<Item Name="fake tool ignored.vi" Type="VI" URL="../fake tool ignored.vi"/>
@@ -30,6 +31,7 @@
 		</Item>
 	</Item>
 	<Item Name="SubVIs" Type="Folder">
+		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
 		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
@@ -76,6 +78,7 @@
 		<Item Name="test tools call mcp names.vi" Type="VI" URL="../test tools call mcp names.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="test tools list array items.vi" Type="VI" URL="../test tools list array items.vi"/>
+		<Item Name="test tools list array shapes.vi" Type="VI" URL="../test tools list array shapes.vi"/>
 		<Item Name="test tools list mcp names.vi" Type="VI" URL="../test tools list mcp names.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
