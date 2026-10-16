@@ -158,7 +158,7 @@ function Resolve-ViServerPort {
     if ("$enabled" -ine 'TRUE') { $changes['server.tcp.enabled'] = 'True' }
     $owner = Get-PortOwner $port
     if (($Avoid -contains $port) -or $owner) {
-        $why = if ($owner) { "is taken by process $owner" } else { 'is used by the other LabVIEW of this run' }
+        $why = if ($owner) { "is taken by process $owner" } else { 'is configured for another LabVIEW on this machine' }
         $newPort = Get-FreePort ([Math]::Max($port + 1, 3363)) $Avoid
         $notes.Add("Port $port $why; using $newPort.")
         $port = $newPort

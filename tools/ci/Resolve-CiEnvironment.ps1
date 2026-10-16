@@ -84,6 +84,24 @@ $vipm = Find-Tool 'vipm' @(
     "$env:ProgramFiles\JKI\VI Package Manager\support\vipm.exe",
     "${env:ProgramFiles(x86)}\JKI\VI Package Manager\support\vipm.exe")
 if (-not $vipm) { $notes.Add('vipm (VIPM command line) not found; installing packages and building will fail.') }
+# Git must be on the PATH before the job starts: without it actions/checkout
+# downloads a zip instead of cloning, and then the VI diff has no history and
+# VIPM Community Edition refuses to install ("Not inside a Git repository").
+$gitOnPath = [bool](Get-Command git -CommandType Application -ErrorAction SilentlyContinue)
+$git = Find-Tool 'git' @(
+    "$env:ProgramW6432\Git\cmd\git.exe",
+    "$env:ProgramFiles\Git\cmd\git.exe",
+    "${env:ProgramFiles(x86)}\Git\cmd\git.exe",
+    "$env:LOCALAPPDATA\Programs\Git\cmd\git.exe")
+if (-not $git) {
+    $problems.Add('Git is not installed on this runner. Install Git for Windows (system PATH) and restart the runner: without it actions/checkout downloads a zip instead of a repository, so the VI diff cannot run and VIPM Community Edition refuses to install packages ("Not inside a Git repository").')
+} elseif (-not $gitOnPath) {
+    $problems.Add("Git is installed ($git) but not on the PATH the runner started with, so actions/checkout downloaded a zip instead of a repository. Add $(Split-Path $git) to the system PATH and restart the runner.")
+}
+if ($env:GITHUB_WORKSPACE -and -not (Test-Path (Join-Path $env:GITHUB_WORKSPACE '.git'))) {
+    $problems.Add('The checkout is not a Git repository (actions/checkout fell back to downloading a zip). The VI diff and VIPM Community Edition need a real clone; see the Git message above.')
+}
+
 $gh = Find-Tool 'gh' @("$env:ProgramW6432\GitHub CLI\gh.exe", "$env:ProgramFiles\GitHub CLI\gh.exe")
 if (-not $gh) { $notes.Add('gh (GitHub CLI) not found; the report is posted through the REST API instead.') }
 
@@ -129,9 +147,23 @@ if ($For -in 'Compare', 'All' -and $installs.Count -gt 0) {
 }
 
 # --- VI Server ports -----------------------------------------------------------
+# Ports configured in the LabVIEW.ini of every installed LabVIEW. A LabVIEW
+# that needs a port gets one none of the others is configured for, so a
+# working configuration (and VIPM's record of it) is never moved to make room.
+$configuredPorts = @{}
+foreach ($i in $installs) {
+    $p = 0
+    [void][int]::TryParse([string](Get-IniValue (Join-Path (Split-Path $i.Path) 'LabVIEW.ini') 'server.tcp.port'), [ref]$p)
+    if ($p) { $configuredPorts[$i.Path.ToLowerInvariant()] = $p }
+}
+function Get-OtherPort([string]$Path) {
+    @($configuredPorts.GetEnumerator() | Where-Object { $_.Key -ne $Path.ToLowerInvariant() } | ForEach-Object { $_.Value })
+}
+
 $testPort = $null
 if ($test) {
-    $r = Resolve-ViServerPort -Path $test.Path -Requested (Get-RequestedPort $env:REQUESTED_LABVIEW_PORT) -Fix:$Fix
+    $r = Resolve-ViServerPort -Path $test.Path -Requested (Get-RequestedPort $env:REQUESTED_LABVIEW_PORT) -Avoid (Get-OtherPort $test.Path) -Fix:$Fix
+    $configuredPorts[$test.Path.ToLowerInvariant()] = $r.Port
     $testPort = $r.Port
     $r.Notes | ForEach-Object { $notes.Add("Test LabVIEW: $_") }
     $result['LABVIEW_PATH'] = $test.Path
@@ -143,8 +175,7 @@ if ($compare) {
     if ($test -and $compare.Path -ieq $test.Path) {
         $comparePort = $testPort
     } else {
-        $avoid = @(); if ($testPort) { $avoid = @($testPort) }
-        $r = Resolve-ViServerPort -Path $compare.Path -Requested (Get-RequestedPort $env:REQUESTED_COMPARE_PORT) -Avoid $avoid -Fix:$Fix
+        $r = Resolve-ViServerPort -Path $compare.Path -Requested (Get-RequestedPort $env:REQUESTED_COMPARE_PORT) -Avoid (Get-OtherPort $compare.Path) -Fix:$Fix
         $comparePort = $r.Port
         $r.Notes | ForEach-Object { $notes.Add("Comparison LabVIEW: $_") }
     }
@@ -171,6 +202,7 @@ if ($compare) { [void]$summary.AppendLine("| **VI comparison** | LabVIEW $($comp
 function Format-Tool([string]$Path, [string]$Missing) {
     if ($Path) { return '`' + $Path + '`' } else { return $Missing }
 }
+[void]$summary.AppendLine('| git | ' + (Format-Tool $git 'missing') + ' |')
 [void]$summary.AppendLine('| LabVIEW CLI | ' + (Format-Tool $cli 'missing') + ' |')
 [void]$summary.AppendLine('| vipm | ' + (Format-Tool $vipm 'missing') + ' |')
 [void]$summary.AppendLine('| gh | ' + (Format-Tool $gh 'missing (REST fallback)') + ' |')
