@@ -102,6 +102,9 @@ jobs:
         timeout-minutes: 25
         env:
           VIPM_CLI_TIMEOUT: 1200
+          # vipm gives up after 60 s without progress from VIPM Desktop by
+          # default; starting LabVIEW and compiling for the build takes longer.
+          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 600
           # Passed through the environment, not pasted into the script: a
           # commit message with quotes or $ would otherwise break or change it.
           HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
