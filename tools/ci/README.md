@@ -6,6 +6,8 @@ generated and posted as a comment on the pull request.
 
 | File | Purpose |
 |---|---|
+| `Resolve-CiEnvironment.ps1` | First step of every job: finds the LabVIEW for tests and build (oldest ≥ 2020) and for the VI comparison (newest), their VI Server ports, LabVIEW CLI, `vipm` and `gh`; with `-Fix` repairs VI Server settings and port clashes; writes `LABVIEW_*` for the following steps and a table to the job summary. |
+| `LabVIEWCi.psm1` | Functions shared by the scripts here: LabVIEW discovery, VI Server port resolution, tool lookup. |
 | `New-ViDiffReport.ps1` | Compares every changed `.vi`/`.vim`/`.ctl` with its version on the base branch, using LabVIEW's own comparison (`LabVIEWCLI -OperationName CreateComparisonReport`), and writes a Markdown report with before/after images. Added VIs are shown with their block diagram and front panel. |
 | `Invoke-CliTest.ps1` | Runs a test entry VI (`tests\Run_Tests_CLI.vi`, `tests\Run_Protocol_Tests_CLI.vi`) through `LabVIEWCLI -OperationName RunVI`. Exit code 0 passed, 1 tests failed, 2 LabVIEW not reachable (CLI error -350000), 3 entry VI missing on the branch. Used by both workflows. |
 | `Convert-CarayaReport.ps1` | Turns `tests\results\caraya-report.txt`, written by `tests\Run_Tests_CLI.vi`, into a table with one row per test, and adds the protocol tester's result from `tests\results\protocol-report.txt`. Says "did not run" instead of showing failures when LabVIEW was not reachable. |
@@ -22,6 +24,15 @@ permission that automation tokens for this repository deliberately do not have.
 The workflow runs on the self-hosted runner, only for branches of this
 repository (never for forks), and takes the scripts from `main`, so a pull
 request cannot change how its own report is produced.
+
+Every step runs in Windows PowerShell with `-ExecutionPolicy Bypass`. Each job
+starts with `Resolve-CiEnvironment.ps1`, which picks the LabVIEW versions,
+their VI Server ports and the tools on that runner and repairs simple setup
+problems (`LabVIEWCi.psm1` holds the shared functions); the review job then
+installs the VIPM packages (`tools/setup/Install-Dependencies.ps1`) into the
+test LabVIEW and the comparison LabVIEW. A new runner therefore needs only
+LabVIEW, the LabVIEW CLI and VIPM; see `tools/setup/README.md`, "What CI finds
+by itself".
 
 ### Release workflow
 

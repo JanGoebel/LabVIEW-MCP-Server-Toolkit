@@ -94,16 +94,47 @@ if ($Footer) { [void]$body.AppendLine($Footer) }
 $bodyFile = Join-Path ([System.IO.Path]::GetTempPath()) ("pr_comment_" + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.md')
 [System.IO.File]::WriteAllText($bodyFile, $body.ToString(), $utf8)
 
+# gh where it is installed; otherwise the REST API directly, with the same
+# token (GH_TOKEN), so a runner without the GitHub CLI still gets its report.
+$useGh = [bool](Get-Command gh -CommandType Application -ErrorAction SilentlyContinue)
+if (-not $useGh) {
+    $ghDefault = Join-Path $env:ProgramFiles 'GitHub CLI\gh.exe'
+    if (Test-Path $ghDefault) { $env:PATH = "$(Split-Path $ghDefault);$env:PATH"; $useGh = $true }
+}
+if (-not $useGh) {
+    if (-not $env:GH_TOKEN) { throw 'Neither the GitHub CLI (gh) nor GH_TOKEN is available to post the comment.' }
+    Write-Host 'gh not found; posting through the REST API.'
+}
+$apiHeaders = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' }
+
+function Invoke-GitHubApi([string]$Method, [string]$Path, [string]$BodyFile) {
+    if ($useGh) {
+        if ($BodyFile) {
+            & gh api --method $Method $Path -F "body=@$BodyFile" --silent
+        } else {
+            return (& gh api --method $Method $Path | Out-String) | ConvertFrom-Json
+        }
+        if ($LASTEXITCODE -ne 0) { throw "GitHub API $Method $Path failed." }
+        return
+    }
+    $parameters = @{ Method = $Method; Uri = "https://api.github.com/$Path"; Headers = $apiHeaders; UseBasicParsing = $true }
+    if ($BodyFile) {
+        $json = @{ body = [System.IO.File]::ReadAllText($BodyFile) } | ConvertTo-Json -Compress
+        $parameters['Body'] = [System.Text.Encoding]::UTF8.GetBytes($json)
+        $parameters['ContentType'] = 'application/json; charset=utf-8'
+    }
+    return Invoke-RestMethod @parameters
+}
+
 try {
     # Looks at the first 100 comments; the report comment is posted early.
-    $comments = (& gh api "repos/$Repo/issues/$PrNumber/comments?per_page=100" | Out-String) | ConvertFrom-Json
+    $comments = Invoke-GitHubApi GET "repos/$Repo/issues/$PrNumber/comments?per_page=100"
     $existing = @($comments | Where-Object { $_.body -like "*$marker*" } | ForEach-Object { $_.id }) | Select-Object -First 1
     if ($existing) {
-        & gh api --method PATCH "repos/$Repo/issues/comments/$existing" -F "body=@$bodyFile" --silent
+        Invoke-GitHubApi PATCH "repos/$Repo/issues/comments/$existing" $bodyFile | Out-Null
     } else {
-        & gh api --method POST "repos/$Repo/issues/$PrNumber/comments" -F "body=@$bodyFile" --silent
+        Invoke-GitHubApi POST "repos/$Repo/issues/$PrNumber/comments" $bodyFile | Out-Null
     }
-    if ($LASTEXITCODE -ne 0) { throw 'Posting the pull request comment failed.' }
 }
 finally {
     Remove-Item $bodyFile -ErrorAction SilentlyContinue
