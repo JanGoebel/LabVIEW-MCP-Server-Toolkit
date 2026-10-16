@@ -43,7 +43,7 @@ jobs:
 
       - name: Find LabVIEW and Tools
         run: |
-          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix
+          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix -CleanStart
 
       # Installs src\*.vipc and tools\setup\test-packages.txt into the LabVIEW
       # chosen above, which runs the tests here and builds the package in the
@@ -96,7 +96,7 @@ jobs:
       # Same LabVIEW as the test job (a job starts with a fresh environment).
       - name: Find LabVIEW and Tools
         run: |
-          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test
+          & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix -CleanStart
 
       - name: Build VI Package via VIPM CLI
         timeout-minutes: 25

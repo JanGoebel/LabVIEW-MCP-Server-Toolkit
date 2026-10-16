@@ -84,7 +84,9 @@ jobs:
 
       # Picks the LabVIEW for the tests and the one for the VI comparison, their
       # VI Server ports and the tools, repairs what is easy to repair (VI
-      # Server off, port clashes, leftover LabVIEW CLI processes) and lists it
+      # Server off, port clashes, leftover LabVIEW CLI processes, and with
+      # -CleanStart a VIPM Desktop left over from an earlier job together with
+      # the LabVIEWs it was driving) and lists it
       # all in the job summary. See the comment at env above.
       # The scripts come from main. While main does not have the scripts this
       # workflow calls yet (in the run of the pull request that introduces
@@ -101,7 +103,7 @@ jobs:
               Copy-Item "$env:GITHUB_WORKSPACE\$dir\*" "$ci\$dir" -Recurse -Force
             }
           }
-          & "$ci\tools\ci\Resolve-CiEnvironment.ps1" -For All -Fix
+          & "$ci\tools\ci\Resolve-CiEnvironment.ps1" -For All -Fix -CleanStart
 
       # Installs the packages the toolkit and its tests need into both LabVIEWs
       # chosen above, so a fresh runner needs no manual setup and the diff
@@ -255,7 +257,7 @@ jobs:
             New-Item -ItemType Directory -Force "$ci\tools\ci" | Out-Null
             Copy-Item "$env:GITHUB_WORKSPACE\tools\ci\*" "$ci\tools\ci" -Recurse -Force
           }
-          & "$ci\tools\ci\Resolve-CiEnvironment.ps1" -For Test
+          & "$ci\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix -CleanStart
 
       - name: Build VI Package via VIPM CLI
         timeout-minutes: 25

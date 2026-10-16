@@ -228,6 +228,26 @@ function Resolve-ViServerPort {
     return [pscustomobject]@{ Port = $port; Notes = $notes; Changed = $changed }
 }
 
+function Stop-LeftoverVipm {
+    <# Ends a running VIPM Desktop and, only if one was running, the LabVIEWs
+       at LabVIEWPath it may have been driving. For the start of a CI job,
+       where a running VIPM Desktop belongs to an earlier job (see
+       Resolve-CiEnvironment.ps1, -CleanStart). Returns a note, or nothing
+       when VIPM Desktop was not running. #>
+    param([string[]]$LabVIEWPath = @(), [string]$ProcessName = 'VI Package Manager')
+    $desktop = @(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)
+    if ($desktop.Count -eq 0) { return }
+    $driven = @($LabVIEWPath | ForEach-Object { Get-LabVIEWProcess $_ } | Where-Object { $_ })
+    # Read the paths first: a stopped process no longer reports one.
+    $drivenPaths = @($driven | ForEach-Object { $_.Path })
+    $ended = @($desktop) + $driven
+    $ended | Stop-Process -Force -ErrorAction SilentlyContinue
+    $ended | ForEach-Object { Wait-Process -Id $_.Id -Timeout 60 -ErrorAction SilentlyContinue }
+    $what = 'VIPM Desktop'
+    if ($driven.Count -gt 0) { $what += " and $($driven.Count) LabVIEW(s) ($($drivenPaths -join ', '))" }
+    "Ended $what left over from an earlier job, so this job starts with a VIPM that answers."
+}
+
 function Find-Tool {
     <# Path of a command-line tool: from PATH, else from its default install
        folders, in which case its folder is added to PATH for this process and,
@@ -255,4 +275,4 @@ function Get-LabVIEWCliPath {
 
 Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
-    Get-VipmPort
+    Get-VipmPort, Stop-LeftoverVipm

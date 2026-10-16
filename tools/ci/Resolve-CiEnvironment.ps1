@@ -28,6 +28,16 @@ program holds, gives the two LabVIEWs different ports, closes a LabVIEW that
 runs without listening on its port, and ends LabVIEW CLI processes left over
 from a cancelled run.
 
+With -Fix -CleanStart (the first step of every job) it also ends a VIPM
+Desktop left over from an earlier job, together with the running LabVIEWs it
+may have been driving. A runner runs one job at a time, so a VIPM Desktop
+that is running when a job starts belongs to an earlier one. When vipm gives
+up on an operation, VIPM Desktop can carry on with it, or wait at a dialog,
+long afterwards, and then never answers the next job ("wait for VIPM startup
+timed out"). The vipm command line starts VIPM Desktop again when needed, and
+LabVIEW CLI starts LabVIEW. The check after the package install does not pass
+-CleanStart, so it keeps what the install just started.
+
 The requested values come from the environment variables
 REQUESTED_LABVIEW_PATH, REQUESTED_LABVIEW_PORT, REQUESTED_COMPARE_PATH and
 REQUESTED_COMPARE_PORT (the workflows map the repository variables onto
@@ -44,7 +54,8 @@ Shows what CI would use on this machine, without changing anything.
 param(
     [ValidateSet('Test', 'Compare', 'All')][string]$For = 'All',
     [int]$MinVersion = 2020,
-    [switch]$Fix
+    [switch]$Fix,
+    [switch]$CleanStart
 )
 
 $ErrorActionPreference = 'Stop'
@@ -119,6 +130,10 @@ if ($installs.Count -eq 0) {
     $problems.Add('No LabVIEW installation found (default folders and registry).')
 }
 $usable = @($installs | Where-Object { $_.Year -ge $MinVersion })
+
+if ($Fix -and $CleanStart) {
+    Stop-LeftoverVipm -LabVIEWPath @($installs | ForEach-Object { $_.Path }) | ForEach-Object { $notes.Add($_) }
+}
 
 $test = $null
 if ($For -in 'Test', 'All' -and $installs.Count -gt 0) {
