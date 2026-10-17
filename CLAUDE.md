@@ -17,6 +17,7 @@ resources). Built on the IG HTTP Server Toolkit and JSONtext.
 | `examples/` | Example servers. In this repo they load the toolkit from `src`, not from an installed package |
 | `tools/ci/` | Pull request review scripts and the workflow template |
 | `tools/setup/`, `tools/test/` | Environment setup and the protocol tester, where present |
+| `docs/` | Guides for working on the repository, e.g. `pull-request-reports.md` |
 | `.github/workflows/` | CI. Maintainer-only, see below |
 
 ## Who decides what
@@ -112,13 +113,17 @@ change does, like a commit subject. Description, in this order:
 2. **Changes** - per VI or file: new or modified, and what it does. GitHub
    cannot diff VIs, so this text carries the reasoning; the generated diff
    comment (see below) carries the exact changes.
-3. **Code summary** - required when VIs change: for every modified VI, the
-   screenshot of each changed spot of its block diagram (the "now" image of
-   the diff report, linked from the `pr-assets/pr-<number>` branch) and one
-   or two sentences on what happens there and why. Added VIs get their whole
-   block diagram and a short walk through it. The images exist only after the
-   diff has run, so add this section once the report is posted, and refresh
-   it when later pushes change the diagrams.
+3. **Code summary** - required when VIs change. A quick overview: a table
+   with one row per changed VI, then one section per VI with cropped block
+   diagram pictures, numbered orange highlights
+   (`tools/ci/New-SummaryImage.ps1`) and a numbered point per highlight on
+   what happens there and why. Show only the spots and case frames needed to
+   explain the change; everything else belongs in the detailed diff report.
+   The layout, picture rules, where the pictures live
+   (`pr-assets/pr-<number>-summary`) and a checklist are in
+   `docs/pull-request-reports.md`; follow it. The pictures exist only after
+   the diff has run, so add this section once the report is posted, and
+   refresh it when later pushes change the diagrams.
 4. **Verified** - what was run, where, with which result.
 5. **Not verified** - what was not run or could not be checked.
 6. **Known rough edges** - auto-arranged diagrams, overlapping nodes, anything
@@ -136,6 +141,10 @@ short:
 - added VIs folded away;
 - a button that opens the full graphical diff as its own page (the report is
   pushed to the `pr-assets/pr-<number>` branch and rendered by GitHub).
+
+That detailed diff report is the complete record: every changed spot before
+and after, and every case frame of added VIs and of the new version of
+modified VIs, not only the visible one (see `docs/pull-request-reports.md`).
 
 The full diff never goes into the comment itself. The pull request workflow
 posts this report and builds a test package. If it is not active or has not
