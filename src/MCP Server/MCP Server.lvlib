@@ -118,6 +118,7 @@
 			<Item Name="Check Tool Arguments.vi" Type="VI" URL="../Check Tool Arguments.vi"/>
 			<Item Name="Check MCP Names.vi" Type="VI" URL="../Check MCP Names.vi"/>
 			<Item Name="LV Type To JSON Schema.vi" Type="VI" URL="../LV Type To JSON Schema.vi"/>
+			<Item Name="Add Control Details To Schema.vi" Type="VI" URL="../Add Control Details To Schema.vi"/>
 			<Item Name="JSON To Control Value.vi" Type="VI" URL="../JSON To Control Value.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
