@@ -59,7 +59,31 @@ Download Claude Desktop:
 https://claude.com/download
 
 ## 🚀 Datatypes
-Currently not all datatypes are fully supported. Tool Inputs support Strings, Numbers and Booleans. Output Datatypes are all supported, the outputs are simply flattened to json.
+Every control of a tool VI's connector pane becomes a tool input, described to the model as JSON Schema in `tools/list`. Arguments in `tools/call` are converted with JSONtext into the control's own type.
+
+| LabVIEW type | JSON Schema | Value in `tools/call` |
+|---|---|---|
+| I8 … U64 | `integer` with `minimum`/`maximum` of the representation | number |
+| SGL, DBL, EXT (also with unit) | `number` | number |
+| Boolean | `boolean` | `true`/`false` |
+| String | `string` | string |
+| Path | `string` | path as text, e.g. `C:\\data\\log.csv` |
+| Timestamp | `string` with `format: date-time` | ISO 8601, e.g. `2026-10-17T12:34:56Z` |
+| Enum | `string` with `enum` of the item names | item name (a number is an error) |
+| Cluster | `object` with `properties` named by the element labels | object; a member left out keeps the control's value |
+| Array, any number of dimensions | nested `array` with `items` | nested arrays |
+| Other types (variant, waveform, complex, fixed point, ring, map, set, refnum, class, picture) | `{}` (any value) | not supported as inputs yet |
+
+What else goes into the schema, so the model knows what to send:
+- `description`: the control's description, and the description of every cluster element at any depth (inside clusters and arrays).
+- Numerics with a unit get `Unit: <unit>.` appended to their description.
+- `minimum`/`maximum` from the control's Data Entry limits when they are set to coerce, combined with the range of the integer representation.
+- `default`: the control's default value for inputs that are not required on the connector pane (left out when it would be longer than 1024 characters).
+- `required`: the inputs marked *Required* on the connector pane.
+
+Write the descriptions with the model in mind: what the value means, its unit and its allowed values.
+
+Outputs of any type are flattened to JSON and returned as text (timestamps as ISO 8601, enums as item names); no `outputSchema` is sent yet.
 
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
