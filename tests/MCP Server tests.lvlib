@@ -19,6 +19,7 @@
 			<Item Name="fake tool add.vi" Type="VI" URL="../fake tool add.vi"/>
 			<Item Name="fake tool array shapes.vi" Type="VI" URL="../fake tool array shapes.vi"/>
 			<Item Name="fake tool schema shapes.vi" Type="VI" URL="../fake tool schema shapes.vi"/>
+			<Item Name="fake tool schema details.vi" Type="VI" URL="../fake tool schema details.vi"/>
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
 			<Item Name="fake tool ignored.vi" Type="VI" URL="../fake tool ignored.vi"/>
@@ -36,6 +37,7 @@
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
 		<Item Name="Add Fixture Schema Shapes Tool.vi" Type="VI" URL="../Add Fixture Schema Shapes Tool.vi"/>
+		<Item Name="Add Fixture Schema Details Tool.vi" Type="VI" URL="../Add Fixture Schema Details Tool.vi"/>
 		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
 		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
 		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
@@ -85,6 +87,7 @@
 		<Item Name="test tools list every array has items.vi" Type="VI" URL="../test tools list every array has items.vi"/>
 		<Item Name="test tools list mcp names.vi" Type="VI" URL="../test tools list mcp names.vi"/>
 		<Item Name="test tools list schema details.vi" Type="VI" URL="../test tools list schema details.vi"/>
+		<Item Name="test tools list descriptions defaults ranges.vi" Type="VI" URL="../test tools list descriptions defaults ranges.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
 		<Item Name="test unknown notification.vi" Type="VI" URL="../test unknown notification.vi"/>
