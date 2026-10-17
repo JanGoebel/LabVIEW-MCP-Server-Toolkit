@@ -53,3 +53,24 @@ Most of its scenarios call tools, prompts and resources with fixed names
 against any other server. The scenarios that apply to every server are
 `server-initialize`, `ping`, `tools-list`, `resources-list`, `prompts-list` and
 `dns-rebinding-protection`.
+
+## Test-WithCodex.ps1
+
+Lets the OpenAI Codex CLI connect to a running server, list its tools and call
+some of them. It shows what an OpenAI client actually receives: Codex rewrites
+every tool schema into a TypeScript-like declaration for the model, so a
+missing `items`, `properties` or `enum` shows up there as `unknown` or a bare
+`number`.
+
+Needs Node.js, `npm install -g @openai/codex` and a `codex login` in your own
+terminal. The server is passed as a temporary override; `~/.codex/config.toml`
+is not changed.
+
+```powershell
+.\tools\test\Test-WithCodex.ps1 -Url http://127.0.0.1:36987/mcp/server -Calls fake_tool_schema_shapes
+```
+
+The full event log goes to `$env:TEMP\codex-mcp-report.jsonl`. The exit code
+is 0 when Codex reports the server's tools. Whether a call worked is in the
+printed answer and the log; the script does not judge it. It is not part of
+CI, because it needs an OpenAI sign-in.
