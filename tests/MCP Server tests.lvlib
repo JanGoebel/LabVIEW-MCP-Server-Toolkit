@@ -17,6 +17,7 @@
 		</Item>
 		<Item Name="tools" Type="Folder">
 			<Item Name="fake tool add.vi" Type="VI" URL="../fake tool add.vi"/>
+			<Item Name="fake tool annotated.vi" Type="VI" URL="../fake tool annotated.vi"/>
 			<Item Name="fake tool array shapes.vi" Type="VI" URL="../fake tool array shapes.vi"/>
 			<Item Name="fake tool schema shapes.vi" Type="VI" URL="../fake tool schema shapes.vi"/>
 			<Item Name="fake tool schema details.vi" Type="VI" URL="../fake tool schema details.vi"/>
@@ -26,6 +27,7 @@
 			<Item Name="fake tool name clash.vi" Type="VI" URL="../fake tool name clash.vi"/>
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
 			<Item Name="fake tool no inputs outputs.vi" Type="VI" URL="../fake tool no inputs outputs.vi"/>
+			<Item Name="fake tool picture outputs.vi" Type="VI" URL="../fake tool picture outputs.vi"/>
 			<Item Name="fake tool return error.vi" Type="VI" URL="../fake tool return error.vi"/>
 			<Item Name="fake tool required input.vi" Type="VI" URL="../fake tool required input.vi"/>
 			<Item Name="fake tool special labels.vi" Type="VI" URL="../fake tool special labels.vi"/>
@@ -34,7 +36,9 @@
 	</Item>
 	<Item Name="SubVIs" Type="Folder">
 		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
+		<Item Name="Add Fixture Annotated Tool.vi" Type="VI" URL="../Add Fixture Annotated Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
+		<Item Name="Add Fixture Picture Tool.vi" Type="VI" URL="../Add Fixture Picture Tool.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
 		<Item Name="Add Fixture Schema Shapes Tool.vi" Type="VI" URL="../Add Fixture Schema Shapes Tool.vi"/>
 		<Item Name="Add Fixture Schema Details Tool.vi" Type="VI" URL="../Add Fixture Schema Details Tool.vi"/>
@@ -81,11 +85,14 @@
 		<Item Name="test tools call array.vi" Type="VI" URL="../test tools call array.vi"/>
 		<Item Name="test tools call mcp names.vi" Type="VI" URL="../test tools call mcp names.vi"/>
 		<Item Name="test tools call schema shapes.vi" Type="VI" URL="../test tools call schema shapes.vi"/>
+		<Item Name="test tools call structured content.vi" Type="VI" URL="../test tools call structured content.vi"/>
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="test tools list array items.vi" Type="VI" URL="../test tools list array items.vi"/>
 		<Item Name="test tools list array shapes.vi" Type="VI" URL="../test tools list array shapes.vi"/>
 		<Item Name="test tools list every array has items.vi" Type="VI" URL="../test tools list every array has items.vi"/>
 		<Item Name="test tools list mcp names.vi" Type="VI" URL="../test tools list mcp names.vi"/>
+		<Item Name="test tools list output schema.vi" Type="VI" URL="../test tools list output schema.vi"/>
+		<Item Name="test tools list title annotations.vi" Type="VI" URL="../test tools list title annotations.vi"/>
 		<Item Name="test tools list schema details.vi" Type="VI" URL="../test tools list schema details.vi"/>
 		<Item Name="test tools list descriptions defaults ranges.vi" Type="VI" URL="../test tools list descriptions defaults ranges.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
