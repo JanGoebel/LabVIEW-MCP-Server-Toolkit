@@ -99,12 +99,16 @@ jobs:
           & "$env:GITHUB_WORKSPACE\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix -CleanStart
 
       - name: Build VI Package via VIPM CLI
-        timeout-minutes: 25
+        timeout-minutes: 50
         env:
-          VIPM_CLI_TIMEOUT: 1200
+          VIPM_CLI_TIMEOUT: 2400
           # vipm gives up after 60 s without progress from VIPM Desktop by
-          # default; starting LabVIEW and compiling for the build takes longer.
-          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 600
+          # default ("made no progress ... may be stuck", exit code 124).
+          # A build of this package in LabVIEW 2020 takes about 23 minutes on
+          # the runner, and its last phase reports nothing for about 10 of
+          # them; with 600 s the build failed or passed depending on a few
+          # seconds. 25 minutes of silence still ends a VIPM that really hangs.
+          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 1500
           # Passed through the environment, not pasted into the script: a
           # commit message with quotes or $ would otherwise break or change it.
           HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
