@@ -35,8 +35,13 @@ that is running when a job starts belongs to an earlier one. When vipm gives
 up on an operation, VIPM Desktop can carry on with it, or wait at a dialog,
 long afterwards, and then never answers the next job ("wait for VIPM startup
 timed out"). The vipm command line starts VIPM Desktop again when needed, and
-LabVIEW CLI starts LabVIEW. The check after the package install does not pass
--CleanStart, so it keeps what the install just started.
+LabVIEW CLI starts LabVIEW. It also closes the LabVIEW chosen for the tests
+and the build if it is still running: jobs of different pull requests use the
+same workspace path, and a LabVIEW that still has the previous job's
+MCP Server.lvlib in memory makes the next build look for that job's files
+("The following source VIs or Libraries are missing"). The check after the
+package install does not pass -CleanStart, so it keeps what the install just
+started.
 
 The requested values come from the environment variables
 REQUESTED_LABVIEW_PATH, REQUESTED_LABVIEW_PORT, REQUESTED_COMPARE_PATH and
@@ -146,6 +151,17 @@ if ($For -in 'Test', 'All' -and $installs.Count -gt 0) {
         $problems.Add("No LabVIEW $MinVersion or newer for the tests and the build.")
     } elseif ($test.Year -ne $MinVersion -or $test.Bitness -ne '64') {
         $notes.Add("Tests and the package build use LabVIEW $($test.Year) $($test.Bitness)-bit, not $MinVersion 64-bit: a package built with it requires LabVIEW $($test.Year) or newer.")
+    }
+}
+
+if ($Fix -and $CleanStart -and $test) {
+    # The previous job's VIs may still be loaded from the same workspace path.
+    $running = Get-LabVIEWProcess $test.Path
+    if ($running) {
+        $runningId = $running.Id
+        Stop-Process -Id $runningId -Force -ErrorAction SilentlyContinue
+        Wait-Process -Id $runningId -Timeout 60 -ErrorAction SilentlyContinue
+        $notes.Add("Closed LabVIEW $($test.Year) $($test.Bitness)-bit (process $runningId) left running by an earlier job, so this job loads the VIs of this checkout instead of the previous job's from memory.")
     }
 }
 
