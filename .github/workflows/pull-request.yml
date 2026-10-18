@@ -260,14 +260,16 @@ jobs:
           & "$ci\tools\ci\Resolve-CiEnvironment.ps1" -For Test -Fix -CleanStart
 
       - name: Build VI Package via VIPM CLI
-        timeout-minutes: 25
+        timeout-minutes: 50
         env:
-          VIPM_CLI_TIMEOUT: 1200
+          VIPM_CLI_TIMEOUT: 2400
           # vipm gives up after 60 s without progress from VIPM Desktop by
-          # default ("made no progress ... may be stuck", exit code 124);
-          # starting LabVIEW and compiling the sources for the build takes
-          # longer than that. Same value as Install-Dependencies.ps1.
-          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 600
+          # default ("made no progress ... may be stuck", exit code 124).
+          # A build of this package in LabVIEW 2020 takes about 23 minutes on
+          # the runner, and its last phase reports nothing for about 10 of
+          # them; with 600 s the build failed or passed depending on a few
+          # seconds. 25 minutes of silence still ends a VIPM that really hangs.
+          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 1500
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           # Read and write the .vipb as UTF-8: VIPM rejects a file that is not valid UTF-8.
