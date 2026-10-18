@@ -36,12 +36,15 @@ up on an operation, VIPM Desktop can carry on with it, or wait at a dialog,
 long afterwards, and then never answers the next job ("wait for VIPM startup
 timed out"). The vipm command line starts VIPM Desktop again when needed, and
 LabVIEW CLI starts LabVIEW. It also closes the LabVIEW chosen for the tests
-and the build if it is still running: jobs of different pull requests use the
-same workspace path, and a LabVIEW that still has the previous job's
-MCP Server.lvlib in memory makes the next build look for that job's files
-("The following source VIs or Libraries are missing"). The check after the
-package install does not pass -CleanStart, so it keeps what the install just
-started.
+and the build if it is still running, and deletes that LabVIEW version's
+compiled object cache (Documents\LabVIEW Data\VIObjCache\<version>). The
+repository's VIs are saved source-only, so their compiled code lives in that
+cache, keyed by file path. Jobs of different pull requests use the same
+workspace path, and a VI that is identical on both branches keeps its cache
+entry, compiled against the previous job's typedefs: the next build then looks
+for that job's files ("The following source VIs or Libraries are missing").
+The check after the package install does not pass -CleanStart, so it keeps
+what the install just started.
 
 The requested values come from the environment variables
 REQUESTED_LABVIEW_PATH, REQUESTED_LABVIEW_PORT, REQUESTED_COMPARE_PATH and
@@ -161,7 +164,19 @@ if ($Fix -and $CleanStart -and $test) {
         $runningId = $running.Id
         Stop-Process -Id $runningId -Force -ErrorAction SilentlyContinue
         Wait-Process -Id $runningId -Timeout 60 -ErrorAction SilentlyContinue
-        $notes.Add("Closed LabVIEW $($test.Year) $($test.Bitness)-bit (process $runningId) left running by an earlier job, so this job loads the VIs of this checkout instead of the previous job's from memory.")
+        $notes.Add("Closed LabVIEW $($test.Year) $($test.Bitness)-bit (process $runningId) left running by an earlier job.")
+    }
+    # Compiled code of source-only VIs from an earlier job's checkout at the
+    # same path; LabVIEW rebuilds the cache from this checkout's files.
+    $cacheRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'LabVIEW Data\VIObjCache'
+    $cacheDirs = @(Get-ChildItem -LiteralPath $cacheRoot -Directory -Filter "$($test.Year - 2000).0*" -ErrorAction SilentlyContinue)
+    foreach ($dir in $cacheDirs) {
+        try {
+            Remove-Item -LiteralPath $dir.FullName -Recurse -Force -ErrorAction Stop
+            $notes.Add("Deleted the compiled object cache $($dir.FullName), so no VI is loaded with code compiled against an earlier job's files.")
+        } catch {
+            $notes.Add("Could not delete the compiled object cache $($dir.FullName): $($_.Exception.Message)")
+        }
     }
 }
 
