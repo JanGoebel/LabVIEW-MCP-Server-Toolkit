@@ -8,7 +8,8 @@ generated and posted as a comment on the pull request.
 |---|---|
 | `Resolve-CiEnvironment.ps1` | First step of every job: finds the LabVIEW for tests and build (oldest ≥ 2020) and for the VI comparison (newest), their VI Server ports, LabVIEW CLI, `vipm` and `gh`; with `-Fix` repairs VI Server settings and port clashes; writes `LABVIEW_*` for the following steps and a table to the job summary. |
 | `LabVIEWCi.psm1` | Functions shared by the scripts here: LabVIEW discovery, VI Server port resolution, tool lookup. |
-| `New-ViDiffReport.ps1` | Compares every changed `.vi`/`.vim`/`.ctl` with its version on the base branch, using LabVIEW's own comparison (`LabVIEWCLI -OperationName CreateComparisonReport`), and writes a Markdown report with before/after images. Added VIs are shown with their block diagram and front panel. |
+| `New-ViDiffReport.ps1` | Compares every changed `.vi`/`.vim`/`.ctl` with its version on the base branch, using LabVIEW's own comparison (`LabVIEWCLI -OperationName CreateComparisonReport`), and writes a Markdown report with before/after images. Added VIs are shown with their block diagram and front panel. Every case frame of the new version of each VI is added in a folded section. |
+| `Print Diagram Frames.vi` | Run by `New-ViDiffReport.ps1` through `LabVIEWCLI -OperationName RunVI`: prints one VI with Print.VI To HTML (one picture per case frame) and lists each frame's structure and selector value in print order. Arguments: VI path, HTML file path, frame list path. LabVIEW 20.0. |
 | `Invoke-CliTest.ps1` | Runs a test entry VI (`tests\Run_Tests_CLI.vi`, `tests\Run_Protocol_Tests_CLI.vi`) through `LabVIEWCLI -OperationName RunVI`. Exit code 0 passed, 1 tests failed, 2 LabVIEW not reachable (CLI error -350000), 3 entry VI missing on the branch. Used by both workflows. |
 | `Convert-CarayaReport.ps1` | Turns `tests\results\caraya-report.txt`, written by `tests\Run_Tests_CLI.vi`, into a table with one row per test, and adds the protocol tester's result from `tests\results\protocol-report.txt`. Says "did not run" instead of showing failures when LabVIEW was not reachable. |
 | `New-SummaryImage.ps1` | Not part of the workflow. Crops a diagram picture (file or URL) to one spot and draws numbered orange boxes around the nodes a pull request's Code summary explains; see `docs/pull-request-reports.md`. |
@@ -55,9 +56,20 @@ access enabled on the given port. A comparison takes roughly 10 seconds per
 VI. When LabVIEW cannot be reached (error -350000), the script stops after the
 first VI instead of waiting for the same timeout on every VI.
 
-The exit code is 1 when any changed VI could not be compared, and the pull
-request workflow fails on it: a pull request without its diff is not ready
-for review.
+The comparison images show each case structure on its visible frame only. So
+the script also runs `Print Diagram Frames.vi` (LabVIEW CLI RunVI, same
+LabVIEW and port) on the new version of every added and modified VI. It prints
+the VI with Print.VI To HTML, which writes one picture per frame, and lists the
+frames of every case structure in LabVIEW's print order. `report.md` gets a
+folded "All case frames" section per VI, one row per frame, captioned with the
+structure and its selector value. If the number of pictures and of listed
+frames ever differ, the pictures are numbered instead of named. The helper is
+saved in LabVIEW 20.0 format; a base branch without it gets the report without
+frames and a warning.
+
+The exit code is 1 when any changed VI could not be compared or its frames
+could not be printed, and the pull request workflow fails on it: a pull
+request without its diff is not ready for review.
 
 ## Housekeeping
 
