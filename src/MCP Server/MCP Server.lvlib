@@ -30,6 +30,8 @@
 			<Item Name="Input Parameter.ctl" Type="VI" URL="../Input Parameter.ctl"/>
 			<Item Name="Logging.ctl" Type="VI" URL="../Logging.ctl"/>
 			<Item Name="Tool Data.ctl" Type="VI" URL="../Tool Data.ctl"/>
+			<Item Name="Tool Hint.ctl" Type="VI" URL="../Tool Hint.ctl"/>
+			<Item Name="Tool Annotations.ctl" Type="VI" URL="../Tool Annotations.ctl"/>
 			<Item Name="Server Data.ctl" Type="VI" URL="../Server Data.ctl"/>
 			<Item Name="Prompt Data.ctl" Type="VI" URL="../Prompt Data.ctl"/>
 			<Item Name="Terminal.ctl" Type="VI" URL="../Terminal.ctl"/>
@@ -106,6 +108,8 @@
 			<Item Name="Null Id For Parse Error.vi" Type="VI" URL="../Null Id For Parse Error.vi"/>
 			<Item Name="Default Tool Arguments.vi" Type="VI" URL="../Default Tool Arguments.vi"/>
 			<Item Name="Mark Tool Error Result.vi" Type="VI" URL="../Mark Tool Error Result.vi"/>
+			<Item Name="Complete Tool Entry.vi" Type="VI" URL="../Complete Tool Entry.vi"/>
+			<Item Name="Add Structured Content.vi" Type="VI" URL="../Add Structured Content.vi"/>
 			<Item Name="Strip Error Details.vi" Type="VI" URL="../Strip Error Details.vi"/>
 			<Item Name="Reject Non Object Message.vi" Type="VI" URL="../Reject Non Object Message.vi"/>
 			<Item Name="Build Prompt List JSON.vi" Type="VI" URL="../Build Prompt List JSON.vi"/>

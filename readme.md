@@ -83,7 +83,22 @@ What else goes into the schema, so the model knows what to send:
 
 Write the descriptions with the model in mind: what the value means, its unit and its allowed values.
 
-Outputs of any type are flattened to JSON and returned as text (timestamps as ISO 8601, enums as item names); no `outputSchema` is sent yet.
+Outputs of any type are flattened to JSON (timestamps as ISO 8601, enums as item names):
+- The result's text block holds all outputs as one JSON object, for older clients.
+- `structuredContent` holds the same object without picture outputs.
+- Picture outputs are returned as separate image content (PNG).
+- `tools/list` describes the outputs as `outputSchema`, built like the input schema: types, descriptions, ranges, units.
+
+## Tool title, annotations and errors
+
+`Add Tool.vi` takes two optional inputs that clients show to users or use to decide when to ask before running a tool:
+- `title`: a display name. Without one, no `title` is sent and clients show the tool name.
+- `annotations` (`Tool Annotations.ctl`): `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`.
+  - Each hint is *not set*, *true* or *false*. Only hints that are set are sent.
+  - MCP's defaults for unset hints are: not read-only, destructive, not idempotent, open world.
+  - Mark tools that only read values as read-only. Mark tools that move hardware or delete data as destructive, so clients ask the user first.
+
+A call with missing required arguments, or with an argument that does not fit its control's type, returns a normal result with `isError: true` and a message the model can act on. Unknown tools and malformed requests are JSON-RPC errors.
 
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
