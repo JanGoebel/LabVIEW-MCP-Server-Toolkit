@@ -139,6 +139,8 @@
 			<Item Name="Prepare Request Dispatch.vi" Type="VI" URL="../Prepare Request Dispatch.vi"/>
 			<Item Name="Run Streamed Request.vi" Type="VI" URL="../Run Streamed Request.vi"/>
 			<Item Name="Start Streamed Request.vi" Type="VI" URL="../Start Streamed Request.vi"/>
+			<Item Name="Server Access Settings.vi" Type="VI" URL="../Server Access Settings.vi"/>
+			<Item Name="Check Client Access.vi" Type="VI" URL="../Check Client Access.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
