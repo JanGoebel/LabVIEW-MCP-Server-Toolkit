@@ -46,6 +46,8 @@
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
 		<Item Name="Ask User.vi" Type="VI" URL="../Ask User.vi"/>
 		<Item Name="Confirm With User.vi" Type="VI" URL="../Confirm With User.vi"/>
+		<Item Name="Report Progress.vi" Type="VI" URL="../Report Progress.vi"/>
+		<Item Name="Cancel Requested.vi" Type="VI" URL="../Cancel Requested.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
 		<Property Name="NI.LibItem.Scope" Type="Int">4</Property>
@@ -129,6 +131,17 @@
 			<Item Name="Handle MCP Request.vi" Type="VI" URL="../Handle MCP Request.vi"/>
 			<Item Name="Cache Hints.vi" Type="VI" URL="../Cache Hints.vi"/>
 			<Item Name="Build Unsupported Version Error.vi" Type="VI" URL="../Build Unsupported Version Error.vi"/>
+			<Item Name="Stream State.vi" Type="VI" URL="../Stream State.vi"/>
+			<Item Name="Legacy Cancellations.vi" Type="VI" URL="../Legacy Cancellations.vi"/>
+			<Item Name="Wait For Stream Drain.vi" Type="VI" URL="../Wait For Stream Drain.vi"/>
+			<Item Name="Get Request Stream.vi" Type="VI" URL="../Get Request Stream.vi"/>
+			<Item Name="Validate MCP Request.vi" Type="VI" URL="../Validate MCP Request.vi"/>
+			<Item Name="Prepare Request Dispatch.vi" Type="VI" URL="../Prepare Request Dispatch.vi"/>
+			<Item Name="Run Streamed Request.vi" Type="VI" URL="../Run Streamed Request.vi"/>
+			<Item Name="Start Streamed Request.vi" Type="VI" URL="../Start Streamed Request.vi"/>
+		</Item>
+		<Item Name="SSE" Type="Folder">
+			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
