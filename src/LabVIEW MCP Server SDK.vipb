@@ -187,6 +187,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Path>tests</Path>
       </Exclusions>
       <Exclusions>
+        <Path>tools</Path>
+      </Exclusions>
+      <Exclusions>
+        <Path>_ci</Path>
+      </Exclusions>
+      <Exclusions>
         <Path>examples/Simple MCP Server/.Simple MCP Server.UserState</Path>
       </Exclusions>
       <Exclusions>
