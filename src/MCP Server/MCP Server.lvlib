@@ -129,6 +129,12 @@
 			<Item Name="Handle MCP Request.vi" Type="VI" URL="../Handle MCP Request.vi"/>
 			<Item Name="Cache Hints.vi" Type="VI" URL="../Cache Hints.vi"/>
 			<Item Name="Build Unsupported Version Error.vi" Type="VI" URL="../Build Unsupported Version Error.vi"/>
+			<Item Name="MCP Request Metadata.ctl" Type="VI" URL="../MCP Request Metadata.ctl"/>
+			<Item Name="Read MCP Request Metadata.vi" Type="VI" URL="../Read MCP Request Metadata.vi"/>
+			<Item Name="Check Modern MCP Request.vi" Type="VI" URL="../Check Modern MCP Request.vi"/>
+			<Item Name="Set MCP Request Context.vi" Type="VI" URL="../Set MCP Request Context.vi"/>
+			<Item Name="Collect MCP Input Requests.vi" Type="VI" URL="../Collect MCP Input Requests.vi"/>
+			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
