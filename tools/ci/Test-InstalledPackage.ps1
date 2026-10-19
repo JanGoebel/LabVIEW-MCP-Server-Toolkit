@@ -15,8 +15,8 @@ tests load the toolkit from src\. This script tests what users install.
    when the toolkit is already installed there, so it never replaces or
    removes a developer's own installation (-Force overrides that).
 3. Example. Starts the installed Datalogger example, the copy under
-   <LabVIEW>\examples\MCP Server\..., not the repository's, through
-   `LabVIEWCLI -OperationName RunVI`, waits until it answers on its port
+   <LabVIEW>\examples\MCP Server\..., not the repository's, with Start VI.vi
+   (next to this script) through LabVIEW CLI, waits until it answers on its port
    (36987), and runs tools\test\Test-McpServer.ps1 against it. The example
    links to the installed jg_mcp_MCP Server.lvlib in vi.lib, so this also
    shows that the installed toolkit loads and serves.
@@ -195,8 +195,11 @@ if ($owner) {
     exit 1
 }
 
+# vipm gives up after 60 s without progress from VIPM Desktop; an install
+# into LabVIEW 2020 is silent for longer than that while LabVIEW loads.
+if (-not $env:VIPM_DESKTOP_LIVELINESS_TIMEOUT) { $env:VIPM_DESKTOP_LIVELINESS_TIMEOUT = '900' }
+
 $installed = $false
-$runner = $null
 try {
     Write-Step 'Install'
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -215,23 +218,21 @@ try {
     if ($examplePath.StartsWith($RepoDir, [System.StringComparison]::OrdinalIgnoreCase)) { throw "$examplePath is inside the repository, not the LabVIEW tree." }
 
     Write-Step 'Installed example'
+    # LabVIEW CLI's RunVI only runs VIs with its own connector pane (error
+    # 1031 for any other VI), so Start VI.vi opens the example and starts it
+    # without waiting; the CLI call returns while the example keeps running.
+    $launcher = Join-Path $PSScriptRoot 'Start VI.vi'
+    if (-not (Test-Path -LiteralPath $launcher)) { throw "$launcher does not exist." }
     Write-Line "Starting $examplePath"
-    $log = Join-Path ([System.IO.Path]::GetTempPath()) 'installed-example-runvi'
-    $runner = Start-Process -FilePath $cli -PassThru -WindowStyle Hidden `
-        -RedirectStandardOutput "$log.out.txt" -RedirectStandardError "$log.err.txt" `
-        -ArgumentList @('-OperationName', 'RunVI', '-VIPath', "`"$examplePath`"", '-LabVIEWPath', "`"$($lvInfo.Path)`"", '-PortNumber', $PortNumber)
+    $code = Invoke-Native $cli @('-OperationName', 'RunVI', '-VIPath', $launcher, '-LabVIEWPath', $lvInfo.Path, '-PortNumber', $PortNumber, $examplePath)
+    if ($code -ne 0) { throw "Start VI.vi could not start the example (LabVIEW CLI exit code $code)." }
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     $up = $false
     while ($sw.Elapsed.TotalSeconds -lt $StartTimeoutSeconds) {
         if (Test-ServerAnswers) { $up = $true; break }
-        if ($runner.HasExited) { break }
         Start-Sleep -Seconds 2
     }
-    if (-not $up) {
-        foreach ($f in "$log.out.txt", "$log.err.txt") { if (Test-Path $f) { Get-Content $f | ForEach-Object { Write-Line "    $_" } } }
-        if ($runner.HasExited) { throw "LabVIEW CLI ended (exit code $($runner.ExitCode)) before the example answered at $ServerUrl." }
-        throw "The example did not answer at $ServerUrl within $StartTimeoutSeconds s."
-    }
+    if (-not $up) { throw "The example was started but did not answer at $ServerUrl within $StartTimeoutSeconds s." }
     Write-Line "The example answers at $ServerUrl after $([int]$sw.Elapsed.TotalSeconds) s."
 
     Write-Step 'Protocol tests against the installed example'
@@ -254,7 +255,6 @@ finally {
         $left = Get-LabVIEWProcess $lvInfo.Path
         if ($left) { Write-Line "LabVIEW did not close; stopping process $($left.Id)."; Stop-Process -Id $left.Id -Force }
     }
-    if ($runner -and -not $runner.HasExited) { Stop-Process -Id $runner.Id -Force -ErrorAction SilentlyContinue }
 
     if ($installed -and -not $KeepInstalled) {
         $code = Invoke-Native $vipm @('uninstall', $packageName, '--labview-version', $lvInfo.Year, '--labview-bitness', $lvInfo.Bitness)
