@@ -135,10 +135,15 @@
 			<Item Name="Legacy Cancellations.vi" Type="VI" URL="../Legacy Cancellations.vi"/>
 			<Item Name="Wait For Stream Drain.vi" Type="VI" URL="../Wait For Stream Drain.vi"/>
 			<Item Name="Get Request Stream.vi" Type="VI" URL="../Get Request Stream.vi"/>
-			<Item Name="Validate MCP Request.vi" Type="VI" URL="../Validate MCP Request.vi"/>
 			<Item Name="Prepare Request Dispatch.vi" Type="VI" URL="../Prepare Request Dispatch.vi"/>
 			<Item Name="Run Streamed Request.vi" Type="VI" URL="../Run Streamed Request.vi"/>
 			<Item Name="Start Streamed Request.vi" Type="VI" URL="../Start Streamed Request.vi"/>
+			<Item Name="MCP Request Metadata.ctl" Type="VI" URL="../MCP Request Metadata.ctl"/>
+			<Item Name="Read MCP Request Metadata.vi" Type="VI" URL="../Read MCP Request Metadata.vi"/>
+			<Item Name="Check Modern MCP Request.vi" Type="VI" URL="../Check Modern MCP Request.vi"/>
+			<Item Name="Set MCP Request Context.vi" Type="VI" URL="../Set MCP Request Context.vi"/>
+			<Item Name="Collect MCP Input Requests.vi" Type="VI" URL="../Collect MCP Input Requests.vi"/>
+			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
