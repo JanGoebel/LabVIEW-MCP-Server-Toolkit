@@ -44,6 +44,8 @@
 		<Item Name="Add Resource (File).vi" Type="VI" URL="../Add Resource (File).vi"/>
 		<Item Name="Add Prompt.vi" Type="VI" URL="../Add Prompt.vi"/>
 		<Item Name="Stop.vi" Type="VI" URL="../Stop.vi"/>
+		<Item Name="Ask User.vi" Type="VI" URL="../Ask User.vi"/>
+		<Item Name="Confirm With User.vi" Type="VI" URL="../Confirm With User.vi"/>
 	</Item>
 	<Item Name="Private" Type="Folder">
 		<Property Name="NI.LibItem.Scope" Type="Int">4</Property>
@@ -124,6 +126,15 @@
 			<Item Name="LV Type To JSON Schema.vi" Type="VI" URL="../LV Type To JSON Schema.vi"/>
 			<Item Name="Add Control Details To Schema.vi" Type="VI" URL="../Add Control Details To Schema.vi"/>
 			<Item Name="JSON To Control Value.vi" Type="VI" URL="../JSON To Control Value.vi"/>
+			<Item Name="Handle MCP Request.vi" Type="VI" URL="../Handle MCP Request.vi"/>
+			<Item Name="Cache Hints.vi" Type="VI" URL="../Cache Hints.vi"/>
+			<Item Name="Build Unsupported Version Error.vi" Type="VI" URL="../Build Unsupported Version Error.vi"/>
+			<Item Name="MCP Request Metadata.ctl" Type="VI" URL="../MCP Request Metadata.ctl"/>
+			<Item Name="Read MCP Request Metadata.vi" Type="VI" URL="../Read MCP Request Metadata.vi"/>
+			<Item Name="Check Modern MCP Request.vi" Type="VI" URL="../Check Modern MCP Request.vi"/>
+			<Item Name="Set MCP Request Context.vi" Type="VI" URL="../Set MCP Request Context.vi"/>
+			<Item Name="Collect MCP Input Requests.vi" Type="VI" URL="../Collect MCP Input Requests.vi"/>
+			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>

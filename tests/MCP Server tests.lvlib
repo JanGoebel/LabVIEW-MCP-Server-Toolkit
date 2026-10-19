@@ -23,6 +23,7 @@
 			<Item Name="fake tool schema details.vi" Type="VI" URL="../fake tool schema details.vi"/>
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
+			<Item Name="fake tool confirm.vi" Type="VI" URL="../fake tool confirm.vi"/>
 			<Item Name="fake tool ignored.vi" Type="VI" URL="../fake tool ignored.vi"/>
 			<Item Name="fake tool name clash.vi" Type="VI" URL="../fake tool name clash.vi"/>
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
@@ -37,6 +38,7 @@
 	<Item Name="SubVIs" Type="Folder">
 		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
 		<Item Name="Add Fixture Annotated Tool.vi" Type="VI" URL="../Add Fixture Annotated Tool.vi"/>
+		<Item Name="Add Fixture Confirm Tool.vi" Type="VI" URL="../Add Fixture Confirm Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Picture Tool.vi" Type="VI" URL="../Add Fixture Picture Tool.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
@@ -54,6 +56,7 @@
 		<Item Name="test broken tool message.vi" Type="VI" URL="../test broken tool message.vi"/>
 		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
 		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
+		<Item Name="test elicitation.vi" Type="VI" URL="../test elicitation.vi"/>
 		<Item Name="test http get rejected.vi" Type="VI" URL="../test http get rejected.vi"/>
 		<Item Name="test http origin.vi" Type="VI" URL="../test http origin.vi"/>
 		<Item Name="test http protocol version.vi" Type="VI" URL="../test http protocol version.vi"/>
@@ -62,6 +65,9 @@
 		<Item Name="test internal error message.vi" Type="VI" URL="../test internal error message.vi"/>
 		<Item Name="test labview version.vi" Type="VI" URL="../test labview version.vi"/>
 		<Item Name="test malformed json.vi" Type="VI" URL="../test malformed json.vi"/>
+		<Item Name="test modern errors.vi" Type="VI" URL="../test modern errors.vi"/>
+		<Item Name="test modern headers.vi" Type="VI" URL="../test modern headers.vi"/>
+		<Item Name="test modern tools list.vi" Type="VI" URL="../test modern tools list.vi"/>
 		<Item Name="test non object message.vi" Type="VI" URL="../test non object message.vi"/>
 		<Item Name="test notification accepted.vi" Type="VI" URL="../test notification accepted.vi"/>
 		<Item Name="test ping.vi" Type="VI" URL="../test ping.vi"/>
@@ -77,6 +83,7 @@
 		<Item Name="test resource templates list.vi" Type="VI" URL="../test resource templates list.vi"/>
 		<Item Name="test resource text utf8.vi" Type="VI" URL="../test resource text utf8.vi"/>
 		<Item Name="test resources list.vi" Type="VI" URL="../test resources list.vi"/>
+		<Item Name="test server discover.vi" Type="VI" URL="../test server discover.vi"/>
 		<Item Name="test string id.vi" Type="VI" URL="../test string id.vi"/>
 		<Item Name="test tool call default arguments.vi" Type="VI" URL="../test tool call default arguments.vi"/>
 		<Item Name="test tool call without arguments.vi" Type="VI" URL="../test tool call without arguments.vi"/>

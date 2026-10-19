@@ -100,6 +100,30 @@ Outputs of any type are flattened to JSON (timestamps as ISO 8601, enums as item
 
 A call with missing required arguments, or with an argument that does not fit its control's type, returns a normal result with `isError: true` and a message the model can act on. Unknown tools and malformed requests are JSON-RPC errors.
 
+## Protocol versions
+
+The server speaks both eras of MCP on the same endpoint, and decides per request:
+
+- **MCP 2026-07-28** (stateless): a request whose `params._meta` carries `io.modelcontextprotocol/protocolVersion`.
+  - Such a request must also carry `io.modelcontextprotocol/clientCapabilities` and the headers `MCP-Protocol-Version`, `Mcp-Method` and, for `tools/call`, `prompts/get` and `resources/read`, `Mcp-Name`.
+  - Results carry `resultType` and `_meta.io.modelcontextprotocol/serverInfo`. Lists and `resources/read` also carry the caching hints `ttlMs` and `cacheScope`.
+  - `server/discover` returns the supported versions, capabilities and server info.
+- **MCP 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05**: clients that start with `initialize`. These are served exactly as before.
+
+An unsupported version is answered with HTTP 400 and error `-32022`, listing every supported version.
+
+## Asking the user (elicitation)
+
+A tool can ask the user a question while it runs, for example to confirm before it moves hardware. This works with clients that speak MCP 2026-07-28 and declare the `elicitation` capability.
+
+- `Confirm With User.vi` asks a yes/no question. `Ask User.vi` asks for a small form (a flat JSON Schema with string, number, Boolean or enum fields).
+- Each question needs a key that is unique within the tool.
+- The tool VI runs twice:
+  1. On the first run, the VI returns `pending`. The tool must then end at once, **without side effects**. The server sends the question to the client.
+  2. The client asks the user and calls the tool again with the answer. On this run the same VI returns the answer (*accept*, *decline* or *cancel*). Do the real work only here.
+- If the client cannot ask (older protocol, or no `elicitation` capability), the VI returns `not supported`. The tool decides what to do then: refuse with an error, or use a safe default.
+- Never use it to ask for passwords or keys.
+
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
 
