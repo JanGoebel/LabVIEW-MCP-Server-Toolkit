@@ -16,13 +16,15 @@ button to the detailed report) stays compact, as described in `CLAUDE.md`.
 
 - Produced by `tools/ci/New-ViDiffReport.ps1` in the pull request workflow, or
   locally with the same script; see `CLAUDE.md` for the comparison LabVIEW.
-- It must show every case frame. LabVIEW's comparison images show each case
-  structure only on its visible frame. LabVIEW's documentation printer (Print.VI
-  To HTML) writes one picture per frame (`<name>d.png`, `<name>d1.png` ...); the
-  `lvai_render_diagrams` tool drives it. Until the script renders the frames
-  itself, render them with that tool and publish them with the summary images
-  (below) as a `frames/README.md` page with one row per frame, named by its case
-  selector, and link that page from the Code summary.
+- It shows every case frame. LabVIEW's comparison images show each case
+  structure only on its visible frame, so the script also prints the new
+  version of every added and modified VI with LabVIEW's documentation printer
+  (Print.VI To HTML, driven by `tools/ci/Print Diagram Frames.vi`). That writes
+  one picture per frame. Each VI with case frames gets a folded "All case
+  frames" section in `report.md`: the whole diagram first, then one row per
+  hidden frame, captioned with its structure and selector value (for example
+  `Case structure 2: "integer"`). The pictures are in `images/<VI>/frames/` on
+  `pr-assets/pr-<n>` and can be used for the Code summary by URL.
 
 ## Code summary
 
@@ -33,8 +35,7 @@ scroll, without opening the detailed report.
 ### Layout
 
 1. **Intro line** (a quote block): orange numbered boxes match the numbered
-   points; click a picture for full size; link to the detailed report and, if
-   separate, to the frames page.
+   points; click a picture for full size; link to the detailed report.
 2. **Overview table**, one row per VI, in reading order (the VI that carries
    the change first, tests last):
 
@@ -68,8 +69,8 @@ scroll, without opening the detailed report.
   image to find them, then open the result to check that every box sits on the
   node it names.
 - Sources: the "after" images and whole diagrams of the detailed report
-  (`images/...` on `pr-assets/pr-<n>`, usable by URL), or frames rendered with
-  `lvai_render_diagrams`.
+  (`images/...` on `pr-assets/pr-<n>`, usable by URL), including the case
+  frames in `images/<VI>/frames/`.
 - Show the picture large: `width="880"` for whole diagrams and frames (the
   width of the description column), smaller only for small spots. Wrap each
   picture in a link to its full-size file. Do not put two large diagrams side by
@@ -81,13 +82,11 @@ scroll, without opening the detailed report.
 
 The workflow replaces `pr-assets/pr-<n>` with a single new commit on every
 run, so anything added there by hand disappears at the next push. Put summary
-pictures (and the frames page, while the script does not render frames) on
-their own branch, `pr-assets/pr-<n>-summary`, with ordinary commits:
+pictures on their own branch, `pr-assets/pr-<n>-summary`, with ordinary
+commits:
 
 ```
 summary/<vi>_<spot>.png      cropped and highlighted pictures
-frames/<VI-Name>/<n>-<case>-<selector>.png
-frames/README.md             one row per frame
 ```
 
 Link them by commit (`https://raw.githubusercontent.com/<repo>/<commit>/...`),
@@ -103,5 +102,5 @@ request is closed.
       width shown (check the rendered pull request page, not only the file).
 - [ ] Box numbers and list numbers match, in the same order.
 - [ ] Every frame the text relies on is shown; every frame of the VI is in the
-      detailed report or on the frames page.
+      detailed report.
 - [ ] Links point to commits, and every picture loads.
