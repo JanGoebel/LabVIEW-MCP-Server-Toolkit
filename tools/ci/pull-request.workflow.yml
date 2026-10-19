@@ -340,6 +340,7 @@ jobs:
         timeout-minutes: 30
         env:
           VIPM_CLI_TIMEOUT: 1200
+          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 900
         run: |
           $script = "$env:GITHUB_WORKSPACE\_ci\tools\ci\Test-InstalledPackage.ps1"
           if (-not (Test-Path $script)) { $script = "$env:GITHUB_WORKSPACE\tools\ci\Test-InstalledPackage.ps1" }
