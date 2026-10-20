@@ -17,6 +17,7 @@ resources). Built on the IG HTTP Server Toolkit and JSONtext.
 | `examples/` | Example servers. In this repo they load the toolkit from `src`, not from an installed package |
 | `tools/ci/` | Pull request review scripts and the workflow template |
 | `tools/setup/`, `tools/test/` | Environment setup and the protocol tester, where present |
+| `tools/icons/` | `New-VIIcon.ps1`, which draws VI icons in the toolkit's style |
 | `docs/` | Guides for working on the repository, e.g. `pull-request-reports.md` |
 | `.github/workflows/` | CI. Maintainer-only, see below |
 
@@ -63,7 +64,9 @@ resources). Built on the IG HTTP Server Toolkit and JSONtext.
 - New VIs become members of the right library folder (`Private/SubVIs`,
   `Private/RPC Methods`, the `tests` folder of the test library) and get an
   icon in the existing style: green "MCP" banner for toolkit VIs, red banner
-  for tests. No default icons.
+  for tests, text in Small Fonts. Draw it with `tools/icons/New-VIIcon.ps1`,
+  not with the line drawing of `lvai_set_vi_icon`, whose font differs. No
+  default icons.
 - "It generated" is not "it works". Check `Execution:State` and run the code.
 - The LabVIEW tools need 64-bit LabVIEW 2026 with Nigel open. Do not call
   `lvai_ensure_labview`: it starts the 32-bit LabVIEW, which has none of the
