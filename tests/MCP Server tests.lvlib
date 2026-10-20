@@ -29,6 +29,7 @@
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
 			<Item Name="fake tool no inputs outputs.vi" Type="VI" URL="../fake tool no inputs outputs.vi"/>
 			<Item Name="fake tool picture outputs.vi" Type="VI" URL="../fake tool picture outputs.vi"/>
+			<Item Name="fake tool progress.vi" Type="VI" URL="../fake tool progress.vi"/>
 			<Item Name="fake tool return error.vi" Type="VI" URL="../fake tool return error.vi"/>
 			<Item Name="fake tool required input.vi" Type="VI" URL="../fake tool required input.vi"/>
 			<Item Name="fake tool special labels.vi" Type="VI" URL="../fake tool special labels.vi"/>
@@ -42,10 +43,12 @@
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Picture Tool.vi" Type="VI" URL="../Add Fixture Picture Tool.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
+		<Item Name="Add Fixture Progress Tool.vi" Type="VI" URL="../Add Fixture Progress Tool.vi"/>
 		<Item Name="Add Fixture Schema Shapes Tool.vi" Type="VI" URL="../Add Fixture Schema Shapes Tool.vi"/>
 		<Item Name="Add Fixture Schema Details Tool.vi" Type="VI" URL="../Add Fixture Schema Details Tool.vi"/>
 		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
 		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
+		<Item Name="Progress Fixture Record.vi" Type="VI" URL="../Progress Fixture Record.vi"/>
 		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
 		<Item Name="Send HTTP request.vi" Type="VI" URL="../Send HTTP request.vi"/>
 	</Item>
@@ -75,6 +78,9 @@
 		<Item Name="test prompt without arguments.vi" Type="VI" URL="../test prompt without arguments.vi"/>
 		<Item Name="test prompts list required.vi" Type="VI" URL="../test prompts list required.vi"/>
 		<Item Name="test prompts list.vi" Type="VI" URL="../test prompts list.vi"/>
+		<Item Name="test progress cancel by close.vi" Type="VI" URL="../test progress cancel by close.vi"/>
+		<Item Name="test progress legacy cancel.vi" Type="VI" URL="../test progress legacy cancel.vi"/>
+		<Item Name="test progress notifications.vi" Type="VI" URL="../test progress notifications.vi"/>
 		<Item Name="test protocol version negotiation.vi" Type="VI" URL="../test protocol version negotiation.vi"/>
 		<Item Name="test protocol version fallback.vi" Type="VI" URL="../test protocol version fallback.vi"/>
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>

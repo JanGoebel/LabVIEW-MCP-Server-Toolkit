@@ -124,6 +124,20 @@ A tool can ask the user a question while it runs, for example to confirm before 
 - If the client cannot ask (older protocol, or no `elicitation` capability), the VI returns `not supported`. The tool decides what to do then: refuse with an error, or use a safe default.
 - Never use it to ask for passwords or keys.
 
+## Progress and cancellation
+
+Long-running tools can report progress and stop when the client cancels.
+
+- `Report Progress.vi` (progress, optional total and message) sends a `notifications/progress` event to the client. It returns `cancelled?`. Stop the tool when it is TRUE.
+- `Cancel Requested.vi` returns `cancelled?`, for loops that do not report progress.
+- Progress is streamed only when the client asks for it: `tools/call` with `_meta.progressToken`, and an `Accept` header that includes `text/event-stream`. The answer is then a Server-Sent Events stream: the progress events, then the result. Without that, both VIs do nothing and return FALSE.
+- Cancelling works in two ways:
+  - MCP 2026-07-28 clients cancel by closing the stream.
+  - Older clients send `notifications/cancelled`.
+  - Either way, the next `Report Progress.vi` / `Cancel Requested.vi` call returns TRUE.
+  - A closed stream is noticed when an event is not taken within about one second.
+  - `notifications/cancelled` only reaches a streamed call. A non-streamed call blocks other requests until it ends.
+
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
 
