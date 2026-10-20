@@ -130,6 +130,20 @@ jobs:
         run: |
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Resolve-CiEnvironment.ps1" -For All -Fix
 
+      # The suite runs only the tests Test_MCP_Server.vi calls. Fails when a
+      # "test *.vi" of the test library is not called, so a test that was
+      # added but not wired in is not skipped without notice. Reads files
+      # only, no LabVIEW. Falls back to the pull request's copy while main
+      # does not have the script yet.
+      - name: Check that Every Test VI Is Called
+        id: wired
+        continue-on-error: true
+        run: |
+          $script = "$env:GITHUB_WORKSPACE\_ci\tools\ci\Test-TestsWired.ps1"
+          if (-not (Test-Path $script)) { $script = "$env:GITHUB_WORKSPACE\tools\ci\Test-TestsWired.ps1" }
+          & $script -RepoDir "$env:GITHUB_WORKSPACE"
+          exit $LASTEXITCODE
+
       # Invoke-CliTest.ps1 exits 0 (passed), 1 (tests failed), 2 (LabVIEW not
       # reachable, nothing ran) or 3 (entry VI missing on this branch). The
       # status goes into the report, so an unreachable LabVIEW is not reported
@@ -216,7 +230,7 @@ jobs:
             -Footer "Report for commit ${{ github.event.pull_request.head.sha }}. The installable test package is under Artifacts of [this run]($runUrl) once the build job has finished."
 
       - name: Fail if the Tests or the VI Diff Failed
-        if: steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure' || steps.diff.outcome == 'failure'
+        if: steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure' || steps.diff.outcome == 'failure' || steps.wired.outcome == 'failure'
         run: |
           if ("${{ steps.tests.outputs.status }}" -eq '2') {
             Write-Host "::error::LabVIEW was not reachable on port $env:LABVIEW_PORT; no tests ran."
@@ -224,7 +238,7 @@ jobs:
           if ("${{ steps.diff.outcome }}" -eq 'failure') {
             Write-Host "::error::The VI diff could not be produced for every changed VI (LabVIEW $env:LABVIEW_COMPARE_PATH, port $env:LABVIEW_COMPARE_PORT). A pull request needs it; see the report."
           }
-          Write-Host "::error::Caraya suite: ${{ steps.tests.outcome }}, protocol tests: ${{ steps.protocol.outcome }}, VI diff: ${{ steps.diff.outcome }}."
+          Write-Host "::error::Caraya suite: ${{ steps.tests.outcome }}, protocol tests: ${{ steps.protocol.outcome }}, VI diff: ${{ steps.diff.outcome }}, test wiring: ${{ steps.wired.outcome }}."
           exit 1
 
   # ==========================================
@@ -314,3 +328,28 @@ jobs:
           name: test-vip-package-pr-${{ github.event.pull_request.number }}
           path: ${{ env.VIP_PATH }}
           retention-days: 14
+
+      # Installs the package just built into the test LabVIEW, checks that it
+      # contains no tools\, _ci\, tests\, .git or .ps1 entries, starts the
+      # INSTALLED Datalogger example (<LabVIEW>\examples\MCP Server\...), runs
+      # tools\test\Test-McpServer.ps1 against it, closes the test LabVIEW
+      # (the example's Stop button cannot be pressed from outside) and
+      # uninstalls the package. The tester comes from the pull request; the
+      # script from main, or from the pull request while main does not have it.
+      - name: Test Installed Package
+        timeout-minutes: 30
+        env:
+          VIPM_CLI_TIMEOUT: 1200
+          VIPM_DESKTOP_LIVELINESS_TIMEOUT: 900
+        run: |
+          $script = "$env:GITHUB_WORKSPACE\_ci\tools\ci\Test-InstalledPackage.ps1"
+          if (-not (Test-Path $script)) { $script = "$env:GITHUB_WORKSPACE\tools\ci\Test-InstalledPackage.ps1" }
+          & $script -VipPath "$env:VIP_PATH" -RepoDir "$env:GITHUB_WORKSPACE" `
+            -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT `
+            -ReportFile "$env:RUNNER_TEMP\installed-package-report.txt"
+          $status = $LASTEXITCODE
+          '### Installed package test' >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          Get-Content "$env:RUNNER_TEMP\installed-package-report.txt" -ErrorAction SilentlyContinue | Add-Content $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          exit $status
