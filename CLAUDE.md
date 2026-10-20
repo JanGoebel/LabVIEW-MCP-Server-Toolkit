@@ -68,9 +68,12 @@ resources). Built on the IG HTTP Server Toolkit and JSONtext.
 - The LabVIEW tools need 64-bit LabVIEW 2026 with Nigel open. Do not call
   `lvai_ensure_labview`: it starts the 32-bit LabVIEW, which has none of the
   toolkits, and clears the auto-save folder. If LabVIEW is not reachable, ask.
-- A running example server locks `MCP Server.lvlib`. Stop it through its Stop
-  button (never abort it) before editing, and restart it afterwards if the
-  maintainer was using it.
+- A running example server locks `MCP Server.lvlib` and holds its port. Stop
+  it through its Stop button before editing, and restart it afterwards if the
+  maintainer was using it. Aborting it is allowed when the Stop button cannot
+  be reached (for example an example started through `tools/ci/Start VI.vi`),
+  but avoid it: an abort skips the example's own clean-up. Afterwards check
+  that its port (36987 for the examples) is free.
 - LabVIEW dialogs that concern only files of this repository or scratch files
   may be dismissed without saving. Stop and ask for anything else.
 - LabVIEW rewrites `*.aliases` and `*.lvlps` when a project is opened. Never
