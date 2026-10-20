@@ -138,6 +138,8 @@
 			<Item Name="Prepare Request Dispatch.vi" Type="VI" URL="../Prepare Request Dispatch.vi"/>
 			<Item Name="Run Streamed Request.vi" Type="VI" URL="../Run Streamed Request.vi"/>
 			<Item Name="Start Streamed Request.vi" Type="VI" URL="../Start Streamed Request.vi"/>
+			<Item Name="Server Access Settings.vi" Type="VI" URL="../Server Access Settings.vi"/>
+			<Item Name="Check Client Access.vi" Type="VI" URL="../Check Client Access.vi"/>
 			<Item Name="MCP Request Metadata.ctl" Type="VI" URL="../MCP Request Metadata.ctl"/>
 			<Item Name="Read MCP Request Metadata.vi" Type="VI" URL="../Read MCP Request Metadata.vi"/>
 			<Item Name="Check Modern MCP Request.vi" Type="VI" URL="../Check Modern MCP Request.vi"/>

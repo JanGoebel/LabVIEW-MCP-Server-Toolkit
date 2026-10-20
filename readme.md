@@ -138,6 +138,19 @@ Long-running tools can report progress and stop when the client cancels.
   - A closed stream is noticed when an event is not taken within about one second.
   - `notifications/cancelled` only reaches a streamed call. A non-streamed call blocks other requests until it ends.
 
+## Access control
+
+The IG HTTP Server listens on **all network interfaces**, so an MCP server can be reached from other computers. `Start.vi` has two optional inputs:
+
+- `Access token`: when set, every request needs the header `Authorization: Bearer <token>`. Without it, or with a wrong token, the answer is HTTP 401 with `WWW-Authenticate: Bearer`. **Set a token whenever the server can be reached beyond this computer.**
+- `Allowed clients`: client host names, as the server sees them through reverse DNS.
+  - Empty, the default, allows only this computer: loopback, `localhost` and this computer's own names.
+  - `*` allows any client.
+  - Other clients get HTTP 403.
+  - Reverse-DNS names can be spoofed on a local network, so this list is a best-effort filter. The token is the protection.
+
+Since this version, clients that do not report as this computer are refused unless you list them or use `*`.
+
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
 

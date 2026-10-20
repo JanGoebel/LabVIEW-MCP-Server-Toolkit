@@ -81,6 +81,8 @@
 		<Item Name="test progress cancel by close.vi" Type="VI" URL="../test progress cancel by close.vi"/>
 		<Item Name="test progress legacy cancel.vi" Type="VI" URL="../test progress legacy cancel.vi"/>
 		<Item Name="test progress notifications.vi" Type="VI" URL="../test progress notifications.vi"/>
+		<Item Name="test access allowed clients.vi" Type="VI" URL="../test access allowed clients.vi"/>
+		<Item Name="test access bearer token.vi" Type="VI" URL="../test access bearer token.vi"/>
 		<Item Name="test protocol version negotiation.vi" Type="VI" URL="../test protocol version negotiation.vi"/>
 		<Item Name="test protocol version fallback.vi" Type="VI" URL="../test protocol version fallback.vi"/>
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
