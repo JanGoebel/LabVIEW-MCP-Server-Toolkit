@@ -37,8 +37,8 @@ param(
     [Parameter(Mandatory = $true)][string]$BaseRef,
     [Parameter(Mandatory = $true)][string]$OutDir,
     [string]$HeadDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,
-    [string]$LabVIEWPath = 'C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe',
-    [int]$PortNumber = 3365
+    [string]$LabVIEWPath = 'C:\Program Files (x86)\National Instruments\LabVIEW 2026\LabVIEW.exe',
+    [int]$PortNumber = 3363
 )
 
 $ErrorActionPreference = 'Stop'

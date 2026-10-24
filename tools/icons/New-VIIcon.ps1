@@ -120,6 +120,9 @@ switch ($Style) {
 $tops = switch ($Lines.Count) { 1 { , 19 } 2 { 15, 23 } 3 { 13, 19, 25 } }
 for ($i = 0; $i -lt $Lines.Count; $i++) { Write-Ink $Lines[$i] $tops[$i] }
 
+# .NET resolves a relative path against the process directory, not the
+# PowerShell location, so resolve it here.
+$OutFile = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutFile)
 $dir = Split-Path -Parent $OutFile
 if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
 $bmp.Save($OutFile, [System.Drawing.Imaging.ImageFormat]::Png)
