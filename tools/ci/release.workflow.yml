@@ -160,7 +160,9 @@ jobs:
           }
           
           # 4. Inject the Release Notes into the VIPB
-          $safeMsg = [System.Security.SecurityElement]::Escape($tagMsg)
+          #    -replace reads $_, $& and $1 in the replacement text as
+          #    substitutions, so double every $ to keep the message as written.
+          $safeMsg = [System.Security.SecurityElement]::Escape($tagMsg).Replace('$', '$$')
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$safeMsg</Release_Notes>"
           
           [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
