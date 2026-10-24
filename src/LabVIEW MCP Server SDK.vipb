@@ -1,7 +1,7 @@
 <VI_Package_Builder_Settings Version="2020.1" Created_Date="2025-12-14 23:14:48" Modified_Date="2026-04-29 00:51:32" Creator="jgoebel" Comments="" ID="4c52463302ca6bc882b57637dfdf635b">
   <Library_General_Settings>
     <Package_File_Name>jgoebel_lib_LabVIEW_MCP_Server_SDK</Package_File_Name>
-    <Library_Version>2.2.6.37</Library_Version>
+    <Library_Version>3.0.0.0</Library_Version>
     <Auto_Increment_Version>false</Auto_Increment_Version>
     <Library_Source_Folder>..</Library_Source_Folder>
     <Library_Output_Folder>..\builds</Library_Output_Folder>
@@ -50,9 +50,10 @@
       <Description>Full details on github:
 https://github.com/JanGoebel/LabVIEW-MCP-Server-Toolkit
 
-Use MCP to control your Applications using AI. You can have a large language model chat-application like claude desktop communicate with your LabVIEW application to trigger actions, change parameters or read and interpret informations.
+Use MCP to control your Applications using AI. You can have a large language model chat-application like claude desktop communicate with your LabVIEW application to trigger actions, change parameters or read and interpret information.
 
-MCP Server toolkit. Enables you to register LabVIEW VIs as MCP Tools, Promps or Resources. 
+MCP Server toolkit. Enables you to register LabVIEW VIs as MCP Tools, Prompts or Resources. 
+Tools can ask the user to confirm or fill in values (elicitation), report progress and stop when the client cancels. Tool results carry structured content and an output schema. By default only clients on this computer are served; others can be allowed by name, and an optional bearer token protects the server.
 Features return of LabVIEW Images. If you wire a labview picture indicator to the connector pane of your tool vi, the picture will be printed in the chat history of the chat interface and the LLM can read and interpret the image. You can return whole front-panels to the AI and have it interpret them.
 
 This toolkit is licensed under the MIT license:
