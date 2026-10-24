@@ -116,6 +116,7 @@ if (-not $LabVIEWPath) {
     if (-not $lv) { Write-Host '::error::No -LabVIEWPath given and no LabVIEW 2020 64-bit found.'; exit 1 }
     $LabVIEWPath = $lv.Path
 }
+if (-not (Test-Path -LiteralPath $LabVIEWPath -PathType Leaf)) { Write-Host "::error::$LabVIEWPath does not exist."; exit 1 }
 $lvInfo = Get-LabVIEWInstall | Where-Object { $_.Path -ieq (Resolve-Path -LiteralPath $LabVIEWPath).Path } | Select-Object -First 1
 if (-not $lvInfo) { Write-Host "::error::$LabVIEWPath is not a LabVIEW installation."; exit 1 }
 $lvDir = Split-Path $lvInfo.Path -Parent
@@ -238,7 +239,10 @@ try {
     Write-Step 'Protocol tests against the installed example'
     $tester = Join-Path $RepoDir 'tools\test\Test-McpServer.ps1'
     $code = Invoke-Native 'powershell.exe' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $tester, '-Url', $ServerUrl)
-    if ($code -ne 0) { Write-Failure "Test-McpServer.ps1: $code required checks failed against the installed example." }
+    # Test-McpServer.ps1 exits with the number of failed required checks, or 99
+    # when the server does not answer at all.
+    if ($code -eq 99) { Write-Failure "Test-McpServer.ps1: the installed example did not answer at $ServerUrl." }
+    elseif ($code -ne 0) { Write-Failure "Test-McpServer.ps1: $code required checks failed against the installed example." }
     else { Write-Line 'PASS: every required protocol check passed against the installed example.' }
 }
 catch {
