@@ -24,6 +24,7 @@
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
 			<Item Name="fake tool confirm.vi" Type="VI" URL="../fake tool confirm.vi"/>
+			<Item Name="fake tool error descriptions.vi" Type="VI" URL="../fake tool error descriptions.vi"/>
 			<Item Name="fake tool ignored.vi" Type="VI" URL="../fake tool ignored.vi"/>
 			<Item Name="fake tool name clash.vi" Type="VI" URL="../fake tool name clash.vi"/>
 			<Item Name="fake tool no description.vi" Type="VI" URL="../fake tool no description.vi"/>
@@ -40,6 +41,7 @@
 		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
 		<Item Name="Add Fixture Annotated Tool.vi" Type="VI" URL="../Add Fixture Annotated Tool.vi"/>
 		<Item Name="Add Fixture Confirm Tool.vi" Type="VI" URL="../Add Fixture Confirm Tool.vi"/>
+		<Item Name="Add Fixture Error Descriptions Tool.vi" Type="VI" URL="../Add Fixture Error Descriptions Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Picture Tool.vi" Type="VI" URL="../Add Fixture Picture Tool.vi"/>
 		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
@@ -110,6 +112,7 @@
 		<Item Name="test tools list title annotations.vi" Type="VI" URL="../test tools list title annotations.vi"/>
 		<Item Name="test tools list schema details.vi" Type="VI" URL="../test tools list schema details.vi"/>
 		<Item Name="test tools list descriptions defaults ranges.vi" Type="VI" URL="../test tools list descriptions defaults ranges.vi"/>
+		<Item Name="test tools list error descriptions.vi" Type="VI" URL="../test tools list error descriptions.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
 		<Item Name="test unknown notification.vi" Type="VI" URL="../test unknown notification.vi"/>

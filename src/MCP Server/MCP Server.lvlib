@@ -146,6 +146,8 @@
 			<Item Name="Set MCP Request Context.vi" Type="VI" URL="../Set MCP Request Context.vi"/>
 			<Item Name="Collect MCP Input Requests.vi" Type="VI" URL="../Collect MCP Input Requests.vi"/>
 			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
+			<Item Name="Remove Default Error Description.vi" Type="VI" URL="../Remove Default Error Description.vi"/>
+			<Item Name="Remove Empty Description.vi" Type="VI" URL="../Remove Empty Description.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
