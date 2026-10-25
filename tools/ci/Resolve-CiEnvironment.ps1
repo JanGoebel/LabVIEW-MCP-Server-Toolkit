@@ -108,10 +108,7 @@ $cliYear = $null
 if ($cli -and ((Get-Item -LiteralPath $cli).VersionInfo.FileVersion -match '^(\d+)\.')) {
     $m = [int]$Matches[1]; $cliYear = if ($m -ge 2000) { $m } elseif ($m -ge 17) { 2000 + $m } else { $null }
 }
-$vipm = Find-Tool 'vipm' @(
-    "$env:ProgramW6432\JKI\VI Package Manager\support\vipm.exe",
-    "$env:ProgramFiles\JKI\VI Package Manager\support\vipm.exe",
-    "${env:ProgramFiles(x86)}\JKI\VI Package Manager\support\vipm.exe")
+$vipm = Get-VipmPath
 if (-not $vipm) { $notes.Add('vipm (VIPM command line) not found; installing packages and building will fail.') }
 # Git must be on the PATH before the job starts: without it actions/checkout
 # downloads a zip instead of cloning, and then the VI diff has no history and
@@ -131,7 +128,7 @@ if ($env:GITHUB_WORKSPACE -and -not (Test-Path (Join-Path $env:GITHUB_WORKSPACE 
     $problems.Add('The checkout is not a Git repository (actions/checkout fell back to downloading a zip). The VI diff and VIPM Community Edition need a real clone; see the Git message above.')
 }
 
-$gh = Find-Tool 'gh' @("$env:ProgramW6432\GitHub CLI\gh.exe", "$env:ProgramFiles\GitHub CLI\gh.exe")
+$gh = Get-GhPath
 if (-not $gh) { $notes.Add('gh (GitHub CLI) not found; the report is posted through the REST API instead.') }
 
 if ($Fix) {

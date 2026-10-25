@@ -75,19 +75,12 @@ function Write-Failure([string]$Text) {
 }
 
 function Invoke-Native {
-    # Runs a console tool, returns its exit code and prints and records its
-    # output. Windows PowerShell turns stderr lines into errors; they must
-    # not stop the script.
+    # Runs a console tool (Invoke-NativeCommand), prints and records its
+    # output and returns its exit code.
     param([string]$Exe, [string[]]$Arguments)
-    $previous = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $out = & $Exe @Arguments 2>&1 | ForEach-Object {
-        if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
-    }
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $previous
-    foreach ($line in $out) { Write-Line "    $line" }
-    return $code
+    $run = Invoke-NativeCommand $Exe $Arguments
+    foreach ($line in $run.Output) { Write-Line "    $line" }
+    return $run.ExitCode
 }
 
 function Test-ServerAnswers {
@@ -126,7 +119,7 @@ Write-Line "Package:  $VipPath"
 if (-not $ContentsOnly) {
     $cli = Get-LabVIEWCliPath
     if (-not $cli) { Write-Host '::error::LabVIEW CLI (LabVIEWCLI.exe) is not installed.'; exit 1 }
-    $vipm = Find-Tool 'vipm' @("$env:ProgramFiles\JKI\VI Package Manager\support\vipm.exe", "${env:ProgramFiles(x86)}\JKI\VI Package Manager\support\vipm.exe")
+    $vipm = Get-VipmPath
     if (-not $vipm) { Write-Host '::error::The vipm CLI is not installed.'; exit 1 }
     Write-Line "LabVIEW:  $($lvInfo.Path) ($($lvInfo.Year) $($lvInfo.Bitness)-bit), VI Server port $PortNumber"
 }

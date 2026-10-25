@@ -41,18 +41,11 @@ if (-not (Get-LabVIEWCliPath)) {
 }
 
 function Invoke-RunVI([int]$Port) {
-    # LabVIEW CLI writes its errors to stderr; Windows PowerShell turns
-    # redirected stderr lines into errors, so they must not stop the script.
-    $previous = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $out = & LabVIEWCLI -OperationName RunVI -VIPath $VIPath -PortNumber $Port `
-        -LabVIEWPath $LabVIEWPath 2>&1 | ForEach-Object {
-            # An empty stderr line arrives as an error record whose text is its type name.
-            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
-        } | Out-String
-    $script:code = $LASTEXITCODE
-    $ErrorActionPreference = $previous
-    return $out
+    # LabVIEW CLI writes its errors to stderr; Invoke-NativeCommand keeps them
+    # as text in the output.
+    $run = Invoke-NativeCommand 'LabVIEWCLI' @('-OperationName', 'RunVI', '-VIPath', $VIPath, '-PortNumber', $Port, '-LabVIEWPath', $LabVIEWPath)
+    $script:code = $run.ExitCode
+    return ($run.Output | Out-String)
 }
 
 $output = Invoke-RunVI $PortNumber

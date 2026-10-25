@@ -55,15 +55,10 @@ if (-not (Test-Path $framePrinter)) { $framePrinter = $null; Write-Warning "$(Jo
 
 function Invoke-CliComparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
     # LabVIEW CLI writes its error text to stderr; keep it for the report.
-    # Windows PowerShell turns redirected stderr lines into errors, so they
-    # must not stop the script here.
-    $previous = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $output = & LabVIEWCLI -OperationName CreateComparisonReport -VI1 $Vi1 -VI2 $Vi2 `
-        -ReportType html -ReportPath $ReportPath -o -c -nobdcosm -nofppos `
-        -LabVIEWPath $LabVIEWPath -PortNumber $script:PortNumber 2>&1 | ForEach-Object { "$_" } | Out-String
-    $ErrorActionPreference = $previous
-    $output = $output.Trim()
+    $run = Invoke-NativeCommand 'LabVIEWCLI' @('-OperationName', 'CreateComparisonReport', '-VI1', $Vi1, '-VI2', $Vi2,
+        '-ReportType', 'html', '-ReportPath', $ReportPath, '-o', '-c', '-nobdcosm', '-nofppos',
+        '-LabVIEWPath', $LabVIEWPath, '-PortNumber', $script:PortNumber)
+    $output = ($run.Output | Out-String).Trim()
     return @{
         Ok          = (Test-Path $ReportPath)
         Output      = $output
@@ -107,15 +102,11 @@ function Invoke-FramePrint([string]$ViPath, [string]$Slug) {
     New-Item -ItemType Directory -Force $dir | Out-Null
     $html = Join-Path $dir 'diagram.html'
     $list = Join-Path $dir 'frames.txt'
-    $previous = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
     # The VI's arguments come last; RunVI hands them to Command Line Arguments.
-    $output = & LabVIEWCLI -OperationName RunVI -LabVIEWPath $LabVIEWPath -PortNumber $script:PortNumber `
-        -VIPath $framePrinter $ViPath $html $list 2>&1 | ForEach-Object {
-            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
-        } | Out-String
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $previous
+    $run = Invoke-NativeCommand 'LabVIEWCLI' @('-OperationName', 'RunVI', '-LabVIEWPath', $LabVIEWPath, '-PortNumber', $script:PortNumber,
+        '-VIPath', $framePrinter, $ViPath, $html, $list)
+    $output = $run.Output | Out-String
+    $code = $run.ExitCode
     if ($code -ne 0 -or -not (Test-Path $html) -or -not (Test-Path $list)) {
         return @{ Ok = $false; Output = $output.Trim() }
     }

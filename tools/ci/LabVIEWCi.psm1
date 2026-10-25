@@ -408,7 +408,38 @@ function Get-LabVIEWCliPath {
         "$env:ProgramFiles\National Instruments\Shared\LabVIEW CLI\LabVIEWCLI.exe")
 }
 
+function Get-VipmPath {
+    <# Path of the VIPM command line (vipm.exe), or $null. #>
+    Find-Tool 'vipm' @(
+        "$env:ProgramW6432\JKI\VI Package Manager\support\vipm.exe",
+        "$env:ProgramFiles\JKI\VI Package Manager\support\vipm.exe",
+        "${env:ProgramFiles(x86)}\JKI\VI Package Manager\support\vipm.exe")
+}
+
+function Get-GhPath {
+    <# Path of the GitHub CLI (gh.exe), or $null. #>
+    Find-Tool 'gh' @("$env:ProgramW6432\GitHub CLI\gh.exe", "$env:ProgramFiles\GitHub CLI\gh.exe")
+}
+
+function Invoke-NativeCommand {
+    <# Runs a console program with its standard error merged into its output
+       and returns ExitCode and Output (one string per line). Windows
+       PowerShell turns redirected stderr lines into error records; here they
+       become plain text and never stop the caller, and an empty stderr line
+       arrives as its message, not as the record's type name. A program that
+       does not exist gives exit code -1 and a "not recognized" line. #>
+    param([Parameter(Mandatory = $true)][string]$FilePath, [string[]]$ArgumentList = @())
+    $ErrorActionPreference = 'Continue'
+    if (-not (Get-Command $FilePath -CommandType Application -ErrorAction SilentlyContinue)) {
+        return [pscustomobject]@{ ExitCode = -1; Output = @("$FilePath is not recognized as the name of a program (not installed or not on PATH).") }
+    }
+    $output = @(& $FilePath @ArgumentList 2>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
+        })
+    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = $output }
+}
+
 Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
     Get-VipmPort, Stop-LeftoverVipm, Test-CiDedicatedMachine, Get-ProcessWindowTitle, Select-LabVIEWToStop,
-    Get-RunningLabVIEW, Stop-CiLabVIEW
+    Get-RunningLabVIEW, Stop-CiLabVIEW, Get-VipmPath, Get-GhPath, Invoke-NativeCommand

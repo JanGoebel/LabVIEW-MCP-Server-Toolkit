@@ -23,6 +23,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot 'LabVIEWCi.psm1') -Force
 $marker = '<!-- labview-pr-report -->'
 $maxLength = 60000   # GitHub rejects comments longer than 65536 characters
 $utf8 = New-Object System.Text.UTF8Encoding $false
@@ -96,11 +97,7 @@ $bodyFile = Join-Path ([System.IO.Path]::GetTempPath()) ("pr_comment_" + [guid]:
 
 # gh where it is installed; otherwise the REST API directly, with the same
 # token (GH_TOKEN), so a runner without the GitHub CLI still gets its report.
-$useGh = [bool](Get-Command gh -CommandType Application -ErrorAction SilentlyContinue)
-if (-not $useGh) {
-    $ghDefault = Join-Path $env:ProgramFiles 'GitHub CLI\gh.exe'
-    if (Test-Path $ghDefault) { $env:PATH = "$(Split-Path $ghDefault);$env:PATH"; $useGh = $true }
-}
+$useGh = [bool](Get-GhPath)
 if (-not $useGh) {
     if (-not $env:GH_TOKEN) { throw 'Neither the GitHub CLI (gh) nor GH_TOKEN is available to post the comment.' }
     Write-Host 'gh not found; posting through the REST API.'
