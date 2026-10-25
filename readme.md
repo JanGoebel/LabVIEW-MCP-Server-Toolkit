@@ -55,8 +55,26 @@ This toolkit is tested using Claude Desktop as an MCP client. There are many mor
 }
 ```
 
-It may of course contain multiple servers.
+It may of course contain multiple servers. `mcp-remote` needs [Node.js](https://nodejs.org).
 The port can be changed when starting the server.
+
+When the server has an access token, pass it as a header:
+
+```json
+"args": [
+  "mcp-remote",
+  "http://127.0.0.1:36987/mcp/server",
+  "--header",
+  "Authorization: Bearer ${MCP_TOKEN}"
+],
+"env": { "MCP_TOKEN": "<your token>" }
+```
+
+Clients that speak Streamable HTTP themselves need no proxy. In Claude Code, for example:
+
+```
+claude mcp add --transport http labview http://127.0.0.1:36987/mcp/server --header "Authorization: Bearer <your token>"
+```
 Claude Desktop usually retrieves the list of available tools and prompts on startup, so multiple restarts may be necessary (close taskbar-icon also).
 
 Download Claude Desktop:
@@ -149,13 +167,17 @@ Long-running tools can report progress and stop when the client cancels.
 The IG HTTP Server listens on **all network interfaces**, so an MCP server can be reached from other computers. `Start.vi` has two optional inputs:
 
 - `Access token`: when set, every request needs the header `Authorization: Bearer <token>`. Without it, or with a wrong token, the answer is HTTP 401 with `WWW-Authenticate: Bearer`. **Set a token whenever the server can be reached beyond this computer.**
-- `Allowed clients`: client host names, as the server sees them through reverse DNS.
-  - Empty, the default, allows only this computer: loopback, `localhost` and this computer's own names.
+- `Allowed clients`: which clients may connect.
+  - Empty, the default, allows only this computer. That is decided by the connection's own address: only connections to `127.0.0.1` (or `localhost`) are served. A remote client cannot fake this. A program on this computer that connects through the computer's network address instead of `127.0.0.1` is refused too.
   - `*` allows any client.
+  - Other entries are client host names as the server sees them through reverse DNS, or IP addresses. The owner of a client's address can choose its reverse-DNS name, so these entries are a convenience, not protection. Always set a token when you list remote clients or use `*`.
   - Other clients get HTTP 403.
-  - Reverse-DNS names can be spoofed on a local network, so this list is a best-effort filter. The token is the protection.
 
-This is a change from v3.0.0 and earlier, which served any client: from the release after v3.0.0 on, clients that do not report as this computer are refused unless you list them or use `*`.
+Requests are checked in this order: client not allowed → 403, missing or wrong token → 401, then the Origin header. A request that carries an `Origin` header is only served when it is a page on `localhost`, `127.0.0.1` or `[::1]` (protection against DNS rebinding); this holds even with `*`, so browser-based clients on other computers are refused.
+
+The server speaks plain HTTP, without TLS: the token travels unencrypted. Beyond a trusted network, put the server behind a TLS reverse proxy or an SSH tunnel.
+
+This is a change from v3.0.0 and earlier, which served any client: from the release after v3.0.0 on, clients that do not connect through `127.0.0.1` are refused unless you list them or use `*`.
 
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
