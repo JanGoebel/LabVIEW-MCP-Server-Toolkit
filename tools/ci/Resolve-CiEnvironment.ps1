@@ -124,7 +124,7 @@ if (-not $git) {
 } elseif (-not $gitOnPath) {
     $problems.Add("Git is installed ($git) but not on the PATH the runner started with, so actions/checkout downloaded a zip instead of a repository. Add $(Split-Path $git) to the system PATH and restart the runner.")
 }
-if ($env:GITHUB_WORKSPACE -and -not (Test-Path (Join-Path $env:GITHUB_WORKSPACE '.git'))) {
+if ($env:GITHUB_WORKSPACE -and -not (Test-Path -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '.git'))) {
     $problems.Add('The checkout is not a Git repository (actions/checkout fell back to downloading a zip). The VI diff and VIPM Community Edition need a real clone; see the Git message above.')
 }
 
@@ -259,7 +259,7 @@ if ($compare) {
 # --- hand over -------------------------------------------------------------------
 foreach ($entry in $result.GetEnumerator()) {
     Set-Item -Path "env:$($entry.Key)" -Value "$($entry.Value)"
-    if ($env:GITHUB_ENV) { Add-Content -LiteralPath $env:GITHUB_ENV -Value "$($entry.Key)=$($entry.Value)" }
+    Add-GitHubFileText $env:GITHUB_ENV "$($entry.Key)=$($entry.Value)"
 }
 
 $summary = New-Object System.Text.StringBuilder
@@ -282,7 +282,7 @@ if ($notes.Count -gt 0) {
     $notes | ForEach-Object { [void]$summary.AppendLine("- $_") }
 }
 Write-Host $summary.ToString()
-if ($env:GITHUB_STEP_SUMMARY) { Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $summary.ToString() }
+Add-GitHubFileText $env:GITHUB_STEP_SUMMARY $summary.ToString()
 if ($env:GITHUB_ACTIONS) { $notes | ForEach-Object { Write-Host "::warning::$_" } }
 
 if ($problems.Count -gt 0) {

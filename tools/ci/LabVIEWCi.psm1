@@ -58,10 +58,33 @@ function Get-LabVIEWInstall {
     }
 }
 
+function Get-AnsiEncoding {
+    <# The system ANSI code page, in which LabVIEW writes LabVIEW.ini and VIPM
+       its Settings.ini. Named explicitly: [Text.Encoding]::Default is that
+       code page in Windows PowerShell but UTF-8 in PowerShell 7.
+       GetEncoding(0) is the system code page in both; 1252 if it fails. #>
+    if (-not $script:AnsiEncoding) {
+        try { $script:AnsiEncoding = [System.Text.Encoding]::GetEncoding(0) }
+        catch { $script:AnsiEncoding = [System.Text.Encoding]::GetEncoding(1252) }
+    }
+    return $script:AnsiEncoding
+}
+
+function Add-GitHubFileText {
+    <# Appends a line to one of the files GitHub Actions reads after a step
+       (GITHUB_ENV, GITHUB_PATH, GITHUB_OUTPUT, GITHUB_STEP_SUMMARY), as UTF-8
+       without BOM, which is what the runner reads. Add-Content would write
+       the ANSI code page in Windows PowerShell. Does nothing when Path is
+       empty (outside GitHub Actions). #>
+    param([string]$Path, [AllowEmptyString()][string]$Text)
+    if (-not $Path) { return }
+    [System.IO.File]::AppendAllText($Path, $Text + "`n", (New-Object System.Text.UTF8Encoding $false))
+}
+
 function Get-IniValue([string]$Ini, [string]$Key) {
     if (-not (Test-Path -LiteralPath $Ini)) { return $null }
     $pattern = '^\s*' + [regex]::Escape($Key) + '\s*=(.*)$'
-    foreach ($line in [System.IO.File]::ReadAllLines($Ini)) {
+    foreach ($line in [System.IO.File]::ReadAllLines($Ini, (Get-AnsiEncoding))) {
         if ($line -match $pattern) { return $Matches[1].Trim().Trim('"') }
     }
     return $null
@@ -70,7 +93,7 @@ function Get-IniValue([string]$Ini, [string]$Key) {
 function Set-IniValue([string]$Ini, [string]$Key, [string]$Value) {
     <# Sets key=value in the [LabVIEW] section of a LabVIEW.ini. Only call it
        while that LabVIEW is not running: LabVIEW rewrites the file on exit. #>
-    $encoding = [System.Text.Encoding]::Default
+    $encoding = Get-AnsiEncoding
     # Not "$lines = if (...) { list }": PowerShell would unroll the list into a
     # fixed-size array, and Insert would fail.
     $lines = New-Object System.Collections.Generic.List[string]
@@ -233,7 +256,7 @@ function Get-VipmPort {
     $inTargets = $false
     $locations = @{}
     $ports = @()
-    foreach ($line in [System.IO.File]::ReadAllLines($Settings, [System.Text.Encoding]::Default)) {
+    foreach ($line in [System.IO.File]::ReadAllLines($Settings, (Get-AnsiEncoding))) {
         if ($line -match '^\s*\[(.+)\]\s*$') { $inTargets = ($Matches[1] -eq 'Targets'); continue }
         if (-not $inTargets) { continue }
         if ($line -match '^Locations (\d+)="(.*)"$') { $locations[[int]$Matches[1]] = $Matches[2] }
@@ -395,7 +418,7 @@ function Find-Tool {
         if (-not $hit) { continue }
         $dir = Split-Path $hit.Path
         $env:PATH = "$dir;$env:PATH"
-        if ($env:GITHUB_PATH) { Add-Content -LiteralPath $env:GITHUB_PATH -Value $dir }
+        Add-GitHubFileText $env:GITHUB_PATH $dir
         return $hit.Path
     }
     return $null
@@ -442,4 +465,5 @@ function Invoke-NativeCommand {
 Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
     Get-VipmPort, Stop-LeftoverVipm, Test-CiDedicatedMachine, Get-ProcessWindowTitle, Select-LabVIEWToStop,
-    Get-RunningLabVIEW, Stop-CiLabVIEW, Get-VipmPath, Get-GhPath, Invoke-NativeCommand
+    Get-RunningLabVIEW, Stop-CiLabVIEW, Get-VipmPath, Get-GhPath, Invoke-NativeCommand, Get-AnsiEncoding,
+    Add-GitHubFileText

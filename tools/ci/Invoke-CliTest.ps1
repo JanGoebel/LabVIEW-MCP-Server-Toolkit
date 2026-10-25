@@ -27,7 +27,7 @@ function Write-Log([string]$Text) {
     if ($LogFile) { [System.IO.File]::WriteAllText($LogFile, $Text, $utf8) }
 }
 
-if (-not (Test-Path $VIPath)) {
+if (-not (Test-Path -LiteralPath $VIPath)) {
     $message = "$VIPath does not exist on this branch."
     Write-Host $message
     Write-Log $message
