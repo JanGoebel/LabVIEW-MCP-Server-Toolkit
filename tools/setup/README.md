@@ -160,3 +160,15 @@ The three `fake ... broken vi.vi` files are reported as bad on purpose; the
   `PSSecurityException`.
 - Only one runner should carry the `self-hosted` label unless all of them are
   set up as described here.
+- At the start of every job, and when a LabVIEW does not listen on its VI
+  Server port, CI force-closes the test LabVIEW and the comparison LabVIEW it
+  chose (and, at the start, a VIPM Desktop left over from an earlier job).
+  Anything open in them is lost. No other LabVIEW on the machine is touched,
+  and a chosen one that has unsaved changes (a window title with `*`) is left
+  running, with a warning in the job summary. On a developer machine, work
+  in a LabVIEW CI does not use (see "LabVIEW for the VI comparison").
+- `CI_DEDICATED_MACHINE=1` in the runner's environment (for example a line
+  `CI_DEDICATED_MACHINE=1` in the runner's `.env` file, then restart the
+  runner) says nobody works on the machine: CI then closes the test and
+  comparison LabVIEWs also when they have unsaved changes. Leave it unset on
+  a machine someone develops on.

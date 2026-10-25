@@ -24,27 +24,37 @@ are only used when LabVIEW.ini has none. LabVIEWCLI, vipm and gh are found on
 PATH or in their default folders.
 
 With -Fix it also: enables VI Server in LabVIEW.ini, moves a port that another
-program holds, gives the two LabVIEWs different ports, closes a LabVIEW that
-runs without listening on its port, and ends LabVIEW CLI processes left over
-from a cancelled run.
+program holds, gives the two LabVIEWs different ports, force-closes a test or
+comparison LabVIEW that runs without listening on its port, and ends LabVIEW
+CLI processes left over from a cancelled run.
 
 With -Fix -CleanStart (the first step of every job) it also ends a VIPM
-Desktop left over from an earlier job, together with the running LabVIEWs it
-may have been driving. A runner runs one job at a time, so a VIPM Desktop
-that is running when a job starts belongs to an earlier one. When vipm gives
-up on an operation, VIPM Desktop can carry on with it, or wait at a dialog,
-long afterwards, and then never answers the next job ("wait for VIPM startup
-timed out"). The vipm command line starts VIPM Desktop again when needed, and
-LabVIEW CLI starts LabVIEW. It also closes the LabVIEW chosen for the tests
-and the build if it is still running, and deletes that LabVIEW version's
-compiled object cache (Documents\LabVIEW Data\VIObjCache\<version>). The
-repository's VIs are saved source-only, so their compiled code lives in that
-cache, keyed by file path. Jobs of different pull requests use the same
+Desktop left over from an earlier job, together with the running test and
+comparison LabVIEWs it may have been driving. A runner runs one job at a
+time, so a VIPM Desktop that is running when a job starts belongs to an
+earlier one. When vipm gives up on an operation, VIPM Desktop can carry on
+with it, or wait at a dialog, long afterwards, and then never answers the
+next job ("wait for VIPM startup timed out"). The vipm command line starts
+VIPM Desktop again when needed, and LabVIEW CLI starts LabVIEW. It also
+force-closes the LabVIEW chosen for the tests and the build if it is still
+running, and deletes that LabVIEW version's compiled object cache
+(Documents\LabVIEW Data\VIObjCache\<version>) unless that LabVIEW still runs.
+The repository's VIs are saved source-only, so their compiled code lives in
+that cache, keyed by file path. Jobs of different pull requests use the same
 workspace path, and a VI that is identical on both branches keeps its cache
 entry, compiled against the previous job's typedefs: the next build then looks
 for that job's files ("The following source VIs or Libraries are missing").
 The check after the package install does not pass -CleanStart, so it keeps
 what the install just started.
+
+Closing a LabVIEW (Stop-Process) discards whatever is open in it. So only the
+test and comparison LabVIEWs chosen above are ever closed, never another
+LabVIEW on the machine, and not one with unsaved changes (a window title with
+"*"); such a LabVIEW is left running and the job summary says so. On a
+machine nobody works on, set CI_DEDICATED_MACHINE=1 (an environment variable
+of the runner, e.g. in its .env file) to close those as well. A test or
+comparison LabVIEW without unsaved changes is closed even when someone has
+it open: on a developer machine, do not work in the LabVIEWs CI uses.
 
 The requested values come from the environment variables
 REQUESTED_LABVIEW_PATH, REQUESTED_LABVIEW_PORT, REQUESTED_COMPARE_PATH and
@@ -139,10 +149,6 @@ if ($installs.Count -eq 0) {
 }
 $usable = @($installs | Where-Object { $_.Year -ge $MinVersion })
 
-if ($Fix -and $CleanStart) {
-    Stop-LeftoverVipm -LabVIEWPath @($installs | ForEach-Object { $_.Path }) | ForEach-Object { $notes.Add($_) }
-}
-
 $test = $null
 if ($For -in 'Test', 'All' -and $installs.Count -gt 0) {
     $test = Select-Requested $env:REQUESTED_LABVIEW_PATH 'LABVIEW_PATH' $installs
@@ -157,29 +163,6 @@ if ($For -in 'Test', 'All' -and $installs.Count -gt 0) {
     }
 }
 
-if ($Fix -and $CleanStart -and $test) {
-    # The previous job's VIs may still be loaded from the same workspace path.
-    $running = Get-LabVIEWProcess $test.Path
-    if ($running) {
-        $runningId = $running.Id
-        Stop-Process -Id $runningId -Force -ErrorAction SilentlyContinue
-        Wait-Process -Id $runningId -Timeout 60 -ErrorAction SilentlyContinue
-        $notes.Add("Closed LabVIEW $($test.Year) $($test.Bitness)-bit (process $runningId) left running by an earlier job.")
-    }
-    # Compiled code of source-only VIs from an earlier job's checkout at the
-    # same path; LabVIEW rebuilds the cache from this checkout's files.
-    $cacheRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'LabVIEW Data\VIObjCache'
-    $cacheDirs = @(Get-ChildItem -LiteralPath $cacheRoot -Directory -Filter "$($test.Year - 2000).0*" -ErrorAction SilentlyContinue)
-    foreach ($dir in $cacheDirs) {
-        try {
-            Remove-Item -LiteralPath $dir.FullName -Recurse -Force -ErrorAction Stop
-            $notes.Add("Deleted the compiled object cache $($dir.FullName), so no VI is loaded with code compiled against an earlier job's files.")
-        } catch {
-            $notes.Add("Could not delete the compiled object cache $($dir.FullName): $($_.Exception.Message)")
-        }
-    }
-}
-
 $compare = $null
 if ($For -in 'Compare', 'All' -and $installs.Count -gt 0) {
     $compare = Select-Requested $env:REQUESTED_COMPARE_PATH 'LABVIEW_COMPARE_PATH' $installs
@@ -189,6 +172,42 @@ if ($For -in 'Compare', 'All' -and $installs.Count -gt 0) {
     }
     if ($compare -and $cliYear -and $compare.Year -lt $cliYear) {
         $notes.Add("The comparison LabVIEW ($($compare.Year)) is older than LabVIEW CLI ($cliYear); its comparison operation will not load there.")
+    }
+}
+
+# --- clean start -----------------------------------------------------------------
+# Only the LabVIEWs this job uses are closed, never any other LabVIEW on the
+# machine, and none with unsaved changes unless CI_DEDICATED_MACHINE=1 (see
+# Select-LabVIEWToStop in LabVIEWCi.psm1).
+if ($Fix -and $CleanStart) {
+    $jobLabVIEWs = @(@($test, $compare) | Where-Object { $_ } | ForEach-Object { $_.Path } | Select-Object -Unique)
+    Stop-LeftoverVipm -LabVIEWPath $jobLabVIEWs | ForEach-Object { $notes.Add($_) }
+}
+
+if ($Fix -and $CleanStart -and $test) {
+    # The previous job's VIs may still be loaded from the same workspace path.
+    $decision = @(Stop-CiLabVIEW -LabVIEWPath @($test.Path)) | Select-Object -First 1
+    if ($decision -and $decision.Stop) {
+        $notes.Add("Force-closed LabVIEW $($test.Year) $($test.Bitness)-bit (process $($decision.Id)) left running by an earlier job.")
+    } elseif ($decision) {
+        $notes.Add("Left LabVIEW $($test.Year) $($test.Bitness)-bit (process $($decision.Id)) running: $($decision.Reason). The tests and the build may load VIs an earlier job left in it.")
+    }
+    # Compiled code of source-only VIs from an earlier job's checkout at the
+    # same path; LabVIEW rebuilds the cache from this checkout's files. Not
+    # while that LabVIEW still runs and uses the cache.
+    $cacheRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'LabVIEW Data\VIObjCache'
+    $cacheDirs = @(Get-ChildItem -LiteralPath $cacheRoot -Directory -Filter "$($test.Year - 2000).0*" -ErrorAction SilentlyContinue)
+    if ($cacheDirs.Count -gt 0 -and (Get-LabVIEWProcess $test.Path)) {
+        $notes.Add("Kept the compiled object cache of LabVIEW $($test.Year) ($($cacheDirs[0].FullName)): that LabVIEW is still running.")
+        $cacheDirs = @()
+    }
+    foreach ($dir in $cacheDirs) {
+        try {
+            Remove-Item -LiteralPath $dir.FullName -Recurse -Force -ErrorAction Stop
+            $notes.Add("Deleted the compiled object cache $($dir.FullName), so no VI is loaded with code compiled against an earlier job's files.")
+        } catch {
+            $notes.Add("Could not delete the compiled object cache $($dir.FullName): $($_.Exception.Message)")
+        }
     }
 }
 

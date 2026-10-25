@@ -112,6 +112,116 @@ function Get-LabVIEWProcess([string]$Path) {
         Where-Object { $_.Path -and ($_.Path -ieq $Path) } | Select-Object -First 1
 }
 
+function Test-CiDedicatedMachine {
+    <# True when the environment variable CI_DEDICATED_MACHINE is 1: nobody
+       works on this machine, so a LabVIEW with unsaved changes may be closed
+       as well (see Select-LabVIEWToStop). #>
+    return ("$env:CI_DEDICATED_MACHINE" -eq '1')
+}
+
+function Get-ProcessWindowTitle {
+    <# Titles of the visible top-level windows of a process: every front
+       panel, block diagram and project window of a LabVIEW, not only the one
+       Process.MainWindowTitle reports. Falls back to MainWindowTitle when the
+       window list cannot be read. Read-only. #>
+    param([Parameter(Mandatory = $true)][int]$ProcessId)
+    try {
+        if (-not ('LabVIEWCi.Windows' -as [type])) {
+            Add-Type -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+namespace LabVIEWCi {
+    public static class Windows {
+        delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
+        [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+        [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowTextLength(IntPtr hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int maxCount);
+        public static string[] Titles(int processId) {
+            List<string> titles = new List<string>();
+            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam) {
+                uint owner;
+                GetWindowThreadProcessId(hWnd, out owner);
+                if (owner == (uint)processId && IsWindowVisible(hWnd)) {
+                    int length = GetWindowTextLength(hWnd);
+                    if (length > 0) {
+                        StringBuilder text = new StringBuilder(length + 1);
+                        GetWindowText(hWnd, text, text.Capacity);
+                        titles.Add(text.ToString());
+                    }
+                }
+                return true;
+            }, IntPtr.Zero);
+            return titles.ToArray();
+        }
+    }
+}
+'@
+        }
+        return @([LabVIEWCi.Windows]::Titles($ProcessId))
+    } catch {
+        $title = (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue).MainWindowTitle
+        if ($title) { return @($title) } else { return @() }
+    }
+}
+
+function Select-LabVIEWToStop {
+    <# Decides which running LabVIEWs a CI step may end. Changes nothing.
+       Process: objects with Id, Path and WindowTitles (Get-RunningLabVIEW).
+       LabVIEWPath: the LabVIEWs this job uses (tests/build and comparison).
+       Returns one object per process with Id, Path, Stop and Reason:
+         * a LabVIEW at any other path is never stopped: on a developer
+           machine that is where someone works;
+         * a LabVIEW one of whose windows has a title with "*", which LabVIEW
+           shows for unsaved changes, is not stopped either, unless Dedicated
+           is set (CI_DEDICATED_MACHINE=1, nobody works on this machine);
+         * every other LabVIEW at one of the LabVIEWPath paths is stopped. #>
+    param([object[]]$Process = @(), [string[]]$LabVIEWPath = @(), [switch]$Dedicated)
+    $wanted = @($LabVIEWPath | Where-Object { $_ })
+    foreach ($p in @($Process | Where-Object { $_ })) {
+        $path = "$($p.Path)"
+        $used = [bool](@($wanted | Where-Object { $_ -ieq $path }).Count)
+        $unsaved = @($p.WindowTitles | Where-Object { "$_" -match '\*' })
+        if (-not $used) {
+            $stop = $false; $reason = 'not a LabVIEW this job uses'
+        } elseif ($unsaved.Count -gt 0 -and -not $Dedicated) {
+            $stop = $false
+            $reason = "it has unsaved changes (window ""$($unsaved[0])""); save or close them, or set CI_DEDICATED_MACHINE=1 on a machine nobody works on"
+        } else {
+            $stop = $true; $reason = if ($unsaved.Count -gt 0) { 'CI_DEDICATED_MACHINE=1, unsaved changes are discarded' } else { 'used by this job' }
+        }
+        [pscustomobject]@{ Id = $p.Id; Path = $path; Stop = $stop; Reason = $reason }
+    }
+}
+
+function Get-RunningLabVIEW {
+    <# The running LabVIEW processes at the given paths, with the titles of
+       their windows, as Select-LabVIEWToStop takes them. Read-only. #>
+    param([string[]]$LabVIEWPath = @())
+    foreach ($path in @($LabVIEWPath | Where-Object { $_ } | Select-Object -Unique)) {
+        $process = Get-LabVIEWProcess $path
+        if (-not $process) { continue }
+        [pscustomobject]@{ Id = $process.Id; Path = $process.Path; WindowTitles = @(Get-ProcessWindowTitle $process.Id) }
+    }
+}
+
+function Stop-CiLabVIEW {
+    <# Ends the running LabVIEWs at LabVIEWPath that Select-LabVIEWToStop
+       allows to end, and waits up to 60 s for each. Returns the decisions
+       (Id, Path, Stop, Reason), so the caller can say what it ended and what
+       it left running. #>
+    param([string[]]$LabVIEWPath = @())
+    $decisions = @(Select-LabVIEWToStop -Process @(Get-RunningLabVIEW $LabVIEWPath) -LabVIEWPath $LabVIEWPath -Dedicated:(Test-CiDedicatedMachine))
+    foreach ($d in $decisions | Where-Object { $_.Stop }) {
+        Stop-Process -Id $d.Id -Force -ErrorAction SilentlyContinue
+        Wait-Process -Id $d.Id -Timeout 60 -ErrorAction SilentlyContinue
+    }
+    return $decisions
+}
+
 function Get-VipmPort {
     <# The VI Server port VIPM has recorded for the LabVIEW at Path, or 0.
        Read-only. VIPM keeps its LabVIEW list in the [Targets] section of its
@@ -150,9 +260,13 @@ function Resolve-ViServerPort {
     With -Fix it repairs what is easy to repair: VI Server disabled or on a
     different port in LabVIEW.ini, a port taken by another program or
     configured for another LabVIEW (Avoid), and an instance that runs on a
-    different port or none (it is closed so that LabVIEW CLI starts it again
-    with the settings written here). Without -Fix it only reports, and uses a
-    running instance's port as it is.
+    different port or none: that LabVIEW is force-closed (Stop-Process,
+    unsaved changes are lost) so that LabVIEW CLI starts it again with the
+    settings written here. A running instance with unsaved changes (a window
+    title with "*") is not closed unless CI_DEDICATED_MACHINE=1; it is then
+    handled as without -Fix, and LabVIEW.ini is not written while it runs.
+    Without -Fix it only reports, and uses a running instance's port as it
+    is when that is its LabVIEW.ini port or the requested port.
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -172,6 +286,9 @@ function Resolve-ViServerPort {
         $notes.Add("VIPM's port $Preferred for this LabVIEW is also used by another LabVIEW; set different ports in VIPM (Tools > Options > LabVIEW).")
     }
 
+    # LabVIEW.ini is only written when -Fix is given and this LabVIEW is not
+    # running: LabVIEW rewrites the file when it exits.
+    $write = [bool]$Fix
     $process = Get-LabVIEWProcess $Path
     if ($process) {
         $listening = Get-ListeningPort $process.Id
@@ -180,16 +297,27 @@ function Resolve-ViServerPort {
             return [pscustomobject]@{ Port = $want; Notes = $notes; Changed = $false }
         }
         $actual = @($iniPort, $Requested) | Where-Object { $_ -and ($listening -contains $_) } | Select-Object -First 1
+        $was = if ($actual) { "on port $actual" } else { 'without listening on its VI Server port' }
+        $stop = $null
         if ($Fix) {
-            $was = if ($actual) { "on port $actual" } else { 'without listening on its VI Server port' }
-            $notes.Add("LabVIEW (process $($process.Id)) was running $was instead of on $want; closed it so LabVIEW CLI starts it with the settings below.")
+            $titles = @(Get-ProcessWindowTitle $process.Id)
+            $stop = Select-LabVIEWToStop -Process @([pscustomobject]@{ Id = $process.Id; Path = $Path; WindowTitles = $titles }) -LabVIEWPath @($Path) -Dedicated:(Test-CiDedicatedMachine)
+            if (-not $stop.Stop) {
+                $notes.Add("LabVIEW (process $($process.Id)) runs $was instead of on $want, but was not closed: $($stop.Reason).")
+                $write = $false
+            }
+        }
+        if ($stop -and $stop.Stop) {
+            $notes.Add("LabVIEW (process $($process.Id)) was running $was instead of on $want; force-closed it so LabVIEW CLI starts it with the settings below.")
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             Wait-Process -Id $process.Id -Timeout 60 -ErrorAction SilentlyContinue
         } elseif ($actual) {
-            $notes.Add("LabVIEW (process $($process.Id)) runs on port $actual, not on $want (VIPM may move it back); using $actual. Run with -Fix to repair it.")
+            $hint = if ($Fix) { 'It is repaired once it can be closed.' } else { 'Run with -Fix to repair it.' }
+            $notes.Add("LabVIEW (process $($process.Id)) runs on port $actual, not on $want (VIPM may move it back); using $actual. $hint")
             return [pscustomobject]@{ Port = $actual; Notes = $notes; Changed = $false }
         } else {
-            $notes.Add("LabVIEW (process $($process.Id)) is running but not listening on its VI Server port ($iniPort); LabVIEW CLI will probably not reach it. Close it, or run with -Fix.")
+            $hint = if ($Fix) { 'Close it.' } else { 'Close it, or run with -Fix.' }
+            $notes.Add("LabVIEW (process $($process.Id)) is running but not listening on its VI Server port ($iniPort); LabVIEW CLI will probably not reach it. $hint")
         }
     }
 
@@ -212,7 +340,7 @@ function Resolve-ViServerPort {
     $changed = $false
     if ($changes.Count -gt 0) {
         $list = ($changes.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', '
-        if ($Fix) {
+        if ($write) {
             try {
                 foreach ($entry in $changes.GetEnumerator()) { Set-IniValue $ini $entry.Key $entry.Value }
                 $notes.Add("Set $list in $ini.")
@@ -220,6 +348,8 @@ function Resolve-ViServerPort {
             } catch {
                 $notes.Add("Could not write $ini ($($_.Exception.Message)); it needs $list.")
             }
+        } elseif ($Fix) {
+            $notes.Add("$ini needs $list; not written while this LabVIEW runs.")
         } else {
             $notes.Add("$ini needs $list (run with -Fix to write it).")
         }
@@ -232,20 +362,25 @@ function Stop-LeftoverVipm {
     <# Ends a running VIPM Desktop and, only if one was running, the LabVIEWs
        at LabVIEWPath it may have been driving. For the start of a CI job,
        where a running VIPM Desktop belongs to an earlier job (see
-       Resolve-CiEnvironment.ps1, -CleanStart). Returns a note, or nothing
-       when VIPM Desktop was not running. #>
+       Resolve-CiEnvironment.ps1, -CleanStart). LabVIEWPath must be the
+       LabVIEWs the job uses, not every installed one: LabVIEWs at other
+       paths are never touched, and of these only those without unsaved
+       changes are ended (see Select-LabVIEWToStop, CI_DEDICATED_MACHINE).
+       Both are force-closed (Stop-Process). Returns notes, or nothing when
+       VIPM Desktop was not running. #>
     param([string[]]$LabVIEWPath = @(), [string]$ProcessName = 'VI Package Manager')
     $desktop = @(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)
     if ($desktop.Count -eq 0) { return }
-    $driven = @($LabVIEWPath | ForEach-Object { Get-LabVIEWProcess $_ } | Where-Object { $_ })
-    # Read the paths first: a stopped process no longer reports one.
-    $drivenPaths = @($driven | ForEach-Object { $_.Path })
-    $ended = @($desktop) + $driven
-    $ended | Stop-Process -Force -ErrorAction SilentlyContinue
-    $ended | ForEach-Object { Wait-Process -Id $_.Id -Timeout 60 -ErrorAction SilentlyContinue }
+    $desktop | Stop-Process -Force -ErrorAction SilentlyContinue
+    $desktop | ForEach-Object { Wait-Process -Id $_.Id -Timeout 60 -ErrorAction SilentlyContinue }
+    $decisions = @(Stop-CiLabVIEW -LabVIEWPath $LabVIEWPath)
+    $ended = @($decisions | Where-Object { $_.Stop })
     $what = 'VIPM Desktop'
-    if ($driven.Count -gt 0) { $what += " and $($driven.Count) LabVIEW(s) ($($drivenPaths -join ', '))" }
+    if ($ended.Count -gt 0) { $what += " and $($ended.Count) LabVIEW(s) ($(($ended | ForEach-Object { $_.Path }) -join ', '))" }
     "Ended $what left over from an earlier job, so this job starts with a VIPM that answers."
+    foreach ($kept in $decisions | Where-Object { -not $_.Stop }) {
+        "Left LabVIEW $($kept.Path) (process $($kept.Id)) running: $($kept.Reason). VIPM may not answer if it was driving it."
+    }
 }
 
 function Find-Tool {
@@ -275,4 +410,5 @@ function Get-LabVIEWCliPath {
 
 Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
-    Get-VipmPort, Stop-LeftoverVipm
+    Get-VipmPort, Stop-LeftoverVipm, Test-CiDedicatedMachine, Get-ProcessWindowTitle, Select-LabVIEWToStop,
+    Get-RunningLabVIEW, Stop-CiLabVIEW
