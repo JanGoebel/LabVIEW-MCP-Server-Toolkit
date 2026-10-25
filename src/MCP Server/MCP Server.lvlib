@@ -148,6 +148,24 @@
 			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
 			<Item Name="Remove Default Error Description.vi" Type="VI" URL="../Remove Default Error Description.vi"/>
 			<Item Name="Remove Empty Description.vi" Type="VI" URL="../Remove Empty Description.vi"/>
+			<Item Name="Write Stream State.vi" Type="VI" URL="../Write Stream State.vi"/>
+			<Item Name="Send Stream Event.vi" Type="VI" URL="../Send Stream Event.vi"/>
+			<Item Name="Build Progress Event.vi" Type="VI" URL="../Build Progress Event.vi"/>
+			<Item Name="Read Request Context.vi" Type="VI" URL="../Read Request Context.vi"/>
+			<Item Name="Register Input Request.vi" Type="VI" URL="../Register Input Request.vi"/>
+			<Item Name="Build Stream Object.vi" Type="VI" URL="../Build Stream Object.vi"/>
+			<Item Name="Stream Was Cancelled.vi" Type="VI" URL="../Stream Was Cancelled.vi"/>
+			<Item Name="Finish Stream.vi" Type="VI" URL="../Finish Stream.vi"/>
+			<Item Name="Read Server Info.vi" Type="VI" URL="../Read Server Info.vi"/>
+			<Item Name="Build Discover Response.vi" Type="VI" URL="../Build Discover Response.vi"/>
+			<Item Name="Add Result Fields.vi" Type="VI" URL="../Add Result Fields.vi"/>
+			<Item Name="Remap Resource Not Found.vi" Type="VI" URL="../Remap Resource Not Found.vi"/>
+			<Item Name="Read Stream State.vi" Type="VI" URL="../Read Stream State.vi"/>
+			<Item Name="Add Cache Hints.vi" Type="VI" URL="../Add Cache Hints.vi"/>
+			<Item Name="Complete Handler Result.vi" Type="VI" URL="../Complete Handler Result.vi"/>
+			<Item Name="Input Required Response.vi" Type="VI" URL="../Input Required Response.vi"/>
+			<Item Name="Response Status Code.vi" Type="VI" URL="../Response Status Code.vi"/>
+			<Item Name="Should Send Progress.vi" Type="VI" URL="../Should Send Progress.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
