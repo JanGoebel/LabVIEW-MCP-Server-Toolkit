@@ -462,23 +462,31 @@ function Invoke-NativeCommand {
     return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = $output }
 }
 
-function Invoke-Git {
-    <# Runs git with Arguments and returns its standard output, one string
-       per line. Throws when git exits with a non-zero code, so a failed call
-       never passes as an empty result. The output is read as UTF-8, which is
-       what git writes (Windows PowerShell would read it in the console code
-       page); standard error goes to the console unchanged. #>
-    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+function Invoke-Utf8Command {
+    <# Runs a console program that writes UTF-8 (git, gh) and returns
+       ExitCode and Output (its standard output, one string per line, read as
+       UTF-8; Windows PowerShell would read it in the console code page).
+       Standard error goes to the console unchanged. #>
+    param([Parameter(Mandatory = $true)][string]$FilePath, [string[]]$ArgumentList = @())
     $console = $null
     try { $console = [Console]::OutputEncoding; [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } catch { $console = $null }
     try {
-        $output = @(& git @Arguments)
+        $output = @(& $FilePath @ArgumentList)
         $code = $LASTEXITCODE
     } finally {
         if ($console) { try { [Console]::OutputEncoding = $console } catch { } }
     }
-    if ($code -ne 0) { throw "git $($Arguments -join ' ') failed with exit code $code." }
-    return $output
+    return [pscustomobject]@{ ExitCode = $code; Output = $output }
+}
+
+function Invoke-Git {
+    <# Runs git with Arguments (Invoke-Utf8Command) and returns its standard
+       output, one string per line. Throws when git exits with a non-zero
+       code, so a failed call never passes as an empty result. #>
+    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+    $run = Invoke-Utf8Command 'git' $Arguments
+    if ($run.ExitCode -ne 0) { throw "git $($Arguments -join ' ') failed with exit code $($run.ExitCode)." }
+    return $run.Output
 }
 
 function ConvertFrom-GitNameStatus {
@@ -526,4 +534,4 @@ Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Ge
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
     Get-VipmPort, Stop-LeftoverVipm, Test-CiDedicatedMachine, Get-ProcessWindowTitle, Select-LabVIEWToStop,
     Get-RunningLabVIEW, Stop-CiLabVIEW, Get-VipmPath, Get-GhPath, Invoke-NativeCommand, Get-AnsiEncoding,
-    Add-GitHubFileText, Invoke-Git, ConvertFrom-GitNameStatus, ConvertTo-MarkdownText, Format-MarkdownCodeBlock
+    Add-GitHubFileText, Invoke-Utf8Command, Invoke-Git, ConvertFrom-GitNameStatus, ConvertTo-MarkdownText, Format-MarkdownCodeBlock
