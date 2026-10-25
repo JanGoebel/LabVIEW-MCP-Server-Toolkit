@@ -153,6 +153,13 @@
 			<Item Name="Build Progress Event.vi" Type="VI" URL="../Build Progress Event.vi"/>
 			<Item Name="Read Request Context.vi" Type="VI" URL="../Read Request Context.vi"/>
 			<Item Name="Register Input Request.vi" Type="VI" URL="../Register Input Request.vi"/>
+			<Item Name="Build Stream Object.vi" Type="VI" URL="../Build Stream Object.vi"/>
+			<Item Name="Stream Was Cancelled.vi" Type="VI" URL="../Stream Was Cancelled.vi"/>
+			<Item Name="Finish Stream.vi" Type="VI" URL="../Finish Stream.vi"/>
+			<Item Name="Read Server Info.vi" Type="VI" URL="../Read Server Info.vi"/>
+			<Item Name="Build Discover Response.vi" Type="VI" URL="../Build Discover Response.vi"/>
+			<Item Name="Add Result Fields.vi" Type="VI" URL="../Add Result Fields.vi"/>
+			<Item Name="Remap Resource Not Found.vi" Type="VI" URL="../Remap Resource Not Found.vi"/>
 			<Item Name="Read Stream State.vi" Type="VI" URL="../Read Stream State.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
