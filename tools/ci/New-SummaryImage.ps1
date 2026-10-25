@@ -96,6 +96,9 @@ try {
     }
     finally { $g.Dispose() }
 
+    # .NET resolves a relative path against the process directory, not the
+    # PowerShell location, so resolve it here.
+    $OutFile = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutFile)
     $dir = Split-Path -Parent $OutFile
     if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Force $dir | Out-Null }
     $out.Save($OutFile, [System.Drawing.Imaging.ImageFormat]::Png)
