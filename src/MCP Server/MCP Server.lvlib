@@ -161,6 +161,11 @@
 			<Item Name="Add Result Fields.vi" Type="VI" URL="../Add Result Fields.vi"/>
 			<Item Name="Remap Resource Not Found.vi" Type="VI" URL="../Remap Resource Not Found.vi"/>
 			<Item Name="Read Stream State.vi" Type="VI" URL="../Read Stream State.vi"/>
+			<Item Name="Add Cache Hints.vi" Type="VI" URL="../Add Cache Hints.vi"/>
+			<Item Name="Complete Handler Result.vi" Type="VI" URL="../Complete Handler Result.vi"/>
+			<Item Name="Input Required Response.vi" Type="VI" URL="../Input Required Response.vi"/>
+			<Item Name="Response Status Code.vi" Type="VI" URL="../Response Status Code.vi"/>
+			<Item Name="Should Send Progress.vi" Type="VI" URL="../Should Send Progress.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
