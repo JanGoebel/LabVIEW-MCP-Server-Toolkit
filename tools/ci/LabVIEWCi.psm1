@@ -1,8 +1,8 @@
 <#
 Shared helpers for the CI scripts: finding the LabVIEW installations on a
-runner, the VI Server port each of them listens on, and the command-line tools
-the workflows call. Used by Resolve-CiEnvironment.ps1, Invoke-CliTest.ps1 and
-New-ViDiffReport.ps1.
+runner, the VI Server port each of them listens on, which LabVIEW CI may
+close, the command-line tools the workflows call and how to run them, and
+Markdown escaping for the reports. Used by the scripts in this folder.
 #>
 
 $script:IniSection = 'LabVIEW'
