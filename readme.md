@@ -2,7 +2,7 @@
 
 With this toolkit you can make large language models like ChatGPT or Claude control your LabVIEW applications.
 
-It opens a http server on the current machine. An MCP client can connect to that server and retrieve information about the available tools, prompts and resources. Then during a chat-conversation the LLM can decide itself when to call a VI for a specific purpouse.
+It opens a http server on the current machine. An MCP client can connect to that server and retrieve information about the available tools, prompts and resources. Then during a chat-conversation the LLM can decide itself when to call a VI for a specific purpose.
 
 ---
 
@@ -19,23 +19,27 @@ https://modelcontextprotocol.io/docs/getting-started/intro
 MCP consists of 3 types of objects:
 
 ### Tools
-A tool is a function that can be called by the AI. It has in- and ouputs, a name and a description. The AI can read this description to understand how to use the tool (e.g. which strings to pass to the input ...) 
+A tool is a function that can be called by the AI. It has in- and outputs, a name and a description. The AI can read this description to understand how to use the tool (e.g. which strings to pass to the input ...) 
 
 ### Prompts
 A prompt is a function with string-inputs and a single string output. It's listed for the user to pick in the chat-client (little plus icon in claude desktop). When selected, a dialog appears with a description and all parameters (string inputs). When clicking okay the resulting string is inserted into the chat message field.
 It's a much less used feature than tools and really just a "configurable prompt template".
 
-### Resoruces
+### Resources
 Resources are very similar to prompts and added in the same way. They return a single string or byte stream. Resources are usually files that are fully returned as text. These are selected just as prompts, but they don't have parameters.
 They are also much less common than tools and are just longer "prompt templates".
 
-The core communication uses **JSON-RPC 2.0 messages** transmitted via HTTP POST requests, where:
+The core communication uses **JSON-RPC 2.0 messages** transmitted via HTTP POST requests.
+
+## Installation
+
+Install the package with VIPM. It needs LabVIEW 2020 or newer, 64-bit. VIPM installs the dependencies (see [Dependencies](#dependencies)) with it. The VIs are then on the **MCP Server** palette; Ask User, Confirm With User, Report Progress and Cancel Requested are in its **Advanced** sub-palette. Example servers are installed under `<LabVIEW>\examples\MCP Server`.
 
 ## MCP Clients
 
 This toolkit is tested using Claude Desktop as an MCP client. There are many more clients out there. Usually they have a ..config.json file that contains the MCP config which looks like this:
 
-'''
+```json
 {
   "mcpServers": {
     "vi-scripting-server": {
@@ -49,7 +53,7 @@ This toolkit is tested using Claude Desktop as an MCP client. There are many mor
     }
   }
 }
-'''
+```
 
 It may of course contain multiple servers.
 The port can be changed when starting the server.
@@ -83,6 +87,8 @@ What else goes into the schema, so the model knows what to send:
 
 Write the descriptions with the model in mind: what the value means, its unit and its allowed values.
 
+Names sent to the client are made valid MCP names: tool and prompt names and the names of inputs, outputs and prompt arguments are lowercased, and every character other than `a-z`, `0-9`, `_` and `-` becomes `_` (`Wert (mm)` becomes `wert__mm_`). `Add Tool.vi` and `Add Prompt.vi` return error 5010 and do not register the tool or prompt when a converted name is empty, longer than 64 characters, or the same as another one in that tool or prompt. The VI's controls keep their labels.
+
 Outputs of any type are flattened to JSON (timestamps as ISO 8601, enums as item names):
 - The result's text block holds all outputs as one JSON object, for older clients.
 - `structuredContent` holds the same object without picture outputs.
@@ -108,7 +114,7 @@ The server speaks both eras of MCP on the same endpoint, and decides per request
   - Such a request must also carry `io.modelcontextprotocol/clientCapabilities` and the headers `MCP-Protocol-Version`, `Mcp-Method` and, for `tools/call`, `prompts/get` and `resources/read`, `Mcp-Name`.
   - Results carry `resultType` and `_meta.io.modelcontextprotocol/serverInfo`. Lists and `resources/read` also carry the caching hints `ttlMs` and `cacheScope`.
   - `server/discover` returns the supported versions, capabilities and server info.
-- **MCP 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05**: clients that start with `initialize`. These are served exactly as before.
+- **MCP 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05**: clients that start with `initialize`. A client that asks for a version the server does not know is answered with 2025-11-25, the newest of these (up to v3.0.0 it was 2025-06-18).
 
 An unsupported version is answered with HTTP 400 and error `-32022`, listing every supported version.
 
@@ -149,7 +155,7 @@ The IG HTTP Server listens on **all network interfaces**, so an MCP server can b
   - Other clients get HTTP 403.
   - Reverse-DNS names can be spoofed on a local network, so this list is a best-effort filter. The token is the protection.
 
-Since this version, clients that do not report as this computer are refused unless you list them or use `*`.
+This is a change from v3.0.0 and earlier, which served any client: from the release after v3.0.0 on, clients that do not report as this computer are refused unless you list them or use `*`.
 
 ## Dependencies
 This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
@@ -159,7 +165,7 @@ https://www.vipm.io/package/illuminatedg_lib_ig_http_server/
 https://www.vipm.io/package/jdp_science_jsontext/
 
 ## G-AI
-Main purpouse to develop this toolkit is to use it for my G-AI project which can generate LabVIEW code using LLMs. Have a look at it here:
+Main purpose to develop this toolkit is to use it for my G-AI project which can generate LabVIEW code using LLMs. Have a look at it here:
 https://github.com/JanGoebel/G-AI
 
 ## License
