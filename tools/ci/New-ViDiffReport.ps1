@@ -51,7 +51,7 @@ $script:portRetried = $false
 # Prints every case frame of the new version of each VI. Absent on a base
 # branch that predates it; the report then shows visible frames only.
 $framePrinter = Join-Path $PSScriptRoot 'Print Diagram Frames.vi'
-if (-not (Test-Path $framePrinter)) { $framePrinter = $null; Write-Warning "$(Join-Path $PSScriptRoot 'Print Diagram Frames.vi') not found; case frames are not printed." }
+if (-not (Test-Path -LiteralPath $framePrinter)) { $framePrinter = $null; Write-Warning "$(Join-Path $PSScriptRoot 'Print Diagram Frames.vi') not found; case frames are not printed." }
 
 function Invoke-CliComparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
     # LabVIEW CLI writes its error text to stderr; keep it for the report.
@@ -60,7 +60,7 @@ function Invoke-CliComparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
         '-LabVIEWPath', $LabVIEWPath, '-PortNumber', $script:PortNumber)
     $output = ($run.Output | Out-String).Trim()
     return @{
-        Ok          = (Test-Path $ReportPath)
+        Ok          = (Test-Path -LiteralPath $ReportPath)
         Output      = $output
         # -350000: the CLI could not connect to LabVIEW (or the CLI is
         # missing). Every further comparison would wait for the same timeout.
@@ -86,10 +86,10 @@ function Invoke-Comparison([string]$Vi1, [string]$Vi2, [string]$ReportPath) {
 function Copy-ReportImage([string]$ReportPath, [string]$Source, [string]$Slug) {
     # $Source is the path as written in the HTML, relative to the report file.
     $from = Join-Path (Split-Path $ReportPath) $Source
-    if (-not (Test-Path $from)) { return $null }
+    if (-not (Test-Path -LiteralPath $from)) { return $null }
     $targetDir = Join-Path (Join-Path $OutDir 'images') $Slug
     New-Item -ItemType Directory -Force $targetDir | Out-Null
-    Copy-Item $from (Join-Path $targetDir (Split-Path $from -Leaf)) -Force
+    Copy-Item -LiteralPath $from -Destination (Join-Path $targetDir (Split-Path $from -Leaf)) -Force
     return "images/$Slug/$(Split-Path $from -Leaf)"
 }
 
@@ -107,7 +107,7 @@ function Invoke-FramePrint([string]$ViPath, [string]$Slug) {
         '-VIPath', $framePrinter, $ViPath, $html, $list)
     $output = $run.Output | Out-String
     $code = $run.ExitCode
-    if ($code -ne 0 -or -not (Test-Path $html) -or -not (Test-Path $list)) {
+    if ($code -ne 0 -or -not (Test-Path -LiteralPath $html) -or -not (Test-Path -LiteralPath $list)) {
         return @{ Ok = $false; Output = $output.Trim() }
     }
     # The pictures in the order of the HTML's block diagram section: the whole
@@ -144,7 +144,7 @@ function Add-FrameSection([string]$ViPath, [string]$Slug) {
     $result = Invoke-FramePrint $ViPath $Slug
     if (-not $result.Ok) {
         Write-Warning "The case frames of $ViPath could not be printed."
-        [void]$md.AppendLine("The case frames could not be printed:`n`n``````n$($result.Output)`n```````n")
+        [void]$md.AppendLine("The case frames could not be printed:`n`n$(Format-MarkdownCodeBlock $result.Output)`n")
         return $false
     }
     $hidden = @($result.Frames | Where-Object { -not $_.Visible })
@@ -160,9 +160,9 @@ function Add-FrameSection([string]$ViPath, [string]$Slug) {
     [void]$md.AppendLine('| Frame | Picture |')
     [void]$md.AppendLine('|---|---|')
     for ($i = 0; $i -lt $result.Images.Count; $i++) {
-        if (-not (Test-Path $result.Images[$i])) { continue }
+        if (-not (Test-Path -LiteralPath $result.Images[$i])) { continue }
         $file = '{0:d2}.png' -f $i
-        Copy-Item $result.Images[$i] (Join-Path $targetDir $file) -Force
+        Copy-Item -LiteralPath $result.Images[$i] -Destination (Join-Path $targetDir $file) -Force
         if ($i -eq 0) {
             $visible = @($result.Frames | Where-Object { $_.Visible } | ForEach-Object { Format-FrameName $_ })
             $caption = if ($visible.Count -gt 0) { "Whole diagram, visible frames: $($visible -join '; ')" } else { 'Whole diagram' }
@@ -171,7 +171,8 @@ function Add-FrameSection([string]$ViPath, [string]$Slug) {
         } else {
             $caption = "Frame picture $i"
         }
-        $caption = $caption -replace '\|', '\|'
+        # Frame names are selector values such as "<Default>" or "a|b".
+        $caption = ConvertTo-MarkdownText $caption
         [void]$md.AppendLine("| $caption | ![$file](images/$Slug/frames/$file) |")
     }
     [void]$md.AppendLine()
@@ -192,15 +193,15 @@ $baseDir = Join-Path $workDir 'base'
 $htmlDir = Join-Path $workDir 'html'
 New-Item -ItemType Directory -Force $htmlDir | Out-Null
 
-$changes = @()
-foreach ($line in (& git -C $HeadDir diff --name-status --find-renames "$BaseRef...HEAD")) {
-    $parts = $line -split "`t"
-    $status = $parts[0].Substring(0, 1)
-    $oldPath = $parts[1]
-    $newPath = if ($parts.Count -gt 2) { $parts[2] } else { $parts[1] }
-    if ($extensions -notcontains [System.IO.Path]::GetExtension($newPath).ToLower()) { continue }
-    $changes += [pscustomobject]@{ Status = $status; OldPath = $oldPath; NewPath = $newPath }
-}
+# A worktree of an earlier run that was killed before its clean-up would
+# make "worktree add" below fail; forget those whose folder is gone.
+Invoke-Git @('-C', $HeadDir, 'worktree', 'prune') | Out-Null
+
+# -z and core.quotePath=false: NUL-separated and unquoted, so paths with
+# spaces, quotes or non-ASCII characters arrive as they are.
+$diffOutput = (Invoke-Git @('-C', $HeadDir, '-c', 'core.quotePath=false', 'diff', '-z', '--name-status', '--find-renames', "$BaseRef...HEAD")) -join "`n"
+$changes = @(ConvertFrom-GitNameStatus $diffOutput |
+    Where-Object { $extensions -contains [System.IO.Path]::GetExtension($_.NewPath).ToLower() })
 
 $md = New-Object System.Text.StringBuilder
 [void]$md.AppendLine('## VI diff report')
@@ -227,8 +228,8 @@ $deleted = @($changes | Where-Object { $_.Status -eq 'D' })
 [void]$md.AppendLine("$($modified.Count) modified, $($added.Count) added, $($deleted.Count) deleted. Generated by LabVIEW's VI comparison; position and size changes are not shown.")
 [void]$md.AppendLine()
 
-$mergeBase = (& git -C $HeadDir merge-base $BaseRef HEAD).Trim()
-& git -C $HeadDir worktree add --detach $baseDir $mergeBase | Out-Null
+$mergeBase = (@(Invoke-Git @('-C', $HeadDir, 'merge-base', $BaseRef, 'HEAD')) -join '').Trim()
+Invoke-Git @('-C', $HeadDir, 'worktree', 'add', '--detach', $baseDir, $mergeBase) | Out-Null
 
 try {
     $index = 0
@@ -259,9 +260,7 @@ try {
         if (-not $result.Ok) {
             [void]$md.AppendLine('The comparison could not be created:')
             [void]$md.AppendLine()
-            [void]$md.AppendLine('```')
-            [void]$md.AppendLine($result.Output)
-            [void]$md.AppendLine('```')
+            [void]$md.AppendLine((Format-MarkdownCodeBlock $result.Output))
             [void]$md.AppendLine()
             $summary += [pscustomobject]@{ Path = $change.NewPath; Status = $change.Status; Count = -1; Image = $null }
             if ($result.Unreachable) {
@@ -298,15 +297,18 @@ try {
         foreach ($section in $sections) {
             $body = $section.Groups[1].Value
             $heading = [regex]::Match($body, '(?s)<summary class="difference-heading">(.*?)</summary>').Groups[1].Value
-            $heading = [System.Net.WebUtility]::HtmlDecode($heading).Trim()
-            [void]$md.AppendLine("**$heading**")
+            # LabVIEW's text, possibly with tags and entities: shown as plain
+            # text, so a "<", "|" or "@" in a VI or control name stays as it is.
+            $heading = [System.Net.WebUtility]::HtmlDecode(($heading -replace '<[^>]*>', '')).Trim()
+            [void]$md.AppendLine("**$(ConvertTo-MarkdownText $heading)**")
             [void]$md.AppendLine()
             # LabVIEW marks each change in the images as <section number><letter>.
             $number = [regex]::Match($heading, '^\d+').Value
             $letter = 0
             foreach ($detail in [regex]::Matches($body, '(?s)<li class="diff-detail">(.*?)</li>')) {
                 $mark = if ($letter -lt 26) { [string][char](65 + $letter) } else { [string]($letter + 1) }
-                [void]$md.AppendLine("- **$number$mark** " + [System.Net.WebUtility]::HtmlDecode($detail.Groups[1].Value).Trim())
+                $text = [System.Net.WebUtility]::HtmlDecode(($detail.Groups[1].Value -replace '<[^>]*>', '')).Trim()
+                [void]$md.AppendLine("- **$number$mark** " + (ConvertTo-MarkdownText $text))
                 $letter++
             }
             [void]$md.AppendLine()
@@ -341,8 +343,9 @@ try {
     }
 }
 finally {
-    & git -C $HeadDir worktree remove --force $baseDir | Out-Null
-    Remove-Item -Recurse -Force $workDir -ErrorAction SilentlyContinue
+    try { Invoke-Git @('-C', $HeadDir, 'worktree', 'remove', '--force', $baseDir) | Out-Null }
+    catch { Write-Warning "Could not remove the worktree $baseDir ($($_.Exception.Message)); 'git worktree prune' cleans it up." }
+    Remove-Item -LiteralPath $workDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 [System.IO.File]::WriteAllText((Join-Path $OutDir 'report.md'), $md.ToString(), $utf8)
@@ -370,7 +373,7 @@ function Add-ChangedTable($Rows) {
         $name = [System.IO.Path]::GetFileName($row.Path)
         $folder = [System.IO.Path]::GetDirectoryName($row.Path) -replace '\\', '/'
         $count = if ($row.Count -eq -2) { 'not compared' } elseif ($row.Count -lt 0) { 'comparison failed' } elseif ($row.Count -eq 0) { 'cosmetic only' } else { "$($row.Count)" }
-        [void]$sm.AppendLine("| ``$name``<br><sub>$folder</sub> | $count | $(Format-Thumb $row.Image 220) |")
+        [void]$sm.AppendLine("| ``$name``<br><sub>$(ConvertTo-MarkdownText $folder)</sub> | $count | $(Format-Thumb $row.Image 220) |")
     }
     [void]$sm.AppendLine()
 }
@@ -393,7 +396,7 @@ if ($addedRows.Count -gt 0) {
     foreach ($row in $addedRows) {
         $name = [System.IO.Path]::GetFileName($row.Path)
         $folder = [System.IO.Path]::GetDirectoryName($row.Path) -replace '\\', '/'
-        [void]$sm.AppendLine("| ``$name``<br><sub>$folder</sub> | $(Format-Thumb $row.Image 200) |")
+        [void]$sm.AppendLine("| ``$name``<br><sub>$(ConvertTo-MarkdownText $folder)</sub> | $(Format-Thumb $row.Image 200) |")
     }
     [void]$sm.AppendLine()
     [void]$sm.AppendLine('</details>')

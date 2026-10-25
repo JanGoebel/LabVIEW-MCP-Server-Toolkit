@@ -462,8 +462,68 @@ function Invoke-NativeCommand {
     return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = $output }
 }
 
+function Invoke-Git {
+    <# Runs git with Arguments and returns its standard output, one string
+       per line. Throws when git exits with a non-zero code, so a failed call
+       never passes as an empty result. The output is read as UTF-8, which is
+       what git writes (Windows PowerShell would read it in the console code
+       page); standard error goes to the console unchanged. #>
+    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+    $console = $null
+    try { $console = [Console]::OutputEncoding; [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } catch { $console = $null }
+    try {
+        $output = @(& git @Arguments)
+        $code = $LASTEXITCODE
+    } finally {
+        if ($console) { try { [Console]::OutputEncoding = $console } catch { } }
+    }
+    if ($code -ne 0) { throw "git $($Arguments -join ' ') failed with exit code $code." }
+    return $output
+}
+
+function ConvertFrom-GitNameStatus {
+    <# Parses the output of "git diff -z --name-status": NUL-separated fields,
+       per entry the status, then the path, or the old and the new path for
+       a rename or copy (R100, C075). Returns Status (first letter), OldPath
+       and NewPath per entry. #>
+    param([AllowEmptyString()][AllowNull()][string]$Text)
+    $fields = @("$Text".Split([char]0) | Where-Object { $_ -ne '' })
+    $i = 0
+    while ($i -lt $fields.Count) {
+        $status = $fields[$i].Substring(0, 1)
+        $paths = if ($status -eq 'R' -or $status -eq 'C') { 2 } else { 1 }
+        if ($i + $paths -ge $fields.Count) { throw "Unexpected git diff output near '$($fields[$i])'." }
+        $oldPath = $fields[$i + 1]
+        $newPath = $fields[$i + $paths]
+        $i += 1 + $paths
+        [pscustomobject]@{ Status = $status; OldPath = $oldPath; NewPath = $newPath }
+    }
+}
+
+function ConvertTo-MarkdownText {
+    <# Text for a Markdown paragraph or table cell that is shown as written:
+       & < > as HTML entities (no tags or entities of its own), | escaped so it
+       does not split a table cell, @ followed by a zero-width space so GitHub
+       does not turn "@name" into a mention, line breaks as spaces. #>
+    param([AllowEmptyString()][AllowNull()][string]$Text)
+    if (-not $Text) { return '' }
+    $t = $Text -replace '\r?\n', ' '
+    return $t.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('|', '\|').Replace('@', '@&#8203;')
+}
+
+function Format-MarkdownCodeBlock {
+    <# A fenced Markdown code block around Text. The fence is one backtick
+       longer than the longest run of backticks in Text (at least three), so
+       no line of Text can close the block early. #>
+    param([AllowEmptyString()][AllowNull()][string]$Text)
+    $longest = 0
+    foreach ($run in [regex]::Matches("$Text", '`+')) { if ($run.Length -gt $longest) { $longest = $run.Length } }
+    $fence = '`' * [Math]::Max(3, $longest + 1)
+    return "$fence`n$Text`n$fence"
+}
+
 Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
     Get-VipmPort, Stop-LeftoverVipm, Test-CiDedicatedMachine, Get-ProcessWindowTitle, Select-LabVIEWToStop,
     Get-RunningLabVIEW, Stop-CiLabVIEW, Get-VipmPath, Get-GhPath, Invoke-NativeCommand, Get-AnsiEncoding,
-    Add-GitHubFileText
+    Add-GitHubFileText, Invoke-Git, ConvertFrom-GitNameStatus, ConvertTo-MarkdownText, Format-MarkdownCodeBlock
