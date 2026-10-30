@@ -175,6 +175,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <Namespace_Type>Prefix</Namespace_Type>
         <Namespace/>
       </Namespace_Overrides>
+      <Namespace_Overrides>
+        <Path>src/MCP Server/MCP SSE Response/Abort Stream.vi</Path>
+        <Namespace_Type>Prefix</Namespace_Type>
+        <Namespace/>
+      </Namespace_Overrides>
+      <Namespace_Overrides>
+        <Path>src/MCP Server/MCP SSE Response/Next Segment.vi</Path>
+        <Namespace_Type>Prefix</Namespace_Type>
+        <Namespace/>
+      </Namespace_Overrides>
+      <Namespace_Overrides>
+        <Path>src/MCP Server/MCP SSE Response/Stream Length.vi</Path>
+        <Namespace_Type>Prefix</Namespace_Type>
+        <Namespace/>
+      </Namespace_Overrides>
       <Exclusions>
         <Path>.github</Path>
       </Exclusions>
