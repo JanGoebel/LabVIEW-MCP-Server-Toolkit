@@ -1,194 +1,362 @@
 # 🧰 LabVIEW MCP Server Toolkit
 
-With this toolkit you can make large language models like ChatGPT or Claude control your LabVIEW applications.
+Let an AI assistant such as Claude or ChatGPT use your LabVIEW application.
 
-It opens a http server on the current machine. An MCP client can connect to that server and retrieve information about the available tools, prompts and resources. Then during a chat-conversation the LLM can decide itself when to call a VI for a specific purpose.
+You pick the VIs the assistant may call, and the toolkit turns them into an
+[MCP](https://modelcontextprotocol.io) server. You can then ask in plain
+language, for example "check which channels of my datalogger carry a signal and
+log only those", and the assistant calls your VIs to do it.
+
+```mermaid
+flowchart LR
+    U([You]) -- chat --> C[AI client<br>Claude Desktop, Claude Code, ...]
+    C -- MCP over HTTP --> S[MCP server<br>in your LabVIEW application]
+    S -- calls --> V[Your VIs]
+```
 
 ---
 
-## ✨ Overview
+## ✨ What you can do
 
-The Model Context Protocol (MCP) is a protocol to enable LLM chatbot applications to call external code. There is a huge community developing MCP servers typically tied to controlling some applications.
-On mcp.so you can find MCP servers for apps like Blender, TouchDesigner, Photoshop, Git, and many more.
-You can add multiple of these MCP servers to an MCP Client like Claude Desktop. The AI can then initiate multiple different actions in multiple different software products.
+- **Expose any VI as a tool.** The VI's name, description and connector pane
+  tell the assistant what the tool does and what to pass in. You don't write a
+  separate schema.
+- **Return rich results.** Numbers, strings, clusters, arrays and pictures. A
+  graph rendered as a picture lets the assistant look at your signal.
+- **Offer prompt templates and documents.** The user can pick them from the
+  client's menu instead of typing them out.
+- **Run long jobs.** A tool can show progress while it runs, and it stops
+  cleanly when the user cancels.
+- **Ask the user before acting.** A tool can ask "Move the stage to 120 mm?"
+  in the chat and wait for the answer.
+- **Control who can connect.** Only your own computer by default, with an
+  access token for anything else.
 
-Detailed info can be found here:
+## 🚀 Quick start
 
-https://modelcontextprotocol.io/docs/getting-started/intro
+1. **Install** the toolkit with VIPM (search for *LabVIEW MCP Server SDK*).
+   It needs LabVIEW 2020 or newer, 64-bit, and VIPM installs its dependencies
+   with it.
+2. **Run an example.** Open
+   `<LabVIEW>\examples\MCP Server\examples\Simple MCP Server\main.vi` and run it.
+   The server is now listening on `http://127.0.0.1:36987/mcp/server`.
+3. **Connect Claude Desktop.** Install [Node.js](https://nodejs.org), then add
+   the server to Claude Desktop's configuration file
+   (*Settings → Developer → Edit Config*):
 
-MCP consists of 3 types of objects:
+   ```json
+   {
+     "mcpServers": {
+       "labview": {
+         "command": "npx",
+         "args": ["mcp-remote", "http://127.0.0.1:36987/mcp/server"]
+       }
+     }
+   }
+   ```
 
-### Tools
-A tool is a function that can be called by the AI. It has in- and outputs, a name and a description. The AI can read this description to understand how to use the tool (e.g. which strings to pass to the input ...) 
+   Quit Claude Desktop completely (including its icon in the taskbar) and start
+   it again. It reads the list of tools only at startup.
+4. **Ask** something like "How much memory does my machine have?" Claude
+   calls `get_system_stats` and answers with the values your VI returned.
 
-### Prompts
-A prompt is a function with string-inputs and a single string output. It's listed for the user to pick in the chat-client (little plus icon in claude desktop). When selected, a dialog appears with a description and all parameters (string inputs). When clicking okay the resulting string is inserted into the chat message field.
-It's a much less used feature than tools and really just a "configurable prompt template".
+## 🔧 How it works: a VI is a tool
 
-### Resources
-Resources are very similar to prompts and added in the same way. They return a single string or byte stream. Resources are usually files that are fully returned as text. These are selected just as prompts, but they don't have parameters.
-They are also much less common than tools and are just longer "prompt templates".
+The Simple example registers a single tool. `Start.vi` opens the server,
+`Add Tool.vi` adds a VI as a tool, and the loop keeps the server running
+until you press Stop:
 
-The core communication uses **JSON-RPC 2.0 messages** transmitted via HTTP POST requests.
+![Block diagram of the Simple example: Start, Add Tool, a while loop and Stop](docs/images/simple-server-main.png)
 
-## Installation
+The tool itself is an ordinary VI:
 
-Install the package with VIPM. It needs LabVIEW 2020 or newer, 64-bit. VIPM installs the dependencies (see [Dependencies](#dependencies)) with it. The VIs are then on the **MCP Server** palette; Ask User, Confirm With User, Report Progress and Cancel Requested are in its **Advanced** sub-palette. Example servers are installed under `<LabVIEW>\examples\MCP Server`.
+| Front panel | Block diagram |
+|---|---|
+| ![Front panel of Get System Stats.vi with the CPU Info and Memory info clusters](docs/images/simple-server-tool-panel.png) | ![Block diagram of Get System Stats.vi](docs/images/simple-server-tool-diagram.png) |
 
-## MCP Clients
+The assistant learns everything about the tool from the VI:
 
-This toolkit is tested using Claude Desktop as an MCP client. There are many more clients out there. Usually they have a ..config.json file that contains the MCP config which looks like this:
+| What the assistant sees | Where it comes from |
+|---|---|
+| Tool name `get_system_stats` | The VI's file name |
+| What the tool does | The VI's description (*File → VI Properties → Documentation*) |
+| Inputs and what they mean | The controls on the connector pane and their descriptions |
+| The result | The indicators on the connector pane, returned as JSON |
+
+Write the descriptions with the assistant in mind. Say what a value means,
+give its unit and its allowed range, and say what the tool does *not* do. The
+description is all the assistant has to go on.
+
+## 🏗️ Building your own server
+
+Your top-level VI follows the same pattern as the examples:
+
+1. Call `Start.vi` with a name and a description for the server.
+2. Call `Add Tool.vi` once per tool VI, and `Add Prompt.vi` /
+   `Add Resource (File).vi` for prompts and documents.
+3. Keep the VI running in a loop while the server should be reachable.
+4. Call `Stop.vi` when you are done. It closes the port again.
+
+Everything is on the **MCP Server** palette:
+
+| VI | What it is for |
+|---|---|
+| `Start.vi` | Starts a server. Inputs: name, description, port (default 36987), URL path (default `/mcp/server`), access token, allowed clients. |
+| `Add Tool.vi` | Makes a VI available as a tool. Optional: a display `title` and `annotations` (see below). |
+| `Add Prompt.vi` | Adds a prompt template: a VI with string inputs and one string output. |
+| `Add Resource (File).vi` | Adds a file (for example a text file of instructions) the user can attach to the chat. |
+| `Stop.vi` | Stops the server and frees the port. |
+| **Advanced** sub-palette | `Report Progress.vi`, `Cancel Requested.vi`, `Confirm With User.vi`, `Ask User.vi`: used *inside* tool VIs, see below. |
+
+### Inputs and outputs
+
+Tool inputs can be numbers, Booleans, strings, paths, timestamps, enums, and
+clusters and arrays of these. The assistant is told the type, the allowed range
+and the default of every input, so it knows what to send. Mark an input
+*Required* on the connector pane if the tool cannot run without it.
+
+Outputs can be of any type. Picture indicators are sent to the assistant as
+images. The full list of types is in [Technical details](docs/technical-details.md#data-types).
+
+Inputs are named after the control labels, lowercased and with spaces and
+special characters turned into `_`. `Wert (mm)` becomes `wert__mm_`.
+`Add Tool.vi` reports error 5010 when two inputs end up with the same name.
+
+### Telling the client which tools are safe
+
+Clients use this information to decide when to ask the user before running a
+tool. Wire it into `Add Tool.vi`:
+
+- `title`: the name the client shows, such as "Move Stage".
+- `annotations`: whether the tool only reads (*read-only*), whether it can
+  destroy something (*destructive*), and whether calling it twice does the same
+  as calling it once (*idempotent*). Leave a hint *not set* if you are unsure.
+  Mark tools that move hardware or delete data as destructive.
+
+### Errors
+
+If a tool VI returns an error, the assistant sees its code and message and can
+react, for example by retrying with other values. The same happens when it
+leaves out a required input or sends a value of the wrong type.
+
+## 💬 Prompts and resources
+
+Most servers only need tools. Two more things can make a server easier to use:
+
+- **Prompts** are templates the user picks from the client's menu (the **+**
+  button in Claude Desktop). A prompt is a VI with string inputs and one string
+  output. The client asks the user for the inputs and puts the resulting text
+  into the message field. The Datalogger example ships a prompt that runs its
+  whole demo.
+- **Resources** are files the user can attach to a conversation, such as
+  instructions or a data sheet. Add them with `Add Resource (File).vi`.
+
+## ⏳ Long-running tools: progress and cancel
+
+For a tool that takes a while, such as a sweep, a calibration or a long
+measurement, call `Report Progress.vi` inside its loop:
+
+- Wire the current step to `progress`, the number of steps to `total`, and a
+  short text such as "Measuring point 12 of 40" to `message`.
+- Stop the loop when `cancelled?` is TRUE. That happens when the user cancels
+  the request in the client. Clean up and return.
+- In a loop that does not report progress, call `Cancel Requested.vi` to check
+  for a cancel.
+
+Clients that support progress show it while the tool runs. With other clients,
+both VIs do nothing and `cancelled?` stays FALSE, so the same tool works
+everywhere.
+
+## 🙋 Asking the user during a tool call
+
+A tool can ask the user to confirm something, or to fill in a small form, before
+it acts:
+
+- `Confirm With User.vi` asks a yes/no question, such as "Move the stage to
+  120 mm?".
+- `Ask User.vi` asks for a few values, such as a serial number and an operator
+  name.
+
+Write the tool in two parts, because it runs twice:
+
+1. **First run:** the VI returns *pending* (`pending?` on
+   `Confirm With User.vi`). End the tool right away, **without doing
+   anything**. The client then shows the question to the user.
+2. **Second run:** the client calls the tool again with the user's answer.
+   Now the VI returns it: `Confirm With User.vi` sets `confirmed?`, and
+   `Ask User.vi` returns *accept* with the values the user entered, or
+   *decline* or *cancel*. Do the real work only here.
+
+Give each question a key that is unique within the tool. If the client cannot
+ask questions, the VI returns *not supported* (`not supported?` on
+`Confirm With User.vi`); decide whether the tool then refuses or uses a safe
+default. Never use this to ask for passwords.
+
+## 🔌 Connecting clients
+
+The server speaks MCP over HTTP at `http://127.0.0.1:36987/mcp/server`. You
+can change the port and the path on `Start.vi`.
+
+**Claude Desktop** and other clients that start servers as a local program
+connect through `mcp-remote`, which needs [Node.js](https://nodejs.org):
 
 ```json
 {
   "mcpServers": {
-    "vi-scripting-server": {
+    "labview": {
       "command": "npx",
-      "args": [
-        "mcp-remote",
-        "http://127.0.0.1:36987/mcp/server"
-      ],
-      "env": {
-      }
+      "args": ["mcp-remote", "http://127.0.0.1:36987/mcp/server"]
     }
   }
 }
 ```
 
-It may of course contain multiple servers. `mcp-remote` needs [Node.js](https://nodejs.org).
-The port can be changed when starting the server.
+**Claude Code** connects directly:
 
-When the server has an access token, pass it as a header:
+```
+claude mcp add --transport http labview http://127.0.0.1:36987/mcp/server
+```
+
+Other clients with HTTP support (often called *Streamable HTTP*) take the URL
+directly. You can run several servers side by side on different ports and add
+each of them to the client.
+
+## 🔒 Who can connect
+
+Out of the box, **only programs on the same computer** can use the server.
+Requests from other computers are refused. Nothing needs to be set up for that.
+
+### Using the server from another computer
+
+Do two things on `Start.vi`:
+
+1. **Allow the clients.** Wire `Allowed clients` with `*` (any computer), or
+   with the IP addresses or host names of the computers that may connect.
+2. **Set an access token.** This is a password that every client has to send.
+   Without a token, anyone who can reach the computer can call your tools.
+
+**Get a token.** The token is a secret you make up yourself. It has no
+account behind it. Use a long random string, for example generated in
+PowerShell:
+
+```powershell
+$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
+```
+
+Wire it to the `Access token` input of `Start.vi`. Don't hard-code it in a VI
+you share; read it from a configuration file or an environment variable.
+
+**Give the token to the client.** The client sends it as an
+`Authorization: Bearer <token>` header with every request.
+
+Claude Desktop (through `mcp-remote`):
 
 ```json
-"args": [
-  "mcp-remote",
-  "http://127.0.0.1:36987/mcp/server",
-  "--header",
-  "Authorization: Bearer ${MCP_TOKEN}"
-],
-"env": { "MCP_TOKEN": "<your token>" }
+{
+  "mcpServers": {
+    "labview": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://192.168.1.20:36987/mcp/server",
+        "--allow-http",
+        "--header",
+        "Authorization:${AUTH_HEADER}"
+      ],
+      "env": { "AUTH_HEADER": "Bearer <your token>" }
+    }
+  }
+}
 ```
 
-Clients that speak Streamable HTTP themselves need no proxy. In Claude Code, for example:
+Keep `Authorization:${AUTH_HEADER}` without a space, and put the space inside
+the variable. Some clients on Windows split arguments at spaces. `--allow-http`
+lets `mcp-remote` connect to a computer other than this one without HTTPS.
+
+Claude Code:
 
 ```
-claude mcp add --transport http labview http://127.0.0.1:36987/mcp/server --header "Authorization: Bearer <your token>"
+claude mcp add --transport http labview http://192.168.1.20:36987/mcp/server --header "Authorization: Bearer <your token>"
 ```
-Claude Desktop usually retrieves the list of available tools and prompts on startup, so multiple restarts may be necessary (close taskbar-icon also).
 
-Download Claude Desktop:
-https://claude.com/download
+A client without the token, or with a wrong one, gets *401 Unauthorized*. A
+computer that is not allowed gets *403 Forbidden*.
 
-## 🚀 Datatypes
-Every control of a tool VI's connector pane becomes a tool input, described to the model as JSON Schema in `tools/list`. Arguments in `tools/call` are converted with JSONtext into the control's own type.
+The connection is not encrypted, so the token can be read on the network. Use
+the server on networks you trust, or put it behind an SSH tunnel or an HTTPS
+reverse proxy.
 
-| LabVIEW type | JSON Schema | Value in `tools/call` |
-|---|---|---|
-| I8 … U64 | `integer` with `minimum`/`maximum` of the representation | number |
-| SGL, DBL, EXT (also with unit) | `number` | number |
-| Boolean | `boolean` | `true`/`false` |
-| String | `string` | string |
-| Path | `string` | path as text, e.g. `C:\\data\\log.csv` |
-| Timestamp | `string` with `format: date-time` | ISO 8601, e.g. `2026-10-17T12:34:56Z` |
-| Enum | `string` with `enum` of the item names | item name (a number is an error) |
-| Cluster | `object` with `properties` named by the element labels | object; a member left out keeps the control's value |
-| Array, any number of dimensions | nested `array` with `items` | nested arrays |
-| Other types (variant, waveform, complex, fixed point, ring, map, set, refnum, class, picture) | `{}` (any value) | not supported as inputs yet |
+> **Changed after v3.0.0:** up to v3.0.0, any computer could connect. Now only
+> this computer can, until you allow others. A program on this computer that
+> connects through the computer's network address instead of `127.0.0.1` also
+> counts as another computer.
 
-What else goes into the schema, so the model knows what to send:
-- `description`: the control's description, and the description of every cluster element at any depth (inside clusters and arrays).
-- Numerics with a unit get `Unit: <unit>.` appended to their description.
-- `minimum`/`maximum` from the control's Data Entry limits when they are set to coerce, combined with the range of the integer representation.
-- `default`: the control's default value for inputs that are not required on the connector pane (left out when it would be longer than 1024 characters).
-- `required`: the inputs marked *Required* on the connector pane.
+## 📦 Examples
 
-Write the descriptions with the model in mind: what the value means, its unit and its allowed values.
+The examples are installed under `<LabVIEW>\examples\MCP Server\examples`.
 
-Names sent to the client are made valid MCP names: tool and prompt names and the names of inputs, outputs and prompt arguments are lowercased, and every character other than `a-z`, `0-9`, `_` and `-` becomes `_` (`Wert (mm)` becomes `wert__mm_`). `Add Tool.vi` and `Add Prompt.vi` return error 5010 and do not register the tool or prompt when a converted name is empty, longer than 64 characters, or the same as another one in that tool or prompt. The VI's controls keep their labels.
+### Simple MCP Server
 
-Outputs of any type are flattened to JSON (timestamps as ISO 8601, enums as item names):
-- The result's text block holds all outputs as one JSON object, for older clients.
-- `structuredContent` holds the same object without picture outputs.
-- Picture outputs are returned as separate image content (PNG).
-- `tools/list` describes the outputs as `outputSchema`, built like the input schema: types, descriptions, ranges, units.
+One tool, `Get System Stats.vi`, that returns CPU and memory information. Start
+here to see the minimum a server needs (pictures [above](#-how-it-works-a-vi-is-a-tool)).
 
-## Tool title, annotations and errors
+### Datalogger MCP Server
 
-`Add Tool.vi` takes two optional inputs that clients show to users or use to decide when to ask before running a tool:
-- `title`: a display name. Without one, no `title` is sent and clients show the tool name.
-- `annotations` (`Tool Annotations.ctl`): `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`.
-  - Each hint is *not set*, *true* or *false*. Only hints that are set are sent.
-  - MCP's defaults for unset hints are: not read-only, destructive, not idempotent, open world.
-  - Mark tools that only read values as read-only. Mark tools that move hardware or delete data as destructive, so clients ask the user first.
+A simulated five-channel datalogger. Some channels carry a signal, the others
+only noise. Use the *Connected?* switches on the front panel to change which.
+The assistant fetches pictures of the waveforms, decides which channels are
+connected, logs only those and checks the log file afterwards.
 
-A call with missing required arguments, or with an argument that does not fit its control's type, returns a normal result with `isError: true` and a message the model can act on. Unknown tools and malformed requests are JSON-RPC errors.
+![Front panel of the Datalogger example](docs/images/datalogger-panel.png)
 
-## Protocol versions
+![Block diagram of the Datalogger example: four tools, a prompt and a resource are added before the acquisition loop](docs/images/datalogger-main.png)
 
-The server speaks both eras of MCP on the same endpoint, and decides per request:
+Try:
 
-- **MCP 2026-07-28** (stateless): a request whose `params._meta` carries `io.modelcontextprotocol/protocolVersion`.
-  - Such a request must also carry `io.modelcontextprotocol/clientCapabilities` and the headers `MCP-Protocol-Version`, `Mcp-Method` and, for `tools/call`, `prompts/get` and `resources/read`, `Mcp-Name`.
-  - Results carry `resultType` and `_meta.io.modelcontextprotocol/serverInfo`. Lists and `resources/read` also carry the caching hints `ttlMs` and `cacheScope`.
-  - `server/discover` returns the supported versions, capabilities and server info.
-- **MCP 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05**: clients that start with `initialize`. A client that asks for a version the server does not know is answered with 2025-11-25, the newest of these (up to v3.0.0 it was 2025-06-18).
+> Check my datalogger through MCP. Which channels are connected? Identify the
+> channels that have not just noise on them, then log the connected channels
+> for a moment, then stop and read the log file and check if the logging was
+> successful.
 
-An unsupported version is answered with HTTP 400 and error `-32022`, listing every supported version.
+The same text is registered as a prompt, so in Claude Desktop you can also pick
+it from the **+** menu.
 
-## Asking the user (elicitation)
+### Full Featured MCP Server
 
-A tool can ask the user a question while it runs, for example to confirm before it moves hardware. This works with clients that speak MCP 2026-07-28 and declare the `elicitation` capability.
+A simulated stock broker that uses every kind of building block: tools to look
+up prices, show a history chart and buy stocks; prompts such as "find the best
+trending stock"; and a resource that makes the assistant act as a stock market
+expert. The MCP log on the front panel shows every request the client sends.
 
-- `Confirm With User.vi` asks a yes/no question. `Ask User.vi` asks for a small form (a flat JSON Schema with string, number, Boolean or enum fields).
-- Each question needs a key that is unique within the tool.
-- The tool VI runs twice:
-  1. On the first run, the VI returns `pending`. The tool must then end at once, **without side effects**. The server sends the question to the client.
-  2. The client asks the user and calls the tool again with the answer. On this run the same VI returns the answer (*accept*, *decline* or *cancel*). Do the real work only here.
-- If the client cannot ask (older protocol, or no `elicitation` capability), the VI returns `not supported`. The tool decides what to do then: refuse with an error, or use a safe default.
-- Never use it to ask for passwords or keys.
+![Front panel of the Full Featured example: stock price chart and MCP log](docs/images/full-featured-panel.png)
 
-## Progress and cancellation
+![Block diagram of the Full Featured example](docs/images/full-featured-main.png)
 
-Long-running tools can report progress and stop when the client cancels.
+## 🩺 Troubleshooting
 
-- `Report Progress.vi` (progress, optional total and message) sends a `notifications/progress` event to the client. It returns `cancelled?`. Stop the tool when it is TRUE.
-- `Cancel Requested.vi` returns `cancelled?`, for loops that do not report progress.
-- Progress is streamed only when the client asks for it: `tools/call` with `_meta.progressToken`, and an `Accept` header that includes `text/event-stream`. The answer is then a Server-Sent Events stream: the progress events, then the result. Without that, both VIs do nothing and return FALSE.
-- Cancelling works in two ways:
-  - MCP 2026-07-28 clients cancel by closing the stream.
-  - Older clients send `notifications/cancelled`.
-  - Either way, the next `Report Progress.vi` / `Cancel Requested.vi` call returns TRUE.
-  - A closed stream is noticed when an event is not taken within about one second.
-  - `notifications/cancelled` only reaches a streamed call. A non-streamed call blocks other requests until it ends.
+- **The client does not list my tools.** Restart the client completely; most
+  read the tool list only at startup. Check that the server VI is running.
+- **A tool reports "not executable".** The tool VI has a broken run arrow.
+  Open it and fix it.
+- **Error 5001 from `Start.vi`.** The port is already in use, often by another
+  server you started earlier. Stop that one, or pick another port.
+- **Error 5010 from `Add Tool.vi`.** Two inputs of that tool end up with the
+  same name, or a name is empty or longer than 64 characters.
+- **403 from another computer.** Add it to `Allowed clients` (see
+  [Who can connect](#-who-can-connect)).
+- **401.** The token is missing or wrong on the client side.
 
-## Access control
+## 📚 More
 
-The IG HTTP Server listens on **all network interfaces**, so an MCP server can be reached from other computers. `Start.vi` has two optional inputs:
-
-- `Access token`: when set, every request needs the header `Authorization: Bearer <token>`. Without it, or with a wrong token, the answer is HTTP 401 with `WWW-Authenticate: Bearer`. **Set a token whenever the server can be reached beyond this computer.**
-- `Allowed clients`: which clients may connect.
-  - Empty, the default, allows only this computer. That is decided by the connection's own address: only connections to `127.0.0.1` (or `localhost`) are served. A remote client cannot fake this. A program on this computer that connects through the computer's network address instead of `127.0.0.1` is refused too.
-  - `*` allows any client.
-  - Other entries are client host names as the server sees them through reverse DNS, or IP addresses. The owner of a client's address can choose its reverse-DNS name, so these entries are a convenience, not protection. Always set a token when you list remote clients or use `*`.
-  - Other clients get HTTP 403.
-
-Requests are checked in this order: client not allowed → 403, missing or wrong token → 401, then the Origin header. A request that carries an `Origin` header is only served when it is a page on `localhost`, `127.0.0.1` or `[::1]` (protection against DNS rebinding); this holds even with `*`, so browser-based clients on other computers are refused.
-
-The server speaks plain HTTP, without TLS: the token travels unencrypted. Beyond a trusted network, put the server behind a TLS reverse proxy or an SSH tunnel.
-
-This is a change from v3.0.0 and earlier, which served any client: from the release after v3.0.0 on, clients that do not connect through `127.0.0.1` are refused unless you list them or use `*`.
-
-## Dependencies
-This toolkit uses IG HTTP Server Toolkit and JKI JSONtext.
-
-https://www.vipm.io/package/illuminatedg_lib_ig_http_server/
-
-https://www.vipm.io/package/jdp_science_jsontext/
-
-## G-AI
-Main purpose to develop this toolkit is to use it for my G-AI project which can generate LabVIEW code using LLMs. Have a look at it here:
-https://github.com/JanGoebel/G-AI
+- [Technical details](docs/technical-details.md): how MCP works, protocol
+  versions, how VIs are translated into tool descriptions, and how progress,
+  cancel and questions to the user work on the wire.
+- Dependencies: [IG HTTP Server Toolkit](https://www.vipm.io/package/illuminatedg_lib_ig_http_server/)
+  and [JKI JSONtext](https://www.vipm.io/package/jdp_science_jsontext/),
+  installed by VIPM.
+- This toolkit was built for [G-AI](https://github.com/JanGoebel/G-AI), which
+  generates LabVIEW code with LLMs.
 
 ## License
-This toolkit is published under the MIT license. Feel free to use and modify it.
+
+MIT. Feel free to use and modify it.
