@@ -8,6 +8,12 @@ name: Pull Request Review
 #
 # Lives in tools/ci as pull-request.workflow.yml; copy it to
 # .github/workflows/pull-request.yml on main to activate it.
+#
+# Values from the event or from earlier steps reach the scripts through env:,
+# never pasted into a run: block with ${{ }}, so a branch name or a step
+# output cannot change the script. Files the runner reads after a step
+# (GITHUB_OUTPUT, GITHUB_ENV, GITHUB_STEP_SUMMARY) are written as UTF-8
+# without BOM.
 
 on:
   pull_request:
@@ -66,18 +72,24 @@ jobs:
       contents: write        # pushes the diff images to pr-assets/pr-<number>
       pull-requests: write   # posts the report comment
     steps:
+      # persist-credentials: false leaves no token in .git/config, where the
+      # pull request's own code (tests, VIs, the protocol tester) could read
+      # it. Only the step that publishes the report gets the token, as
+      # GH_TOKEN; Publish-PrReport.ps1 pushes with it.
       - name: Checkout Pull Request
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0     # the diff needs the history of both branches
+          persist-credentials: false
 
       # The report scripts come from main, not from the pull request, so a
-      # pull request cannot change how its own report is produced.
+      # change to them takes effect only once it is merged.
       - name: Checkout Report Scripts from main
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: _ci
+          persist-credentials: false
           sparse-checkout: |
             tools/ci
             tools/setup
@@ -86,14 +98,16 @@ jobs:
       # VI Server ports and the tools, repairs what is easy to repair (VI
       # Server off, port clashes, leftover LabVIEW CLI processes, and with
       # -CleanStart a VIPM Desktop left over from an earlier job together with
-      # the LabVIEWs it was driving) and lists it
-      # all in the job summary. See the comment at env above.
+      # the test and comparison LabVIEWs it was driving, never another LabVIEW
+      # and none with unsaved changes unless CI_DEDICATED_MACHINE=1) and lists
+      # it all in the job summary. See the comment at env above.
       # The scripts come from main. While main does not have the scripts this
       # workflow calls yet (in the run of the pull request that introduces
       # them), this run uses the pull request's own tools\ci and tools\setup
       # instead, with a warning; this job only runs for branches of this
       # repository. Later steps then call the same copies through _ci.
       - name: Find LabVIEW and Tools
+        id: setup
         run: |
           $ci = "$env:GITHUB_WORKSPACE\_ci"
           if (-not (Test-Path "$ci\tools\ci\Resolve-CiEnvironment.ps1")) {
@@ -114,6 +128,7 @@ jobs:
       # that are already installed. VIPM Desktop must have detected the
       # LabVIEW installations once (see tools/setup/README.md).
       - name: Install VIPM Dependencies
+        id: install
         timeout-minutes: 45
         run: |
           $install = "$env:GITHUB_WORKSPACE\_ci\tools\setup\Install-Dependencies.ps1"
@@ -127,8 +142,14 @@ jobs:
       # ports again, so the tests and the diff reach the LabVIEW they mean;
       # the values written here replace the ones from the first check.
       - name: Check LabVIEW after Package Install
+        id: recheck
         run: |
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Resolve-CiEnvironment.ps1" -For All -Fix
+
+      # The steps below run only when the three steps above succeeded (the
+      # default condition, or an explicit check of their outcome), so none of
+      # them runs with empty LABVIEW_* values; a step that did not run is
+      # reported as "not run" in the report and by the last step.
 
       # The suite runs only the tests Test_MCP_Server.vi calls. Fails when a
       # "test *.vi" of the test library is not called, so a test that was
@@ -158,14 +179,14 @@ jobs:
             -VIPath "$env:GITHUB_WORKSPACE\tests\Run_Tests_CLI.vi" `
             -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
           $status = $LASTEXITCODE
-          "status=$status" >> $env:GITHUB_OUTPUT
+          [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "status=$status`n")
           if ($status -ne 0) { exit 1 }
 
       # Starts the toolkit's test server and runs tools\test\Test-McpServer.ps1
       # against it over HTTP. Skipped when LabVIEW was not reachable above.
       - name: Run Protocol Tests
         id: protocol
-        if: always() && steps.tests.outputs.status != '2'
+        if: ${{ !cancelled() && steps.recheck.outcome == 'success' && steps.tests.outputs.status != '2' }}
         continue-on-error: true
         run: |
           $report = "$env:GITHUB_WORKSPACE\tests\results\protocol-report.txt"
@@ -174,40 +195,55 @@ jobs:
             -VIPath "$env:GITHUB_WORKSPACE\tests\Run_Protocol_Tests_CLI.vi" `
             -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
           $status = $LASTEXITCODE
-          "status=$status" >> $env:GITHUB_OUTPUT
+          [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "status=$status`n")
           # A branch without the entry VI is not a failure.
           if ($status -ne 0 -and $status -ne 3) { exit 1 }
           exit 0
 
+      # A skipped test step becomes "not-run" in the report. A protocol step
+      # skipped because LabVIEW was not reachable (status 2) gets no section,
+      # as the test section already says so.
       - name: Build Test Report
-        if: always()
+        if: ${{ !cancelled() }}
+        env:
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          TESTS_STATUS: ${{ steps.tests.outputs.status }}
+          PROTOCOL_OUTCOME: ${{ steps.protocol.outcome }}
+          PROTOCOL_STATUS: ${{ steps.protocol.outputs.status }}
         run: |
+          $testStatus = if ($env:TESTS_OUTCOME -eq 'skipped') { 'not-run' } else { $env:TESTS_STATUS }
+          $protocolStatus = if ($env:PROTOCOL_OUTCOME -eq 'skipped' -and $env:TESTS_STATUS -ne '2') { 'not-run' } else { $env:PROTOCOL_STATUS }
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Convert-CarayaReport.ps1" `
             -ReportPath "$env:GITHUB_WORKSPACE\tests\results\caraya-report.txt" `
             -OutFile "$env:RUNNER_TEMP\test-report.md" `
-            -TestStatus "${{ steps.tests.outputs.status }}" `
+            -TestStatus $testStatus `
             -ProtocolReportPath "$env:GITHUB_WORKSPACE\tests\results\protocol-report.txt" `
-            -ProtocolStatus "${{ steps.protocol.outputs.status }}"
-          Get-Content "$env:RUNNER_TEMP\test-report.md" | Add-Content $env:GITHUB_STEP_SUMMARY
+            -ProtocolStatus $protocolStatus
+          [System.IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, [System.IO.File]::ReadAllText("$env:RUNNER_TEMP\test-report.md"))
 
       # Exits 1 when a changed VI could not be compared (LabVIEW not
       # reachable, comparison error). The report is still written and posted;
-      # the last step then fails the run.
+      # the last step then fails the run. Needs the comparison LabVIEW from
+      # the first step; it also runs when the package install failed (the
+      # diagrams then show "?" for missing subVIs), but not when the check
+      # after the install failed.
       - name: Build VI Diff Report
         id: diff
-        if: always()
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && steps.recheck.outcome != 'failure' }}
         continue-on-error: true
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\New-ViDiffReport.ps1" `
-            -BaseRef "origin/${{ github.event.pull_request.base.ref }}" `
+            -BaseRef "origin/$env:BASE_REF" `
             -HeadDir "$env:GITHUB_WORKSPACE" `
             -OutDir "$env:RUNNER_TEMP\vi-diff" `
             -LabVIEWPath "$env:LABVIEW_COMPARE_PATH" -PortNumber $env:LABVIEW_COMPARE_PORT
           exit $LASTEXITCODE
 
       - name: Upload Reports
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: review-reports-pr-${{ github.event.pull_request.number }}
           path: |
@@ -215,30 +251,54 @@ jobs:
             ${{ runner.temp }}/vi-diff
           retention-days: 14
 
+      # The only step with the token: Publish-PrReport.ps1 pushes the images
+      # with it (the checkout keeps no credentials) and posts the comment.
       - name: Post Report on the Pull Request
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DIFF_OUTCOME: ${{ steps.diff.outcome }}
         run: |
-          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $runUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          $footer = "Report for commit $env:HEAD_SHA. The installable test package is under Artifacts of [this run]($runUrl) once the build job has finished."
+          if ($env:DIFF_OUTCOME -eq 'skipped') {
+            $footer = "**VI diff: not run**, because finding LabVIEW and the tools failed; see [this run]($runUrl).`n`n" + $footer
+          }
           & "$env:GITHUB_WORKSPACE\_ci\tools\ci\Publish-PrReport.ps1" `
-            -PrNumber ${{ github.event.pull_request.number }} `
-            -Repo "${{ github.repository }}" `
+            -PrNumber $env:PR_NUMBER `
+            -Repo "$env:GITHUB_REPOSITORY" `
             -RepoDir "$env:GITHUB_WORKSPACE" `
             -TestReport "$env:RUNNER_TEMP\test-report.md" `
             -DiffDir "$env:RUNNER_TEMP\vi-diff" `
-            -Footer "Report for commit ${{ github.event.pull_request.head.sha }}. The installable test package is under Artifacts of [this run]($runUrl) once the build job has finished."
+            -Footer $footer
 
       - name: Fail if the Tests or the VI Diff Failed
-        if: steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure' || steps.diff.outcome == 'failure' || steps.wired.outcome == 'failure'
+        if: ${{ !cancelled() && (steps.setup.outcome != 'success' || steps.install.outcome != 'success' || steps.recheck.outcome != 'success' || steps.tests.outcome == 'failure' || steps.protocol.outcome == 'failure' || steps.diff.outcome != 'success' || steps.wired.outcome == 'failure') }}
+        env:
+          SETUP_OUTCOME: ${{ steps.setup.outcome }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          RECHECK_OUTCOME: ${{ steps.recheck.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          TESTS_STATUS: ${{ steps.tests.outputs.status }}
+          PROTOCOL_OUTCOME: ${{ steps.protocol.outcome }}
+          DIFF_OUTCOME: ${{ steps.diff.outcome }}
+          WIRED_OUTCOME: ${{ steps.wired.outcome }}
         run: |
-          if ("${{ steps.tests.outputs.status }}" -eq '2') {
+          function Format-Outcome([string]$Outcome) { if ($Outcome -eq 'skipped' -or -not $Outcome) { 'not run' } else { $Outcome } }
+          if ($env:SETUP_OUTCOME -ne 'success' -or $env:INSTALL_OUTCOME -ne 'success' -or $env:RECHECK_OUTCOME -ne 'success') {
+            Write-Host "::error::Finding LabVIEW and tools: $(Format-Outcome $env:SETUP_OUTCOME), package install: $(Format-Outcome $env:INSTALL_OUTCOME), check after the install: $(Format-Outcome $env:RECHECK_OUTCOME). The steps that need them did not run."
+          }
+          if ($env:TESTS_STATUS -eq '2') {
             Write-Host "::error::LabVIEW was not reachable on port $env:LABVIEW_PORT; no tests ran."
           }
-          if ("${{ steps.diff.outcome }}" -eq 'failure') {
+          if ($env:DIFF_OUTCOME -eq 'failure') {
             Write-Host "::error::The VI diff could not be produced for every changed VI (LabVIEW $env:LABVIEW_COMPARE_PATH, port $env:LABVIEW_COMPARE_PORT). A pull request needs it; see the report."
+          } elseif ($env:DIFF_OUTCOME -ne 'success') {
+            Write-Host "::error::The VI diff did not run. A pull request needs it."
           }
-          Write-Host "::error::Caraya suite: ${{ steps.tests.outcome }}, protocol tests: ${{ steps.protocol.outcome }}, VI diff: ${{ steps.diff.outcome }}, test wiring: ${{ steps.wired.outcome }}."
+          Write-Host "::error::Caraya suite: $(Format-Outcome $env:TESTS_OUTCOME), protocol tests: $(Format-Outcome $env:PROTOCOL_OUTCOME), VI diff: $(Format-Outcome $env:DIFF_OUTCOME), test wiring: $(Format-Outcome $env:WIRED_OUTCOME)."
           exit 1
 
   # ==========================================
@@ -246,18 +306,24 @@ jobs:
   # ==========================================
   test-build:
     needs: review
+    # Same fork guard as the review job, stated here too so this job never
+    # runs code of a fork on the self-hosted runner, whatever "needs" does.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: self-hosted
     permissions:
       contents: read
     steps:
       - name: Checkout Pull Request
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Checkout Report Scripts from main
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: _ci
+          persist-credentials: false
           sparse-checkout: tools/ci
 
       # Same choice of LabVIEW as in the review job (a job starts with a fresh
@@ -284,6 +350,8 @@ jobs:
           # them; with 600 s the build failed or passed depending on a few
           # seconds. 25 minutes of silence still ends a VIPM that really hangs.
           VIPM_DESKTOP_LIVELINESS_TIMEOUT: 1500
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
           # Read and write the .vipb as UTF-8: VIPM rejects a file that is not valid UTF-8.
@@ -292,11 +360,11 @@ jobs:
           # Keep major.minor.patch from the .vipb and use the run number as the
           # build number, so every test build gets its own installable version.
           $current = ($vipbContent | Select-String "<Library_Version>(\d+)\.(\d+)\.(\d+)\.\d+</Library_Version>").Matches[0]
-          $newVersion = "$($current.Groups[1].Value).$($current.Groups[2].Value).$($current.Groups[3].Value).${{ github.run_number }}"
+          $newVersion = "$($current.Groups[1].Value).$($current.Groups[2].Value).$($current.Groups[3].Value).$env:GITHUB_RUN_NUMBER"
           Write-Host "Test build version: $newVersion"
           $vipbContent = $vipbContent -replace "<Library_Version>.*?</Library_Version>", "<Library_Version>$newVersion</Library_Version>"
 
-          $notes = "Test build of pull request #${{ github.event.pull_request.number }} (commit ${{ github.event.pull_request.head.sha }}). Not a release."
+          $notes = "Test build of pull request #$env:PR_NUMBER (commit $env:HEAD_SHA). Not a release."
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$notes</Release_Notes>"
 
           [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
@@ -310,7 +378,7 @@ jobs:
             Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
             exit 1
           }
-          "### Test package built: version $newVersion" >> $env:GITHUB_STEP_SUMMARY
+          [System.IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "### Test package built: version $newVersion`n")
 
       - name: Locate Built VIP Artifact
         run: |
@@ -320,10 +388,10 @@ jobs:
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $vipFile) { Write-Host '::error::The build produced no .vip file.'; exit 1 }
           Write-Host "Package: $($vipFile.FullName)"
-          echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "VIP_PATH=$($vipFile.FullName)`n")
 
       - name: Upload Test Package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: test-vip-package-pr-${{ github.event.pull_request.number }}
           path: ${{ env.VIP_PATH }}
@@ -344,12 +412,12 @@ jobs:
         run: |
           $script = "$env:GITHUB_WORKSPACE\_ci\tools\ci\Test-InstalledPackage.ps1"
           if (-not (Test-Path $script)) { $script = "$env:GITHUB_WORKSPACE\tools\ci\Test-InstalledPackage.ps1" }
+          $reportFile = "$env:RUNNER_TEMP\installed-package-report.txt"
           & $script -VipPath "$env:VIP_PATH" -RepoDir "$env:GITHUB_WORKSPACE" `
             -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT `
-            -ReportFile "$env:RUNNER_TEMP\installed-package-report.txt"
+            -ReportFile $reportFile
           $status = $LASTEXITCODE
-          '### Installed package test' >> $env:GITHUB_STEP_SUMMARY
-          '```' >> $env:GITHUB_STEP_SUMMARY
-          Get-Content "$env:RUNNER_TEMP\installed-package-report.txt" -ErrorAction SilentlyContinue | Add-Content $env:GITHUB_STEP_SUMMARY
-          '```' >> $env:GITHUB_STEP_SUMMARY
+          $report = if (Test-Path $reportFile) { [System.IO.File]::ReadAllText($reportFile).TrimEnd() } else { '(no report written)' }
+          $fence = '````'
+          [System.IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "### Installed package test`n$fence`n$report`n$fence`n")
           exit $status

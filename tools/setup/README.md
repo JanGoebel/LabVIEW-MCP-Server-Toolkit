@@ -72,7 +72,7 @@ would use there (without `-Fix` it changes nothing):
 |---|---|---|
 | LabVIEW for tests and build | repository variable `LABVIEW_PATH` if that file exists, otherwise the **oldest** LabVIEW of at least 2020 in the default folders or the registry, 64-bit preferred. The package is built with it, so its version is the package's minimum LabVIEW version; anything other than 2020 64-bit gives a warning | - |
 | LabVIEW for the VI comparison | `LABVIEW_COMPARE_PATH` if it exists, otherwise the **newest** LabVIEW, 32-bit preferred at equal version; warns when it is older than the LabVIEW CLI | - |
-| VI Server port of each | the port the running LabVIEW listens on, else `server.tcp.port` in its `LabVIEW.ini`, else `LABVIEW_PORT` / `LABVIEW_COMPARE_PORT`, else 3363 | VI Server switched on; a missing port written; a port held by another program, or by the other LabVIEW, moved to a free one; localhost added to `server.tcp.access` if it is missing; a LabVIEW that runs without listening on its port is closed so LabVIEW CLI restarts it |
+| VI Server port of each | VIPM's port for that LabVIEW (`[Targets]` in `C:\ProgramData\JKI\VIPM\Settings.ini`) unless another LabVIEW is meant to have it, else `server.tcp.port` in its `LabVIEW.ini`, else `LABVIEW_PORT` / `LABVIEW_COMPARE_PORT`, else 3363. A running LabVIEW that listens on that port is used as it is; without `-Fix`, one that listens on its `LabVIEW.ini` port or the requested port instead is used on that port | VI Server switched on; the port written to `LabVIEW.ini`; a port held by another program, or meant for another LabVIEW, moved to the next free one; localhost added to `server.tcp.access` if it is missing; a test or comparison LabVIEW that runs on another port or none is force-closed so LabVIEW CLI restarts it with these settings, unless it has unsaved changes (see "Self-hosted runner") |
 | LabVIEW CLI, `vipm`, `gh` | `PATH`, then their default install folders, which are then added to `PATH` | LabVIEW CLI processes left from a cancelled run are ended |
 
 When LabVIEW CLI still cannot connect (error -350000), the test and diff
@@ -86,9 +86,12 @@ or port; a value that does not fit the runner is reported and replaced.
 ## VI Server port
 
 VIPM gives every LabVIEW installation its own VI Server TCP port when it first
-connects (written to that LabVIEW's `LabVIEW.ini` as `server.tcp.port`). The
-LabVIEW CLI must be given the same port, which CI reads from there (see
-above). To look it up by hand:
+connects. It records the port in its own settings (`[Targets]` in
+`C:\ProgramData\JKI\VIPM\Settings.ini`), writes it to that LabVIEW's
+`LabVIEW.ini` as `server.tcp.port`, and puts LabVIEW back on it whenever VIPM
+starts that LabVIEW. The LabVIEW CLI must be given the same port. CI takes
+VIPM's port first and the `LabVIEW.ini` port only when VIPM has none for that
+LabVIEW (see the table above). To look it up by hand:
 
 ```powershell
 Select-String 'server.tcp.port' "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.ini"
@@ -141,13 +144,16 @@ sources are saved without compiled code, so LabVIEW keeps it in a per-user
 cache). Rebuild it once by mass compiling the checkout:
 
 ```powershell
+git status
 LabVIEWCLI -OperationName MassCompile -DirectoryToCompile "$PWD\tests" `
     -LabVIEWPath "C:\Program Files\National Instruments\LabVIEW 2020\LabVIEW.exe" -PortNumber <port>
-git checkout -- .
+git restore -- tests
 ```
 
-The three `fake ... broken vi.vi` files are reported as bad on purpose; the
-`git checkout` undoes the files the mass compile saved.
+The three `fake ... broken vi.vi` files are reported as bad on purpose. The
+mass compile saves the VIs it recompiles, and `git restore -- tests` undoes
+that, but it also discards any change of your own below `tests`: check
+`git status` first and commit or stash such changes before you start.
 
 ## Self-hosted runner
 
@@ -160,3 +166,15 @@ The three `fake ... broken vi.vi` files are reported as bad on purpose; the
   `PSSecurityException`.
 - Only one runner should carry the `self-hosted` label unless all of them are
   set up as described here.
+- At the start of every job, and when a LabVIEW does not listen on its VI
+  Server port, CI force-closes the test LabVIEW and the comparison LabVIEW it
+  chose (and, at the start, a VIPM Desktop left over from an earlier job).
+  Anything open in them is lost. No other LabVIEW on the machine is touched,
+  and a chosen one that has unsaved changes (a window title with `*`) is left
+  running, with a warning in the job summary. On a developer machine, work
+  in a LabVIEW CI does not use (see "LabVIEW for the VI comparison").
+- `CI_DEDICATED_MACHINE=1` in the runner's environment (for example a line
+  `CI_DEDICATED_MACHINE=1` in the runner's `.env` file, then restart the
+  runner) says nobody works on the machine: CI then closes the test and
+  comparison LabVIEWs also when they have unsaved changes. Leave it unset on
+  a machine someone develops on.

@@ -75,36 +75,34 @@ function Write-Failure([string]$Text) {
 }
 
 function Invoke-Native {
-    # Runs a console tool, returns its exit code and prints and records its
-    # output. Windows PowerShell turns stderr lines into errors; they must
-    # not stop the script.
+    # Runs a console tool (Invoke-NativeCommand), prints and records its
+    # output and returns its exit code.
     param([string]$Exe, [string[]]$Arguments)
-    $previous = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $out = & $Exe @Arguments 2>&1 | ForEach-Object {
-        if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
-    }
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $previous
-    foreach ($line in $out) { Write-Line "    $line" }
-    return $code
+    $run = Invoke-NativeCommand $Exe $Arguments
+    foreach ($line in $run.Output) { Write-Line "    $line" }
+    return $run.ExitCode
 }
 
+# The initialize request Test-ServerAnswers posts; a file of this run only,
+# deleted at the end.
+$script:initializeFile = Join-Path ([System.IO.Path]::GetTempPath()) ('installed-package-initialize_' + [guid]::NewGuid().ToString('N') + '.json')
+
 function Test-ServerAnswers {
-    $body = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"installed-package-test","version":"1.0"}}}'
-    $file = Join-Path ([System.IO.Path]::GetTempPath()) 'installed-package-initialize.json'
-    [System.IO.File]::WriteAllText($file, $body, $utf8)
+    if (-not (Test-Path -LiteralPath $script:initializeFile)) {
+        $body = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"installed-package-test","version":"1.0"}}}'
+        [System.IO.File]::WriteAllText($script:initializeFile, $body, $utf8)
+    }
     $previous = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     $status = & curl.exe -s -m 5 -o NUL -w '%{http_code}' -X POST -H 'Content-Type: application/json' `
-        -H 'Accept: application/json, text/event-stream' --data-binary "@$file" $ServerUrl 2>$null
+        -H 'Accept: application/json, text/event-stream' --data-binary "@$($script:initializeFile)" $ServerUrl 2>$null
     $ErrorActionPreference = $previous
     return "$status" -eq '200'
 }
 
 # ---------------------------------------------------------------- inputs
 if (-not $VipPath) {
-    $newest = Get-ChildItem (Join-Path $RepoDir 'builds') -Filter *.vip -File -ErrorAction SilentlyContinue |
+    $newest = Get-ChildItem -LiteralPath (Join-Path $RepoDir 'builds') -Filter *.vip -File -ErrorAction SilentlyContinue |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $newest) { Write-Host "::error::No -VipPath given and no .vip under $RepoDir\builds."; exit 1 }
     $VipPath = $newest.FullName
@@ -126,7 +124,7 @@ Write-Line "Package:  $VipPath"
 if (-not $ContentsOnly) {
     $cli = Get-LabVIEWCliPath
     if (-not $cli) { Write-Host '::error::LabVIEW CLI (LabVIEWCLI.exe) is not installed.'; exit 1 }
-    $vipm = Find-Tool 'vipm' @("$env:ProgramFiles\JKI\VI Package Manager\support\vipm.exe", "${env:ProgramFiles(x86)}\JKI\VI Package Manager\support\vipm.exe")
+    $vipm = Get-VipmPath
     if (-not $vipm) { Write-Host '::error::The vipm CLI is not installed.'; exit 1 }
     Write-Line "LabVIEW:  $($lvInfo.Path) ($($lvInfo.Year) $($lvInfo.Bitness)-bit), VI Server port $PortNumber"
 }
@@ -269,6 +267,8 @@ finally {
     } elseif ($KeepInstalled) {
         Write-Line 'The package stays installed (-KeepInstalled).'
     }
+
+    Remove-Item -LiteralPath $script:initializeFile -Force -ErrorAction SilentlyContinue
 
     Write-Step 'Result'
     if ($script:failed) { Write-Line 'FAILED: see the FAIL lines above.' } else { Write-Line 'PASSED: the installed package is clean and its Datalogger example serves MCP.' }

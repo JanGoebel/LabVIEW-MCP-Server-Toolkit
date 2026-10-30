@@ -8,8 +8,9 @@ on:
       - 'v*.*.*'
       - 'test-*'
 
+# Read-only by default; only the job that creates the release may write.
 permissions:
-  contents: write
+  contents: read
 
 # Every run step goes through Windows PowerShell with the execution policy
 # bypassed for that process only, so the runner needs no Set-ExecutionPolicy.
@@ -39,7 +40,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Find LabVIEW and Tools
         run: |
@@ -86,12 +87,40 @@ jobs:
     needs: test    # <--- This is the magic line. It waits for JOB 1.
     if: startsWith(github.ref, 'refs/tags/') # <--- Only build if it's a tag!
     runs-on: self-hosted
-    
+    # The "release" environment holds the job until a required reviewer
+    # (the maintainer) approves it, and its deployment rules can limit it to
+    # v* tags. The environment is created in the repository settings.
+    environment: release
+    permissions:
+      contents: write   # creates the GitHub release and uploads the .vip
+
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          fetch-depth: 0     # the check below needs the history of main
           fetch-tags: true   # <--- CRITICAL: Tells GitHub to download the tag annotations!
+
+      # A release is built only from a commit that is on main, that is one
+      # that went through a reviewed pull request: a v* tag on any other
+      # commit fails here, before anything is built. test-* tags build a
+      # test package only (no release) and may point anywhere.
+      - name: Check that the Tag Is on main
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          if ($LASTEXITCODE -ne 0) { Write-Host '::error::Could not fetch main from origin.'; exit 1 }
+          $commit = (git rev-parse HEAD).Trim()
+          git merge-base --is-ancestor $commit refs/remotes/origin/main
+          $code = $LASTEXITCODE
+          if ($code -eq 1) {
+            Write-Host "::error::Tag $env:TAG_NAME points to $commit, which is not on main. Releases are built only from commits on main."
+            exit 1
+          }
+          if ($code -ne 0) { Write-Host "::error::git merge-base --is-ancestor failed with exit code $code."; exit 1 }
+          Write-Host "Tag $env:TAG_NAME ($commit) is on main."
 
       # Same LabVIEW as the test job (a job starts with a fresh environment).
       - name: Find LabVIEW and Tools
@@ -110,24 +139,32 @@ jobs:
           # seconds. 25 minutes of silence still ends a VIPM that really hangs.
           VIPM_DESKTOP_LIVELINESS_TIMEOUT: 1500
           # Passed through the environment, not pasted into the script: a
-          # commit message with quotes or $ would otherwise break or change it.
+          # commit message or tag name with quotes or $ would otherwise break
+          # or change it.
           HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
           $vipbFile = "$env:GITHUB_WORKSPACE\src\LabVIEW MCP Server SDK.vipb"
-          
-          $gitTag = "${{ github.ref_name }}"
+          # git writes UTF-8; without this Windows PowerShell reads a tag
+          # message in the console code page and garbles non-ASCII text.
+          try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } catch { }
+
+          $gitTag = $env:TAG_NAME
           Write-Host "Detected Tag: $gitTag"
-          
+
           # 1. Extract the Annotated Tag Message using the Git CLI.
           #    actions/checkout recreates the tag as a lightweight tag on the
           #    commit, so %(contents) would return the commit message. Fetch
           #    the real tag object first.
           git fetch --quiet --force --no-tags origin "refs/tags/${gitTag}:refs/tags/${gitTag}"
+          if ($LASTEXITCODE -ne 0) { Write-Error "Fetching tag $gitTag failed."; exit 1 }
           $tagMsg = ""
           if ((git cat-file -t "refs/tags/$gitTag") -eq "tag") {
-            $tagMsg = (git tag -l --format='%(contents)' $gitTag) -join "`n"
+            # Subject and body only: %(contents) would also include the
+            # signature block of a signed tag.
+            $tagMsg = ((git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' $gitTag) -join "`n").Trim()
           }
-          
+
           # 2. Fallback to the commit message if the tag was left blank
           if ([string]::IsNullOrWhiteSpace($tagMsg)) {
             $tagMsg = "$env:HEAD_COMMIT_MESSAGE"
@@ -135,36 +172,38 @@ jobs:
           } else {
             Write-Host "Found annotated tag message!"
           }
-          
+
           Write-Host "Release Notes to use:`n$tagMsg"
 
           # Hand the same text to the GitHub release step (UTF-8 without BOM)
           $notesFile = Join-Path $env:RUNNER_TEMP "release-notes.md"
           [System.IO.File]::WriteAllText($notesFile, $tagMsg, (New-Object System.Text.UTF8Encoding $false))
-          
+
           # 3. Update the Version Number (Only if it's a 'v' release tag)
           # Read and write the .vipb as UTF-8: VIPM rejects a file that is not
           # valid UTF-8, and Get-Content/Set-Content use the ANSI code page in
           # Windows PowerShell.
           $vipbContent = [System.IO.File]::ReadAllLines($vipbFile)
-          
-          if ($gitTag -match "v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?") {
+
+          # Anchored: a test-* tag that contains a number (test-1.2.3) keeps
+          # the version of the .vipb.
+          if ($gitTag -match '^v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') {
             $major = $matches[1]
             $minor = $matches[2]
             $patch = $matches[3]
             $build = if ($matches[4]) { $matches[4] } else { 0 }
-            
+
             $newVersion = "$major.$minor.$patch.$build"
             Write-Host "Updating VIPB to version: $newVersion"
             $vipbContent = $vipbContent -replace "<Library_Version>.*?</Library_Version>", "<Library_Version>$newVersion</Library_Version>"
           }
-          
+
           # 4. Inject the Release Notes into the VIPB
           #    -replace reads $_, $& and $1 in the replacement text as
           #    substitutions, so double every $ to keep the message as written.
           $safeMsg = [System.Security.SecurityElement]::Escape($tagMsg).Replace('$', '$$')
           $vipbContent = $vipbContent -replace "<Release_Notes>.*?</Release_Notes>", "<Release_Notes>$safeMsg</Release_Notes>"
-          
+
           [System.IO.File]::WriteAllLines($vipbFile, $vipbContent, (New-Object System.Text.UTF8Encoding $false))
 
           # 5. Run the build with the LabVIEW chosen above (as the pull request
@@ -172,7 +211,7 @@ jobs:
           # version; the step above warns when that is not LabVIEW 2020 64-bit.
           Write-Host "Building VI Package with LabVIEW $env:LABVIEW_VERSION $env:LABVIEW_BITNESS-bit..."
           vipm build "$vipbFile" --labview-version $env:LABVIEW_VERSION --labview-bitness $env:LABVIEW_BITNESS
-          
+
           if ($LASTEXITCODE -ne 0) {
             Write-Error "VIPM CLI build failed with exit code $LASTEXITCODE."
             exit 1
@@ -187,18 +226,19 @@ jobs:
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $vipFile) { Write-Host '::error::The build produced no .vip file.'; exit 1 }
           Write-Host "Package: $($vipFile.FullName)"
-          echo "VIP_PATH=$($vipFile.FullName)" >> $env:GITHUB_ENV
+          # UTF-8 without BOM, which the runner reads (">>" writes UTF-16).
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "VIP_PATH=$($vipFile.FullName)`n")
 
       - name: Upload Artifact for Testing
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: test-vip-package
           path: ${{ env.VIP_PATH }}
 
       - name: Create GitHub Release and Upload VIP
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: ${{ env.VIP_PATH }}
           body_path: ${{ runner.temp }}/release-notes.md

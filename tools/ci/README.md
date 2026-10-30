@@ -6,8 +6,8 @@ generated and posted as a comment on the pull request.
 
 | File | Purpose |
 |---|---|
-| `Resolve-CiEnvironment.ps1` | First step of every job: finds the LabVIEW for tests and build (oldest ≥ 2020) and for the VI comparison (newest), their VI Server ports, LabVIEW CLI, `vipm` and `gh`; with `-Fix` repairs VI Server settings and port clashes; writes `LABVIEW_*` for the following steps and a table to the job summary. |
-| `LabVIEWCi.psm1` | Functions shared by the scripts here: LabVIEW discovery, VI Server port resolution, tool lookup. |
+| `Resolve-CiEnvironment.ps1` | First step of every job: finds the LabVIEW for tests and build (oldest ≥ 2020) and for the VI comparison (newest), their VI Server ports, LabVIEW CLI, `vipm` and `gh`; with `-Fix` repairs VI Server settings and port clashes, and with `-CleanStart` ends a leftover VIPM Desktop and the job's own LabVIEWs (never another LabVIEW, none with unsaved changes unless `CI_DEDICATED_MACHINE=1`); writes `LABVIEW_*` for the following steps and a table to the job summary. |
+| `LabVIEWCi.psm1` | Functions shared by the scripts here: LabVIEW discovery, VI Server port resolution, which LabVIEW CI may close, tool lookup, running git and other console tools, Markdown escaping. |
 | `New-ViDiffReport.ps1` | Compares every changed `.vi`/`.vim`/`.ctl` with its version on the base branch, using LabVIEW's own comparison (`LabVIEWCLI -OperationName CreateComparisonReport`), and writes a Markdown report with before/after images. Added VIs are shown with their block diagram and front panel. Every case frame of the new version of each VI is added in a folded section. |
 | `Print Diagram Frames.vi` | Run by `New-ViDiffReport.ps1` through `LabVIEWCLI -OperationName RunVI`: prints one VI with Print.VI To HTML (one picture per case frame) and lists each frame's structure and selector value in print order. Arguments: VI path, HTML file path, frame list path. LabVIEW 20.0. |
 | `Invoke-CliTest.ps1` | Runs a test entry VI (`tests\Run_Tests_CLI.vi`, `tests\Run_Protocol_Tests_CLI.vi`) through `LabVIEWCLI -OperationName RunVI`. Exit code 0 passed, 1 tests failed, 2 LabVIEW not reachable (CLI error -350000), 3 entry VI missing on the branch. Used by both workflows. |
@@ -16,9 +16,9 @@ generated and posted as a comment on the pull request.
 | `Test-InstalledPackage.ps1` | Tests the package users install: fails on `tools\`, `_ci\`, `tests\`, `.github\`, `builds\`, `.git`, `.ps1` or test-library entries in the `.vip`, installs it with `vipm` into the test LabVIEW, starts the installed Datalogger example (under `<LabVIEW>\examples\MCP Server`, not the repository's) with `Start VI.vi`, runs `tools\test\Test-McpServer.ps1` against it, closes that LabVIEW and uninstalls the package. Refuses to run when the toolkit is already installed there (`-Force`); `-ContentsOnly` checks only the contents. Test-build job, after the package is uploaded. Closing LabVIEW ends everything running in it: do not point it at a LabVIEW someone works in. |
 | `Start VI.vi` | Run by `Test-InstalledPackage.ps1` through `LabVIEWCLI -OperationName RunVI`: opens the VI whose path is its first argument and starts it without waiting (Run VI, Auto Dispose Ref), so the CLI call returns while that VI keeps running. RunVI itself only runs VIs with its own connector pane (error 1031 otherwise). Exit Code 1 when no path is given, the file is missing or the VI is broken. LabVIEW 20.0. |
 | `New-SummaryImage.ps1` | Not part of the workflow. Crops a diagram picture (file or URL) to one spot and draws numbered orange boxes around the nodes a pull request's Code summary explains; see `docs/pull-request-reports.md`. |
-| `Publish-PrReport.ps1` | Pushes the diff images to the branch `pr-assets/pr-<number>` and posts or updates one comment on the pull request containing both reports. |
+| `Publish-PrReport.ps1` | Pushes the diff images to the branch `pr-assets/pr-<number>` (with `GH_TOKEN` when the checkout keeps no credentials) and posts one comment on the pull request containing both reports, or updates the one it posted before (found by a hidden marker and its author). |
 | `pull-request.workflow.yml` | The GitHub Actions workflow that runs the above and builds a test package. |
-| `release.workflow.yml` | Proposed version of `.github/workflows/release.yml`: runs the Caraya suite and the protocol tests before a build, uses the annotated tag message as release text, writes the `.vipb` as UTF-8 and builds for LabVIEW 2020 64-bit like the pull request builds. |
+| `release.workflow.yml` | Proposed version of `.github/workflows/release.yml`. On every push to `main` and on every tag it runs the Caraya suite and the protocol tests. On a tag it then builds the package, with the test LabVIEW `Resolve-CiEnvironment.ps1` chooses (the oldest LabVIEW of at least 2020, 64-bit preferred), like the pull request builds, and writes the `.vipb` as UTF-8. A `v*` tag sets the package version and must point to a commit on `main`; it creates the GitHub release with the annotated tag message (subject and body, no signature) as release text. A `test-*` tag only uploads the package as an artifact. The build job runs in the `release` environment and is the only job with write access. |
 
 ## Activating the workflow
 
@@ -27,8 +27,20 @@ Copy `pull-request.workflow.yml` to `.github/workflows/pull-request.yml` on
 permission that automation tokens for this repository deliberately do not have.
 
 The workflow runs on the self-hosted runner, only for branches of this
-repository (never for forks), and takes the scripts from `main`, so a pull
-request cannot change how its own report is produced.
+repository (never for forks). It takes the report scripts from `main`, so a
+change to them takes effect only once it is merged. That is no isolation: the
+pull request's own VIs, tests, package lists and `tools/test/Test-McpServer.ps1`
+run on the same runner as the same user and could change files, processes or
+the report there. In the first run of a pull request that adds a script `main`
+does not have yet, the pull request's own copy is used. The checkouts keep no
+token (`persist-credentials: false`); only the step that publishes the report
+gets one. That is why only branches of this repository run on the runner.
+
+At the start of each job and when a LabVIEW does not listen on its VI Server
+port, CI force-closes the test and comparison LabVIEWs it chose; no other
+LabVIEW, and none with unsaved changes (a window title with `*`) unless the
+runner's environment has `CI_DEDICATED_MACHINE=1`. See tools/setup/README.md,
+"Self-hosted runner".
 
 Every step runs in Windows PowerShell with `-ExecutionPolicy Bypass`. Each job
 starts with `Resolve-CiEnvironment.ps1`, which picks the LabVIEW versions,
@@ -44,6 +56,11 @@ by itself".
 `release.workflow.yml` is a full copy of `.github/workflows/release.yml` with
 the proposed changes applied. Copy it over the live file on `main`. Keep both
 copies in step afterwards: the templates are where changes are proposed.
+
+It expects an environment named `release` (Settings > Environments) with the
+maintainer as required reviewer; GitHub creates a missing environment without
+any protection on the first run, so create it first. A tag ruleset for `v*`
+that only the maintainer may create or move keeps the tag side safe too.
 
 ## Running locally
 
