@@ -229,6 +229,16 @@ jobs:
           # UTF-8 without BOM, which the runner reads (">>" writes UTF-16).
           [System.IO.File]::AppendAllText($env:GITHUB_ENV, "VIP_PATH=$($vipFile.FullName)`n")
 
+      # The tests above ran against src\. This checks what users install:
+      # no tools\, tests\ or .ps1 entries in the package, and no class
+      # override the build renamed with the jg_mcp_ prefix (such a class is
+      # broken in the installed toolkit). Needs no install.
+      - name: Check Package Contents
+        run: |
+          & "$env:GITHUB_WORKSPACE\tools\ci\Test-InstalledPackage.ps1" -ContentsOnly -VipPath "$env:VIP_PATH" `
+            -RepoDir "$env:GITHUB_WORKSPACE" -LabVIEWPath "$env:LABVIEW_PATH" -PortNumber $env:LABVIEW_PORT
+          exit $LASTEXITCODE
+
       - name: Upload Artifact for Testing
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
