@@ -18,7 +18,7 @@ resources). Built on the IG HTTP Server Toolkit and JSONtext.
 | `tools/ci/` | Pull request review scripts and the workflow template |
 | `tools/setup/`, `tools/test/` | Environment setup and the protocol tester, where present |
 | `tools/icons/` | `New-VIIcon.ps1`, which draws VI icons in the toolkit's style |
-| `docs/` | Guides for working on the repository, e.g. `pull-request-reports.md` |
+| `docs/` | `technical-details.md` (protocol and internals, linked from the readme), `images/` (readme pictures), and guides for working on the repository, e.g. `pull-request-reports.md` |
 | `.github/workflows/` | CI. Maintainer-only, see below |
 
 ## Who decides what
