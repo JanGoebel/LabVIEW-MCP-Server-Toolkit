@@ -1,4 +1,4 @@
-# 🧰 LabVIEW MCP Server Toolkit
+# 🧰 LabVIEW MCP Server SDK
 
 With this toolkit you can make large language models like ChatGPT or Claude control your LabVIEW applications.
 
