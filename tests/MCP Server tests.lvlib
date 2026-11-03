@@ -50,9 +50,11 @@
 		<Item Name="Add Fixture Schema Details Tool.vi" Type="VI" URL="../Add Fixture Schema Details Tool.vi"/>
 		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
 		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
+		<Item Name="JSON item equals.vi" Type="VI" URL="../JSON item equals.vi"/>
 		<Item Name="Progress Fixture Record.vi" Type="VI" URL="../Progress Fixture Record.vi"/>
 		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
 		<Item Name="Send HTTP request.vi" Type="VI" URL="../Send HTTP request.vi"/>
+		<Item Name="Send MCP request (headers).vi" Type="VI" URL="../Send MCP request (headers).vi"/>
 	</Item>
 	<Item Name="tests" Type="Folder">
 		<Item Name="test add prompt name clash.vi" Type="VI" URL="../test add prompt name clash.vi"/>
