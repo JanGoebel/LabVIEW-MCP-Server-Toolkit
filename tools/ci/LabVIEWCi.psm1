@@ -1,8 +1,8 @@
 <#
 Shared helpers for the CI scripts: finding the LabVIEW installations on a
-runner, the VI Server port each of them listens on, and the command-line tools
-the workflows call. Used by Resolve-CiEnvironment.ps1, Invoke-CliTest.ps1 and
-New-ViDiffReport.ps1.
+runner, the VI Server port each of them listens on, which LabVIEW CI may
+close, the command-line tools the workflows call and how to run them, and
+Markdown escaping for the reports. Used by the scripts in this folder.
 #>
 
 $script:IniSection = 'LabVIEW'
@@ -58,10 +58,33 @@ function Get-LabVIEWInstall {
     }
 }
 
+function Get-AnsiEncoding {
+    <# The system ANSI code page, in which LabVIEW writes LabVIEW.ini and VIPM
+       its Settings.ini. Named explicitly: [Text.Encoding]::Default is that
+       code page in Windows PowerShell but UTF-8 in PowerShell 7.
+       GetEncoding(0) is the system code page in both; 1252 if it fails. #>
+    if (-not $script:AnsiEncoding) {
+        try { $script:AnsiEncoding = [System.Text.Encoding]::GetEncoding(0) }
+        catch { $script:AnsiEncoding = [System.Text.Encoding]::GetEncoding(1252) }
+    }
+    return $script:AnsiEncoding
+}
+
+function Add-GitHubFileText {
+    <# Appends a line to one of the files GitHub Actions reads after a step
+       (GITHUB_ENV, GITHUB_PATH, GITHUB_OUTPUT, GITHUB_STEP_SUMMARY), as UTF-8
+       without BOM, which is what the runner reads. Add-Content would write
+       the ANSI code page in Windows PowerShell. Does nothing when Path is
+       empty (outside GitHub Actions). #>
+    param([string]$Path, [AllowEmptyString()][string]$Text)
+    if (-not $Path) { return }
+    [System.IO.File]::AppendAllText($Path, $Text + "`n", (New-Object System.Text.UTF8Encoding $false))
+}
+
 function Get-IniValue([string]$Ini, [string]$Key) {
     if (-not (Test-Path -LiteralPath $Ini)) { return $null }
     $pattern = '^\s*' + [regex]::Escape($Key) + '\s*=(.*)$'
-    foreach ($line in [System.IO.File]::ReadAllLines($Ini)) {
+    foreach ($line in [System.IO.File]::ReadAllLines($Ini, (Get-AnsiEncoding))) {
         if ($line -match $pattern) { return $Matches[1].Trim().Trim('"') }
     }
     return $null
@@ -70,7 +93,7 @@ function Get-IniValue([string]$Ini, [string]$Key) {
 function Set-IniValue([string]$Ini, [string]$Key, [string]$Value) {
     <# Sets key=value in the [LabVIEW] section of a LabVIEW.ini. Only call it
        while that LabVIEW is not running: LabVIEW rewrites the file on exit. #>
-    $encoding = [System.Text.Encoding]::Default
+    $encoding = Get-AnsiEncoding
     # Not "$lines = if (...) { list }": PowerShell would unroll the list into a
     # fixed-size array, and Insert would fail.
     $lines = New-Object System.Collections.Generic.List[string]
@@ -112,6 +135,116 @@ function Get-LabVIEWProcess([string]$Path) {
         Where-Object { $_.Path -and ($_.Path -ieq $Path) } | Select-Object -First 1
 }
 
+function Test-CiDedicatedMachine {
+    <# True when the environment variable CI_DEDICATED_MACHINE is 1: nobody
+       works on this machine, so a LabVIEW with unsaved changes may be closed
+       as well (see Select-LabVIEWToStop). #>
+    return ("$env:CI_DEDICATED_MACHINE" -eq '1')
+}
+
+function Get-ProcessWindowTitle {
+    <# Titles of the visible top-level windows of a process: every front
+       panel, block diagram and project window of a LabVIEW, not only the one
+       Process.MainWindowTitle reports. Falls back to MainWindowTitle when the
+       window list cannot be read. Read-only. #>
+    param([Parameter(Mandatory = $true)][int]$ProcessId)
+    try {
+        if (-not ('LabVIEWCi.Windows' -as [type])) {
+            Add-Type -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+namespace LabVIEWCi {
+    public static class Windows {
+        delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
+        [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+        [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowTextLength(IntPtr hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int maxCount);
+        public static string[] Titles(int processId) {
+            List<string> titles = new List<string>();
+            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam) {
+                uint owner;
+                GetWindowThreadProcessId(hWnd, out owner);
+                if (owner == (uint)processId && IsWindowVisible(hWnd)) {
+                    int length = GetWindowTextLength(hWnd);
+                    if (length > 0) {
+                        StringBuilder text = new StringBuilder(length + 1);
+                        GetWindowText(hWnd, text, text.Capacity);
+                        titles.Add(text.ToString());
+                    }
+                }
+                return true;
+            }, IntPtr.Zero);
+            return titles.ToArray();
+        }
+    }
+}
+'@
+        }
+        return @([LabVIEWCi.Windows]::Titles($ProcessId))
+    } catch {
+        $title = (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue).MainWindowTitle
+        if ($title) { return @($title) } else { return @() }
+    }
+}
+
+function Select-LabVIEWToStop {
+    <# Decides which running LabVIEWs a CI step may end. Changes nothing.
+       Process: objects with Id, Path and WindowTitles (Get-RunningLabVIEW).
+       LabVIEWPath: the LabVIEWs this job uses (tests/build and comparison).
+       Returns one object per process with Id, Path, Stop and Reason:
+         * a LabVIEW at any other path is never stopped: on a developer
+           machine that is where someone works;
+         * a LabVIEW one of whose windows has a title with "*", which LabVIEW
+           shows for unsaved changes, is not stopped either, unless Dedicated
+           is set (CI_DEDICATED_MACHINE=1, nobody works on this machine);
+         * every other LabVIEW at one of the LabVIEWPath paths is stopped. #>
+    param([object[]]$Process = @(), [string[]]$LabVIEWPath = @(), [switch]$Dedicated)
+    $wanted = @($LabVIEWPath | Where-Object { $_ })
+    foreach ($p in @($Process | Where-Object { $_ })) {
+        $path = "$($p.Path)"
+        $used = [bool](@($wanted | Where-Object { $_ -ieq $path }).Count)
+        $unsaved = @($p.WindowTitles | Where-Object { "$_" -match '\*' })
+        if (-not $used) {
+            $stop = $false; $reason = 'not a LabVIEW this job uses'
+        } elseif ($unsaved.Count -gt 0 -and -not $Dedicated) {
+            $stop = $false
+            $reason = "it has unsaved changes (window ""$($unsaved[0])""); save or close them, or set CI_DEDICATED_MACHINE=1 on a machine nobody works on"
+        } else {
+            $stop = $true; $reason = if ($unsaved.Count -gt 0) { 'CI_DEDICATED_MACHINE=1, unsaved changes are discarded' } else { 'used by this job' }
+        }
+        [pscustomobject]@{ Id = $p.Id; Path = $path; Stop = $stop; Reason = $reason }
+    }
+}
+
+function Get-RunningLabVIEW {
+    <# The running LabVIEW processes at the given paths, with the titles of
+       their windows, as Select-LabVIEWToStop takes them. Read-only. #>
+    param([string[]]$LabVIEWPath = @())
+    foreach ($path in @($LabVIEWPath | Where-Object { $_ } | Select-Object -Unique)) {
+        $process = Get-LabVIEWProcess $path
+        if (-not $process) { continue }
+        [pscustomobject]@{ Id = $process.Id; Path = $process.Path; WindowTitles = @(Get-ProcessWindowTitle $process.Id) }
+    }
+}
+
+function Stop-CiLabVIEW {
+    <# Ends the running LabVIEWs at LabVIEWPath that Select-LabVIEWToStop
+       allows to end, and waits up to 60 s for each. Returns the decisions
+       (Id, Path, Stop, Reason), so the caller can say what it ended and what
+       it left running. #>
+    param([string[]]$LabVIEWPath = @())
+    $decisions = @(Select-LabVIEWToStop -Process @(Get-RunningLabVIEW $LabVIEWPath) -LabVIEWPath $LabVIEWPath -Dedicated:(Test-CiDedicatedMachine))
+    foreach ($d in $decisions | Where-Object { $_.Stop }) {
+        Stop-Process -Id $d.Id -Force -ErrorAction SilentlyContinue
+        Wait-Process -Id $d.Id -Timeout 60 -ErrorAction SilentlyContinue
+    }
+    return $decisions
+}
+
 function Get-VipmPort {
     <# The VI Server port VIPM has recorded for the LabVIEW at Path, or 0.
        Read-only. VIPM keeps its LabVIEW list in the [Targets] section of its
@@ -123,7 +256,7 @@ function Get-VipmPort {
     $inTargets = $false
     $locations = @{}
     $ports = @()
-    foreach ($line in [System.IO.File]::ReadAllLines($Settings, [System.Text.Encoding]::Default)) {
+    foreach ($line in [System.IO.File]::ReadAllLines($Settings, (Get-AnsiEncoding))) {
         if ($line -match '^\s*\[(.+)\]\s*$') { $inTargets = ($Matches[1] -eq 'Targets'); continue }
         if (-not $inTargets) { continue }
         if ($line -match '^Locations (\d+)="(.*)"$') { $locations[[int]$Matches[1]] = $Matches[2] }
@@ -150,9 +283,13 @@ function Resolve-ViServerPort {
     With -Fix it repairs what is easy to repair: VI Server disabled or on a
     different port in LabVIEW.ini, a port taken by another program or
     configured for another LabVIEW (Avoid), and an instance that runs on a
-    different port or none (it is closed so that LabVIEW CLI starts it again
-    with the settings written here). Without -Fix it only reports, and uses a
-    running instance's port as it is.
+    different port or none: that LabVIEW is force-closed (Stop-Process,
+    unsaved changes are lost) so that LabVIEW CLI starts it again with the
+    settings written here. A running instance with unsaved changes (a window
+    title with "*") is not closed unless CI_DEDICATED_MACHINE=1; it is then
+    handled as without -Fix, and LabVIEW.ini is not written while it runs.
+    Without -Fix it only reports, and uses a running instance's port as it
+    is when that is its LabVIEW.ini port or the requested port.
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -172,6 +309,9 @@ function Resolve-ViServerPort {
         $notes.Add("VIPM's port $Preferred for this LabVIEW is also used by another LabVIEW; set different ports in VIPM (Tools > Options > LabVIEW).")
     }
 
+    # LabVIEW.ini is only written when -Fix is given and this LabVIEW is not
+    # running: LabVIEW rewrites the file when it exits.
+    $write = [bool]$Fix
     $process = Get-LabVIEWProcess $Path
     if ($process) {
         $listening = Get-ListeningPort $process.Id
@@ -180,16 +320,27 @@ function Resolve-ViServerPort {
             return [pscustomobject]@{ Port = $want; Notes = $notes; Changed = $false }
         }
         $actual = @($iniPort, $Requested) | Where-Object { $_ -and ($listening -contains $_) } | Select-Object -First 1
+        $was = if ($actual) { "on port $actual" } else { 'without listening on its VI Server port' }
+        $stop = $null
         if ($Fix) {
-            $was = if ($actual) { "on port $actual" } else { 'without listening on its VI Server port' }
-            $notes.Add("LabVIEW (process $($process.Id)) was running $was instead of on $want; closed it so LabVIEW CLI starts it with the settings below.")
+            $titles = @(Get-ProcessWindowTitle $process.Id)
+            $stop = Select-LabVIEWToStop -Process @([pscustomobject]@{ Id = $process.Id; Path = $Path; WindowTitles = $titles }) -LabVIEWPath @($Path) -Dedicated:(Test-CiDedicatedMachine)
+            if (-not $stop.Stop) {
+                $notes.Add("LabVIEW (process $($process.Id)) runs $was instead of on $want, but was not closed: $($stop.Reason).")
+                $write = $false
+            }
+        }
+        if ($stop -and $stop.Stop) {
+            $notes.Add("LabVIEW (process $($process.Id)) was running $was instead of on $want; force-closed it so LabVIEW CLI starts it with the settings below.")
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             Wait-Process -Id $process.Id -Timeout 60 -ErrorAction SilentlyContinue
         } elseif ($actual) {
-            $notes.Add("LabVIEW (process $($process.Id)) runs on port $actual, not on $want (VIPM may move it back); using $actual. Run with -Fix to repair it.")
+            $hint = if ($Fix) { 'It is repaired once it can be closed.' } else { 'Run with -Fix to repair it.' }
+            $notes.Add("LabVIEW (process $($process.Id)) runs on port $actual, not on $want (VIPM may move it back); using $actual. $hint")
             return [pscustomobject]@{ Port = $actual; Notes = $notes; Changed = $false }
         } else {
-            $notes.Add("LabVIEW (process $($process.Id)) is running but not listening on its VI Server port ($iniPort); LabVIEW CLI will probably not reach it. Close it, or run with -Fix.")
+            $hint = if ($Fix) { 'Close it.' } else { 'Close it, or run with -Fix.' }
+            $notes.Add("LabVIEW (process $($process.Id)) is running but not listening on its VI Server port ($iniPort); LabVIEW CLI will probably not reach it. $hint")
         }
     }
 
@@ -212,7 +363,7 @@ function Resolve-ViServerPort {
     $changed = $false
     if ($changes.Count -gt 0) {
         $list = ($changes.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', '
-        if ($Fix) {
+        if ($write) {
             try {
                 foreach ($entry in $changes.GetEnumerator()) { Set-IniValue $ini $entry.Key $entry.Value }
                 $notes.Add("Set $list in $ini.")
@@ -220,6 +371,8 @@ function Resolve-ViServerPort {
             } catch {
                 $notes.Add("Could not write $ini ($($_.Exception.Message)); it needs $list.")
             }
+        } elseif ($Fix) {
+            $notes.Add("$ini needs $list; not written while this LabVIEW runs.")
         } else {
             $notes.Add("$ini needs $list (run with -Fix to write it).")
         }
@@ -232,20 +385,25 @@ function Stop-LeftoverVipm {
     <# Ends a running VIPM Desktop and, only if one was running, the LabVIEWs
        at LabVIEWPath it may have been driving. For the start of a CI job,
        where a running VIPM Desktop belongs to an earlier job (see
-       Resolve-CiEnvironment.ps1, -CleanStart). Returns a note, or nothing
-       when VIPM Desktop was not running. #>
+       Resolve-CiEnvironment.ps1, -CleanStart). LabVIEWPath must be the
+       LabVIEWs the job uses, not every installed one: LabVIEWs at other
+       paths are never touched, and of these only those without unsaved
+       changes are ended (see Select-LabVIEWToStop, CI_DEDICATED_MACHINE).
+       Both are force-closed (Stop-Process). Returns notes, or nothing when
+       VIPM Desktop was not running. #>
     param([string[]]$LabVIEWPath = @(), [string]$ProcessName = 'VI Package Manager')
     $desktop = @(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)
     if ($desktop.Count -eq 0) { return }
-    $driven = @($LabVIEWPath | ForEach-Object { Get-LabVIEWProcess $_ } | Where-Object { $_ })
-    # Read the paths first: a stopped process no longer reports one.
-    $drivenPaths = @($driven | ForEach-Object { $_.Path })
-    $ended = @($desktop) + $driven
-    $ended | Stop-Process -Force -ErrorAction SilentlyContinue
-    $ended | ForEach-Object { Wait-Process -Id $_.Id -Timeout 60 -ErrorAction SilentlyContinue }
+    $desktop | Stop-Process -Force -ErrorAction SilentlyContinue
+    $desktop | ForEach-Object { Wait-Process -Id $_.Id -Timeout 60 -ErrorAction SilentlyContinue }
+    $decisions = @(Stop-CiLabVIEW -LabVIEWPath $LabVIEWPath)
+    $ended = @($decisions | Where-Object { $_.Stop })
     $what = 'VIPM Desktop'
-    if ($driven.Count -gt 0) { $what += " and $($driven.Count) LabVIEW(s) ($($drivenPaths -join ', '))" }
+    if ($ended.Count -gt 0) { $what += " and $($ended.Count) LabVIEW(s) ($(($ended | ForEach-Object { $_.Path }) -join ', '))" }
     "Ended $what left over from an earlier job, so this job starts with a VIPM that answers."
+    foreach ($kept in $decisions | Where-Object { -not $_.Stop }) {
+        "Left LabVIEW $($kept.Path) (process $($kept.Id)) running: $($kept.Reason). VIPM may not answer if it was driving it."
+    }
 }
 
 function Find-Tool {
@@ -260,7 +418,7 @@ function Find-Tool {
         if (-not $hit) { continue }
         $dir = Split-Path $hit.Path
         $env:PATH = "$dir;$env:PATH"
-        if ($env:GITHUB_PATH) { Add-Content -LiteralPath $env:GITHUB_PATH -Value $dir }
+        Add-GitHubFileText $env:GITHUB_PATH $dir
         return $hit.Path
     }
     return $null
@@ -273,6 +431,107 @@ function Get-LabVIEWCliPath {
         "$env:ProgramFiles\National Instruments\Shared\LabVIEW CLI\LabVIEWCLI.exe")
 }
 
+function Get-VipmPath {
+    <# Path of the VIPM command line (vipm.exe), or $null. #>
+    Find-Tool 'vipm' @(
+        "$env:ProgramW6432\JKI\VI Package Manager\support\vipm.exe",
+        "$env:ProgramFiles\JKI\VI Package Manager\support\vipm.exe",
+        "${env:ProgramFiles(x86)}\JKI\VI Package Manager\support\vipm.exe")
+}
+
+function Get-GhPath {
+    <# Path of the GitHub CLI (gh.exe), or $null. #>
+    Find-Tool 'gh' @("$env:ProgramW6432\GitHub CLI\gh.exe", "$env:ProgramFiles\GitHub CLI\gh.exe")
+}
+
+function Invoke-NativeCommand {
+    <# Runs a console program with its standard error merged into its output
+       and returns ExitCode and Output (one string per line). Windows
+       PowerShell turns redirected stderr lines into error records; here they
+       become plain text and never stop the caller, and an empty stderr line
+       arrives as its message, not as the record's type name. A program that
+       does not exist gives exit code -1 and a "not recognized" line. #>
+    param([Parameter(Mandatory = $true)][string]$FilePath, [string[]]$ArgumentList = @())
+    $ErrorActionPreference = 'Continue'
+    if (-not (Get-Command $FilePath -CommandType Application -ErrorAction SilentlyContinue)) {
+        return [pscustomobject]@{ ExitCode = -1; Output = @("$FilePath is not recognized as the name of a program (not installed or not on PATH).") }
+    }
+    $output = @(& $FilePath @ArgumentList 2>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
+        })
+    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = $output }
+}
+
+function Invoke-Utf8Command {
+    <# Runs a console program that writes UTF-8 (git, gh) and returns
+       ExitCode and Output (its standard output, one string per line, read as
+       UTF-8; Windows PowerShell would read it in the console code page).
+       Standard error goes to the console unchanged. #>
+    param([Parameter(Mandatory = $true)][string]$FilePath, [string[]]$ArgumentList = @())
+    $console = $null
+    try { $console = [Console]::OutputEncoding; [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } catch { $console = $null }
+    try {
+        $output = @(& $FilePath @ArgumentList)
+        $code = $LASTEXITCODE
+    } finally {
+        if ($console) { try { [Console]::OutputEncoding = $console } catch { } }
+    }
+    return [pscustomobject]@{ ExitCode = $code; Output = $output }
+}
+
+function Invoke-Git {
+    <# Runs git with Arguments (Invoke-Utf8Command) and returns its standard
+       output, one string per line. Throws when git exits with a non-zero
+       code, so a failed call never passes as an empty result. #>
+    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+    $run = Invoke-Utf8Command 'git' $Arguments
+    if ($run.ExitCode -ne 0) { throw "git $($Arguments -join ' ') failed with exit code $($run.ExitCode)." }
+    return $run.Output
+}
+
+function ConvertFrom-GitNameStatus {
+    <# Parses the output of "git diff -z --name-status": NUL-separated fields,
+       per entry the status, then the path, or the old and the new path for
+       a rename or copy (R100, C075). Returns Status (first letter), OldPath
+       and NewPath per entry. #>
+    param([AllowEmptyString()][AllowNull()][string]$Text)
+    $fields = @("$Text".Split([char]0) | Where-Object { $_ -ne '' })
+    $i = 0
+    while ($i -lt $fields.Count) {
+        $status = $fields[$i].Substring(0, 1)
+        $paths = if ($status -eq 'R' -or $status -eq 'C') { 2 } else { 1 }
+        if ($i + $paths -ge $fields.Count) { throw "Unexpected git diff output near '$($fields[$i])'." }
+        $oldPath = $fields[$i + 1]
+        $newPath = $fields[$i + $paths]
+        $i += 1 + $paths
+        [pscustomobject]@{ Status = $status; OldPath = $oldPath; NewPath = $newPath }
+    }
+}
+
+function ConvertTo-MarkdownText {
+    <# Text for a Markdown paragraph or table cell that is shown as written:
+       & < > as HTML entities (no tags or entities of its own), | escaped so it
+       does not split a table cell, @ followed by a zero-width space so GitHub
+       does not turn "@name" into a mention, line breaks as spaces. #>
+    param([AllowEmptyString()][AllowNull()][string]$Text)
+    if (-not $Text) { return '' }
+    $t = $Text -replace '\r?\n', ' '
+    return $t.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('|', '\|').Replace('@', '@&#8203;')
+}
+
+function Format-MarkdownCodeBlock {
+    <# A fenced Markdown code block around Text. The fence is one backtick
+       longer than the longest run of backticks in Text (at least three), so
+       no line of Text can close the block early. #>
+    param([AllowEmptyString()][AllowNull()][string]$Text)
+    $longest = 0
+    foreach ($run in [regex]::Matches("$Text", '`+')) { if ($run.Length -gt $longest) { $longest = $run.Length } }
+    $fence = '`' * [Math]::Max(3, $longest + 1)
+    return "$fence`n$Text`n$fence"
+}
+
 Export-ModuleMember -Function Get-LabVIEWInstall, Get-IniValue, Set-IniValue, Get-ListeningPort,
     Get-PortOwner, Get-FreePort, Get-LabVIEWProcess, Resolve-ViServerPort, Find-Tool, Get-LabVIEWCliPath, Get-ExeBitness,
-    Get-VipmPort, Stop-LeftoverVipm
+    Get-VipmPort, Stop-LeftoverVipm, Test-CiDedicatedMachine, Get-ProcessWindowTitle, Select-LabVIEWToStop,
+    Get-RunningLabVIEW, Stop-CiLabVIEW, Get-VipmPath, Get-GhPath, Invoke-NativeCommand, Get-AnsiEncoding,
+    Add-GitHubFileText, Invoke-Utf8Command, Invoke-Git, ConvertFrom-GitNameStatus, ConvertTo-MarkdownText, Format-MarkdownCodeBlock

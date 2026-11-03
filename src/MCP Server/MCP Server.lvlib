@@ -172,6 +172,7 @@
 		</Item>
 		<Item Name="Webserver" Type="Folder">
 			<Item Name="MCP Handler.lvclass" Type="LVClass" URL="../MCP Handler/MCP Handler.lvclass"/>
+			<Item Name="MCP Connection Probe.lvclass" Type="LVClass" URL="../MCP Connection Probe/MCP Connection Probe.lvclass"/>
 		</Item>
 	</Item>
 </Library>

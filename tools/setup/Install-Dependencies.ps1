@@ -28,20 +28,21 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$repo = (Resolve-Path $RepoDir).Path
+$repo = (Resolve-Path -LiteralPath $RepoDir).Path
 $vipc = Join-Path $repo 'src\LabVIEW MCP Server SDK.vipc'
-if (-not (Test-Path $vipc)) { throw "No package configuration at $vipc." }
+if (-not (Test-Path -LiteralPath $vipc)) { throw "No package configuration at $vipc." }
 $target = @('--labview-version', $LabVIEWVersion, '--labview-bitness', $Bitness)
 
 # VIPM Desktop goes quiet for minutes while LabVIEW starts and compiles.
-$env:VIPM_DESKTOP_LIVELINESS_TIMEOUT = '600'
+# A value the caller (a workflow step) has set is kept.
+if (-not $env:VIPM_DESKTOP_LIVELINESS_TIMEOUT) { $env:VIPM_DESKTOP_LIVELINESS_TIMEOUT = '600' }
 
 # VIPM Community Edition only installs from inside a public Git repository
 # and looks at the current folder for it, so run vipm from the checkout.
-if (-not (Test-Path (Join-Path $repo '.git'))) {
+if (-not (Test-Path -LiteralPath (Join-Path $repo '.git'))) {
     Write-Warning "$repo is not a Git repository; VIPM Community Edition will refuse to install (""Not inside a Git repository""). Clone the repository with Git instead of downloading it."
 }
-Push-Location $repo
+Push-Location -LiteralPath $repo
 try {
     Write-Host "Installing runtime dependencies from $vipc into LabVIEW $LabVIEWVersion $Bitness-bit ..."
     & vipm install $vipc @target --yes --timeout 1200
@@ -49,8 +50,8 @@ try {
 
     $packageList = Join-Path $repo 'tools\setup\test-packages.txt'
     $packages = @()
-    if (Test-Path $packageList) {
-        $packages = @(Get-Content $packageList |
+    if (Test-Path -LiteralPath $packageList) {
+        $packages = @(Get-Content -LiteralPath $packageList |
             ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
     } else {
         Write-Host "No $packageList; only the runtime dependencies are installed."
