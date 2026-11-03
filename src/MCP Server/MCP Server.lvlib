@@ -127,6 +127,9 @@
 			<Item Name="Check MCP Names.vi" Type="VI" URL="../Check MCP Names.vi"/>
 			<Item Name="LV Type To JSON Schema.vi" Type="VI" URL="../LV Type To JSON Schema.vi"/>
 			<Item Name="Add Control Details To Schema.vi" Type="VI" URL="../Add Control Details To Schema.vi"/>
+			<Item Name="List Control Elements.vi" Type="VI" URL="../List Control Elements.vi"/>
+			<Item Name="Read Numeric Limits.vi" Type="VI" URL="../Read Numeric Limits.vi"/>
+			<Item Name="Make Schema Details.vi" Type="VI" URL="../Make Schema Details.vi"/>
 			<Item Name="JSON To Control Value.vi" Type="VI" URL="../JSON To Control Value.vi"/>
 			<Item Name="Handle MCP Request.vi" Type="VI" URL="../Handle MCP Request.vi"/>
 			<Item Name="Cache Hints.vi" Type="VI" URL="../Cache Hints.vi"/>
