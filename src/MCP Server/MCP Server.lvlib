@@ -150,6 +150,7 @@
 			<Item Name="MCP Request Metadata.ctl" Type="VI" URL="../MCP Request Metadata.ctl"/>
 			<Item Name="Read MCP Request Metadata.vi" Type="VI" URL="../Read MCP Request Metadata.vi"/>
 			<Item Name="Check Modern MCP Request.vi" Type="VI" URL="../Check Modern MCP Request.vi"/>
+			<Item Name="Decode Header Value.vi" Type="VI" URL="../Decode Header Value.vi"/>
 			<Item Name="Set MCP Request Context.vi" Type="VI" URL="../Set MCP Request Context.vi"/>
 			<Item Name="Collect MCP Input Requests.vi" Type="VI" URL="../Collect MCP Input Requests.vi"/>
 			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
