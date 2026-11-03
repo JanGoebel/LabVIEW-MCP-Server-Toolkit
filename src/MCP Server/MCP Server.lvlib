@@ -113,6 +113,10 @@
 			<Item Name="Default Tool Arguments.vi" Type="VI" URL="../Default Tool Arguments.vi"/>
 			<Item Name="Mark Tool Error Result.vi" Type="VI" URL="../Mark Tool Error Result.vi"/>
 			<Item Name="Complete Tool Entry.vi" Type="VI" URL="../Complete Tool Entry.vi"/>
+			<Item Name="Set Tool Title.vi" Type="VI" URL="../Set Tool Title.vi"/>
+			<Item Name="Set Tool Annotations.vi" Type="VI" URL="../Set Tool Annotations.vi"/>
+			<Item Name="Make Output Schema.vi" Type="VI" URL="../Make Output Schema.vi"/>
+			<Item Name="Make Output Property Schema.vi" Type="VI" URL="../Make Output Property Schema.vi"/>
 			<Item Name="Add Structured Content.vi" Type="VI" URL="../Add Structured Content.vi"/>
 			<Item Name="Strip Error Details.vi" Type="VI" URL="../Strip Error Details.vi"/>
 			<Item Name="Reject Non Object Message.vi" Type="VI" URL="../Reject Non Object Message.vi"/>
