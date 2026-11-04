@@ -113,6 +113,10 @@
 			<Item Name="Default Tool Arguments.vi" Type="VI" URL="../Default Tool Arguments.vi"/>
 			<Item Name="Mark Tool Error Result.vi" Type="VI" URL="../Mark Tool Error Result.vi"/>
 			<Item Name="Complete Tool Entry.vi" Type="VI" URL="../Complete Tool Entry.vi"/>
+			<Item Name="Set Tool Title.vi" Type="VI" URL="../Set Tool Title.vi"/>
+			<Item Name="Set Tool Annotations.vi" Type="VI" URL="../Set Tool Annotations.vi"/>
+			<Item Name="Make Output Schema.vi" Type="VI" URL="../Make Output Schema.vi"/>
+			<Item Name="Make Output Property Schema.vi" Type="VI" URL="../Make Output Property Schema.vi"/>
 			<Item Name="Add Structured Content.vi" Type="VI" URL="../Add Structured Content.vi"/>
 			<Item Name="Strip Error Details.vi" Type="VI" URL="../Strip Error Details.vi"/>
 			<Item Name="Reject Non Object Message.vi" Type="VI" URL="../Reject Non Object Message.vi"/>
@@ -127,6 +131,9 @@
 			<Item Name="Check MCP Names.vi" Type="VI" URL="../Check MCP Names.vi"/>
 			<Item Name="LV Type To JSON Schema.vi" Type="VI" URL="../LV Type To JSON Schema.vi"/>
 			<Item Name="Add Control Details To Schema.vi" Type="VI" URL="../Add Control Details To Schema.vi"/>
+			<Item Name="List Control Elements.vi" Type="VI" URL="../List Control Elements.vi"/>
+			<Item Name="Read Numeric Limits.vi" Type="VI" URL="../Read Numeric Limits.vi"/>
+			<Item Name="Make Schema Details.vi" Type="VI" URL="../Make Schema Details.vi"/>
 			<Item Name="JSON To Control Value.vi" Type="VI" URL="../JSON To Control Value.vi"/>
 			<Item Name="Handle MCP Request.vi" Type="VI" URL="../Handle MCP Request.vi"/>
 			<Item Name="Cache Hints.vi" Type="VI" URL="../Cache Hints.vi"/>
@@ -143,6 +150,7 @@
 			<Item Name="MCP Request Metadata.ctl" Type="VI" URL="../MCP Request Metadata.ctl"/>
 			<Item Name="Read MCP Request Metadata.vi" Type="VI" URL="../Read MCP Request Metadata.vi"/>
 			<Item Name="Check Modern MCP Request.vi" Type="VI" URL="../Check Modern MCP Request.vi"/>
+			<Item Name="Decode Header Value.vi" Type="VI" URL="../Decode Header Value.vi"/>
 			<Item Name="Set MCP Request Context.vi" Type="VI" URL="../Set MCP Request Context.vi"/>
 			<Item Name="Collect MCP Input Requests.vi" Type="VI" URL="../Collect MCP Input Requests.vi"/>
 			<Item Name="Complete Modern MCP Result.vi" Type="VI" URL="../Complete Modern MCP Result.vi"/>
