@@ -78,6 +78,8 @@
 		<Item Name="test malformed json.vi" Type="VI" URL="../test malformed json.vi"/>
 		<Item Name="test modern errors.vi" Type="VI" URL="../test modern errors.vi"/>
 		<Item Name="test modern headers.vi" Type="VI" URL="../test modern headers.vi"/>
+		<Item Name="test modern initialize.vi" Type="VI" URL="../test modern initialize.vi"/>
+		<Item Name="test modern missing meta.vi" Type="VI" URL="../test modern missing meta.vi"/>
 		<Item Name="test modern tools list.vi" Type="VI" URL="../test modern tools list.vi"/>
 		<Item Name="test non object message.vi" Type="VI" URL="../test non object message.vi"/>
 		<Item Name="test notification accepted.vi" Type="VI" URL="../test notification accepted.vi"/>
@@ -94,6 +96,7 @@
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
 		<Item Name="test request without method.vi" Type="VI" URL="../test request without method.vi"/>
 		<Item Name="test resource blob.vi" Type="VI" URL="../test resource blob.vi"/>
+		<Item Name="test resource not found uri.vi" Type="VI" URL="../test resource not found uri.vi"/>
 		<Item Name="test resource templates list.vi" Type="VI" URL="../test resource templates list.vi"/>
 		<Item Name="test resource text utf8.vi" Type="VI" URL="../test resource text utf8.vi"/>
 		<Item Name="test resources list.vi" Type="VI" URL="../test resources list.vi"/>
@@ -125,6 +128,7 @@
 		<Item Name="test unknown prompt.vi" Type="VI" URL="../test unknown prompt.vi"/>
 		<Item Name="test unknown resource.vi" Type="VI" URL="../test unknown resource.vi"/>
 		<Item Name="test unknown tool.vi" Type="VI" URL="../test unknown tool.vi"/>
+		<Item Name="test unsupported version id.vi" Type="VI" URL="../test unsupported version id.vi"/>
 	</Item>
 	<Item Name="Run_Protocol_Tests_CLI.vi" Type="VI" URL="../Run_Protocol_Tests_CLI.vi"/>
 	<Item Name="Test_MCP_Server.vi" Type="VI" URL="../Test_MCP_Server.vi"/>
