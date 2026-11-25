@@ -5,6 +5,7 @@
 	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
 	<Item Name="fakes" Type="Folder">
 		<Item Name="prompts" Type="Folder">
+			<Item Name="fake prompt ask user.vi" Type="VI" URL="../fake prompt ask user.vi"/>
 			<Item Name="fake prompt broken vi.vi" Type="VI" URL="../fake prompt broken vi.vi"/>
 			<Item Name="fake prompt concatanate strings.vi" Type="VI" URL="../fake prompt concatanate strings.vi"/>
 			<Item Name="fake prompt name clash.vi" Type="VI" URL="../fake prompt name clash.vi"/>
@@ -34,6 +35,7 @@
 			<Item Name="fake tool schema details.vi" Type="VI" URL="../fake tool schema details.vi"/>
 			<Item Name="fake tool schema shapes.vi" Type="VI" URL="../fake tool schema shapes.vi"/>
 			<Item Name="fake tool special labels.vi" Type="VI" URL="../fake tool special labels.vi"/>
+			<Item Name="fake tool two questions.vi" Type="VI" URL="../fake tool two questions.vi"/>
 			<Item Name="fake tool unwired error.vi" Type="VI" URL="../fake tool unwired error.vi"/>
 			<Item Name="fake_tool_say_hello.vi" Type="VI" URL="../fake_tool_say_hello.vi"/>
 		</Item>
@@ -41,6 +43,7 @@
 	<Item Name="SubVIs" Type="Folder">
 		<Item Name="Add Fixture Annotated Tool.vi" Type="VI" URL="../Add Fixture Annotated Tool.vi"/>
 		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
+		<Item Name="Add Fixture Ask User Prompt.vi" Type="VI" URL="../Add Fixture Ask User Prompt.vi"/>
 		<Item Name="Add Fixture Confirm Tool.vi" Type="VI" URL="../Add Fixture Confirm Tool.vi"/>
 		<Item Name="Add Fixture Error Descriptions Tool.vi" Type="VI" URL="../Add Fixture Error Descriptions Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
@@ -51,6 +54,7 @@
 		<Item Name="Add Fixture Schema Shapes Tool.vi" Type="VI" URL="../Add Fixture Schema Shapes Tool.vi"/>
 		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
 		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
+		<Item Name="Add Fixture Two Questions Tool.vi" Type="VI" URL="../Add Fixture Two Questions Tool.vi"/>
 		<Item Name="Add Fixture Unwired Error Tool.vi" Type="VI" URL="../Add Fixture Unwired Error Tool.vi"/>
 		<Item Name="JSON item equals.vi" Type="VI" URL="../JSON item equals.vi"/>
 		<Item Name="Progress Fixture Record.vi" Type="VI" URL="../Progress Fixture Record.vi"/>
@@ -87,12 +91,15 @@
 		<Item Name="test progress cancel by close.vi" Type="VI" URL="../test progress cancel by close.vi"/>
 		<Item Name="test progress legacy cancel.vi" Type="VI" URL="../test progress legacy cancel.vi"/>
 		<Item Name="test progress notifications.vi" Type="VI" URL="../test progress notifications.vi"/>
+		<Item Name="test prompt elicitation.vi" Type="VI" URL="../test prompt elicitation.vi"/>
 		<Item Name="test prompt required argument.vi" Type="VI" URL="../test prompt required argument.vi"/>
 		<Item Name="test prompt without arguments.vi" Type="VI" URL="../test prompt without arguments.vi"/>
 		<Item Name="test prompts list required.vi" Type="VI" URL="../test prompts list required.vi"/>
 		<Item Name="test prompts list.vi" Type="VI" URL="../test prompts list.vi"/>
 		<Item Name="test protocol version fallback.vi" Type="VI" URL="../test protocol version fallback.vi"/>
 		<Item Name="test protocol version negotiation.vi" Type="VI" URL="../test protocol version negotiation.vi"/>
+		<Item Name="test request state refused.vi" Type="VI" URL="../test request state refused.vi"/>
+		<Item Name="test request state rounds.vi" Type="VI" URL="../test request state rounds.vi"/>
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
 		<Item Name="test request without method.vi" Type="VI" URL="../test request without method.vi"/>
 		<Item Name="test resource blob.vi" Type="VI" URL="../test resource blob.vi"/>
