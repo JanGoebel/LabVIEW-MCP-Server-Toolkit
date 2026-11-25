@@ -86,10 +86,15 @@ The server speaks both eras of MCP on the same endpoint and decides per
 request:
 
 - **MCP 2026-07-28** (stateless): a request whose `params._meta` carries
-  `io.modelcontextprotocol/protocolVersion`.
-  - Such a request must also carry `io.modelcontextprotocol/clientCapabilities`
-    and the headers `MCP-Protocol-Version`, `Mcp-Method` and, for `tools/call`,
-    `prompts/get` and `resources/read`, `Mcp-Name`.
+  `io.modelcontextprotocol/protocolVersion`, whose `MCP-Protocol-Version`
+  header names 2026-07-28, or whose method is `server/discover`.
+  - Such a request must carry `io.modelcontextprotocol/protocolVersion` and
+    `io.modelcontextprotocol/clientCapabilities` in `params._meta` (otherwise
+    `400`, `-32602`) and the headers `MCP-Protocol-Version`, `Mcp-Method` and,
+    for `tools/call`, `prompts/get` and `resources/read`, `Mcp-Name`
+    (otherwise `400`, `-32020`).
+  - `initialize`, `ping` and the other methods this era removed are answered
+    `404`, `-32601`.
   - Results carry `resultType` and `_meta.io.modelcontextprotocol/serverInfo`.
     Lists and `resources/read` also carry the caching hints `ttlMs` and
     `cacheScope`.
@@ -101,7 +106,9 @@ request:
   2025-06-18).
 
 An unsupported `MCP-Protocol-Version` header is answered with HTTP `400` and
-error `-32022`, listing every supported version.
+error `-32022`, listing every supported version. Like every refusal it carries
+the id of the request. Every response carries `Connection: close`: the server
+closes the connection after each answer.
 
 ## How a VI becomes a tool
 
