@@ -179,6 +179,14 @@ the model can act on. The model sees `error out` of the tool VI like any other
 output. Unknown tools and malformed requests are JSON-RPC errors. A tool VI
 with a broken run arrow is answered with error `1003`.
 
+Before a tool or prompt VI runs, the server switches off its *automatic error
+handling* in memory (VI Properties > Execution). With it on, an error on an
+output that is not wired opens LabVIEW's modal error dialog, and the server
+would stop answering until someone pressed Continue. The VI is not saved; in
+the IDE it may show as modified afterwards. In a built application the setting
+cannot be changed at run time, so wire the error outputs inside tool VIs
+anyway.
+
 ## Asking the user (elicitation)
 
 MCP 2026-07-28 is stateless: the server cannot hold a call open while the user

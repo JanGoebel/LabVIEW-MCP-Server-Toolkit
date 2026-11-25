@@ -174,6 +174,7 @@
 			<Item Name="Input Required Response.vi" Type="VI" URL="../Input Required Response.vi"/>
 			<Item Name="Response Status Code.vi" Type="VI" URL="../Response Status Code.vi"/>
 			<Item Name="Should Send Progress.vi" Type="VI" URL="../Should Send Progress.vi"/>
+			<Item Name="Disable Automatic Error Handling.vi" Type="VI" URL="../Disable Automatic Error Handling.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
