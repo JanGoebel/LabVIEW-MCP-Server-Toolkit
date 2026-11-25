@@ -18,6 +18,7 @@
 		</Item>
 		<Item Name="tools" Type="Folder">
 			<Item Name="fake tool add.vi" Type="VI" URL="../fake tool add.vi"/>
+			<Item Name="fake tool added later.vi" Type="VI" URL="../fake tool added later.vi"/>
 			<Item Name="fake tool annotated.vi" Type="VI" URL="../fake tool annotated.vi"/>
 			<Item Name="fake tool array shapes.vi" Type="VI" URL="../fake tool array shapes.vi"/>
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
@@ -80,6 +81,7 @@
 		<Item Name="Test Initialize.vi" Type="VI" URL="../Test Initialize.vi"/>
 		<Item Name="Test Initialized.vi" Type="VI" URL="../Test Initialized.vi"/>
 		<Item Name="test internal error message.vi" Type="VI" URL="../test internal error message.vi"/>
+		<Item Name="test invalid input response.vi" Type="VI" URL="../test invalid input response.vi"/>
 		<Item Name="test labview version.vi" Type="VI" URL="../test labview version.vi"/>
 		<Item Name="test malformed json.vi" Type="VI" URL="../test malformed json.vi"/>
 		<Item Name="test modern errors.vi" Type="VI" URL="../test modern errors.vi"/>
@@ -125,6 +127,7 @@
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="test tools list array items.vi" Type="VI" URL="../test tools list array items.vi"/>
 		<Item Name="test tools list array shapes.vi" Type="VI" URL="../test tools list array shapes.vi"/>
+		<Item Name="test tools list cache.vi" Type="VI" URL="../test tools list cache.vi"/>
 		<Item Name="test tools list descriptions defaults ranges.vi" Type="VI" URL="../test tools list descriptions defaults ranges.vi"/>
 		<Item Name="test tools list error descriptions.vi" Type="VI" URL="../test tools list error descriptions.vi"/>
 		<Item Name="test tools list every array has items.vi" Type="VI" URL="../test tools list every array has items.vi"/>
