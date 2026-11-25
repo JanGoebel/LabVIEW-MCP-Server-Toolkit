@@ -45,6 +45,7 @@
 		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
 		<Item Name="Add Fixture Ask User Prompt.vi" Type="VI" URL="../Add Fixture Ask User Prompt.vi"/>
 		<Item Name="Add Fixture Confirm Tool.vi" Type="VI" URL="../Add Fixture Confirm Tool.vi"/>
+		<Item Name="Add Fixture Custom URI.vi" Type="VI" URL="../Add Fixture Custom URI.vi"/>
 		<Item Name="Add Fixture Error Descriptions Tool.vi" Type="VI" URL="../Add Fixture Error Descriptions Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Picture Tool.vi" Type="VI" URL="../Add Fixture Picture Tool.vi"/>
@@ -70,6 +71,7 @@
 		<Item Name="test batch.vi" Type="VI" URL="../test batch.vi"/>
 		<Item Name="test broken tool message.vi" Type="VI" URL="../test broken tool message.vi"/>
 		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
+		<Item Name="test completion complete.vi" Type="VI" URL="../test completion complete.vi"/>
 		<Item Name="test elicitation.vi" Type="VI" URL="../test elicitation.vi"/>
 		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
 		<Item Name="test http get rejected.vi" Type="VI" URL="../test http get rejected.vi"/>
@@ -103,6 +105,7 @@
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
 		<Item Name="test request without method.vi" Type="VI" URL="../test request without method.vi"/>
 		<Item Name="test resource blob.vi" Type="VI" URL="../test resource blob.vi"/>
+		<Item Name="test resource custom uri.vi" Type="VI" URL="../test resource custom uri.vi"/>
 		<Item Name="test resource not found uri.vi" Type="VI" URL="../test resource not found uri.vi"/>
 		<Item Name="test resource templates list.vi" Type="VI" URL="../test resource templates list.vi"/>
 		<Item Name="test resource text utf8.vi" Type="VI" URL="../test resource text utf8.vi"/>
