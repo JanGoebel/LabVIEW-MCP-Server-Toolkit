@@ -180,6 +180,9 @@
 			<Item Name="Resolve Request State.vi" Type="VI" URL="../Resolve Request State.vi"/>
 			<Item Name="Add Completions Capability.vi" Type="VI" URL="../Add Completions Capability.vi"/>
 			<Item Name="Resource URI.vi" Type="VI" URL="../Resource URI.vi"/>
+			<Item Name="Tool List Cache.vi" Type="VI" URL="../Tool List Cache.vi"/>
+			<Item Name="Cached Tool List.vi" Type="VI" URL="../Cached Tool List.vi"/>
+			<Item Name="Valid Input Response.vi" Type="VI" URL="../Valid Input Response.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>

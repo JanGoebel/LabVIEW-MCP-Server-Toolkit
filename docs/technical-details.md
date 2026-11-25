@@ -143,6 +143,12 @@ is added. `tools/list` then returns for each tool:
 On `tools/call` the arguments are converted with JSONtext into the controls'
 own types, the VI is run, and the indicator values are flattened to JSON.
 
+The answer of `tools/list` is built once and then kept per server
+(`Cached Tool List.vi`, `Tool List Cache.vi`), because building it reads every
+tool VI through VI Server. It is built again after the tools of the server
+change (`Add Tool.vi`, `Clear Tools.vi`). A change made inside a tool VI while
+the server runs is therefore not listed until then.
+
 ### Data types
 
 | LabVIEW type | JSON Schema | Value in `tools/call` |
@@ -234,6 +240,12 @@ capability. For any other client the VI returns *not supported* without
 sending anything. Keys must be unique within one tool, since a tool can ask
 several questions, one per round trip. Prompt VIs can ask the same way: a
 `prompts/get` is answered with `input_required` too.
+
+An answer the client sends back counts only when it is a JSON object whose
+`action` is `accept`, `decline` or `cancel`. Anything else under the key (a
+number, a bare string, an unknown action) is treated like a missing answer:
+the question is asked again with a new `input_required`, as MCP 2026-07-28
+recommends for invalid input.
 
 A client sends back only the answers to the latest questions. So that a tool
 asking several questions in several rounds keeps the earlier answers, every
