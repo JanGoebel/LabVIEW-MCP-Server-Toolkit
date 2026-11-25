@@ -13,6 +13,9 @@ Layout, measured on the existing icons:
   - Toolkit style: green banner (00FF00) with "MCP" in black.
   - Test style: red banner (FF6666) without text.
   - Class style: yellow banner (FFFF00) with -BannerText in black.
+  - Example style (the VIs under examples\): no banner, the whole body white;
+    one line at row 13, two at rows 8 and 19, three at rows 5, 14 and 22;
+    a line may be 29 px wide and its left edge is rounded up.
   - Body text in black capitals, every line centred horizontally;
     one line at row 19, two at rows 15 and 23, three at rows 13, 19 and 25
     (top of the capitals).
@@ -25,7 +28,7 @@ LabVIEW 20.0 format.
 #>
 param(
     [Parameter(Mandatory = $true)][string[]]$Lines,
-    [ValidateSet('Toolkit', 'Test', 'Class')][string]$Style = 'Toolkit',
+    [ValidateSet('Toolkit', 'Test', 'Class', 'Example')][string]$Style = 'Toolkit',
     [string]$BannerText = '',
     [Parameter(Mandatory = $true)][string]$OutFile,
     [switch]$Show
@@ -86,12 +89,13 @@ $banner = switch ($Style) {
     'Toolkit' { [System.Drawing.Color]::FromArgb(255, 0, 255, 0) }
     'Test'    { [System.Drawing.Color]::FromArgb(255, 255, 102, 102) }
     'Class'   { [System.Drawing.Color]::FromArgb(255, 255, 255, 0) }
+    'Example' { $white }
 }
 
 $bmp = New-Object System.Drawing.Bitmap 32, 32, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 for ($y = 0; $y -lt 32; $y++) {
     for ($x = 0; $x -lt 32; $x++) {
-        $c = if ($x -eq 0 -or $x -eq 31 -or $y -eq 0 -or $y -eq 11 -or $y -eq 31) { $black }
+        $c = if ($x -eq 0 -or $x -eq 31 -or $y -eq 0 -or ($y -eq 11 -and $Style -ne 'Example') -or $y -eq 31) { $black }
              elseif ($y -le 10) { $banner } else { $white }
         $bmp.SetPixel($x, $y, $c)
     }
@@ -102,9 +106,11 @@ function Write-Ink([string]$Text, [int]$Top, [int]$Left = -1) {
     $ink = [SmallFontsText]::Ink($Text.ToUpperInvariant())
     if ($ink.Count -eq 0) { return }
     $w = $ink[0].Length
-    if ($w -gt 28) { throw "'$Text' is $w px wide; at most 28 px fit inside the frame with a 1 px margin." }
+    # The example icons go up to 29 px (BUY ANY) and round the left edge up.
+    $max = if ($Style -eq 'Example') { 29 } else { 28 }
+    if ($w -gt $max) { throw "'$Text' is $w px wide; at most $max px fit inside the frame." }
     # Centred like the existing icons: x = floor((32 - width) / 2).
-    $x0 = if ($Left -ge 0) { $Left } else { [math]::Floor((32 - $w) / 2) }
+    $x0 = if ($Left -ge 0) { $Left } elseif ($Style -eq 'Example') { [math]::Ceiling((32 - $w) / 2) } else { [math]::Floor((32 - $w) / 2) }
     for ($r = 0; $r -lt $ink.Count; $r++) {
         for ($i = 0; $i -lt $w; $i++) {
             if ($ink[$r][$i] -eq '#') { $script:bmp.SetPixel($x0 + $i, $Top + $r, $black) }
@@ -117,7 +123,8 @@ switch ($Style) {
     'Class'   { Write-Ink $BannerText 3 }
 }
 
-$tops = switch ($Lines.Count) { 1 { , 19 } 2 { 15, 23 } 3 { 13, 19, 25 } }
+$tops = if ($Style -eq 'Example') { switch ($Lines.Count) { 1 { , 13 } 2 { 8, 19 } 3 { 5, 14, 22 } } }
+        else { switch ($Lines.Count) { 1 { , 19 } 2 { 15, 23 } 3 { 13, 19, 25 } } }
 for ($i = 0; $i -lt $Lines.Count; $i++) { Write-Ink $Lines[$i] $tops[$i] }
 
 # .NET resolves a relative path against the process directory, not the
