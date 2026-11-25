@@ -215,7 +215,17 @@ repeats the call with the answer. The tool VI therefore runs twice.
 This needs a client that speaks MCP 2026-07-28 and declares the `elicitation`
 capability. For any other client the VI returns *not supported* without
 sending anything. Keys must be unique within one tool, since a tool can ask
-several questions, one per round trip.
+several questions, one per round trip. Prompt VIs can ask the same way: a
+`prompts/get` is answered with `input_required` too.
+
+A client sends back only the answers to the latest questions. So that a tool
+asking several questions in several rounds keeps the earlier answers, every
+`input_required` result carries a `requestState`: an opaque token
+(`mcp-rs-…`). The answers so far stay in the server, bound to the method, the
+tool or prompt name and the arguments; the retry's token brings them back. A
+token that is unknown, older than 10 minutes, or sent with another tool,
+prompt or arguments is refused with `400` and `-32602`. The server keeps at
+most 64 such states.
 
 ## Progress and cancellation
 
