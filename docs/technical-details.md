@@ -75,10 +75,27 @@ Desktop, reach the HTTP endpoint through the `mcp-remote` proxy.
 | `tools/list`, `tools/call` | the tools, and the result of a call |
 | `prompts/list`, `prompts/get` | the prompts, and the text of one prompt with its arguments filled in |
 | `resources/list`, `resources/read`, `resources/templates/list` | the files, and the content of one |
+| `completion/complete` | no suggestions: `{"completion":{"values":[],"total":0,"hasMore":false}}` for a prompt or resource the server has |
 | `notifications/initialized`, `notifications/cancelled` | accepted with `202` |
 
 An unknown method is answered with error `-32601` (method not found), malformed
 JSON with `-32700`, a request without a method with `-32600`.
+
+`completion/complete` exists so that clients which ask for argument suggestions get a
+valid answer: prompt arguments are free strings, so there is nothing to suggest.
+`params.ref` must be `{"type":"ref/prompt","name":...}` (a prompt of the server, by
+its MCP name) or `{"type":"ref/resource","uri":...}` (a resource, by its exact
+uri); anything else, an unknown prompt and an unknown uri are answered with
+`-32602`. Both eras declare it as the capability `completions: {}` in `initialize`
+and `server/discover`.
+
+A resource is listed and read under the uri `labview://<file name>` (the file
+name without extension, made a valid MCP name like a tool name). The optional
+`uri` input of `Add Resource (File).vi` replaces it, for example
+`test://static-text`; `resources/read` then matches that uri exactly. The
+`mimeType` always follows the file extension (`.txt` and unknown ones
+`text/plain`, `.png` `image/png`, `.pdf`, `.md`, `.json`, `.csv`, `.xml`, `.py`,
+`.c`).
 
 ## Protocol versions
 
