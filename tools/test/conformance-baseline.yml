@@ -1,0 +1,52 @@
+# Expected failures of the official MCP conformance suite
+# (@modelcontextprotocol/conformance, server scenarios, requirements 2026-07-28)
+# against examples/Conformance MCP Server. Used by Invoke-Conformance.ps1.
+#
+# Every entry needs a feature this toolkit does not have, or a diagnostic
+# fixture tool the example does not provide. None of them is a rule every
+# MCP server must follow. An entry that starts to pass makes the run fail,
+# so the list cannot go stale: remove the entry then.
+server:
+  # --- Tool results are the VI's outputs: one JSON text block, structuredContent
+  #     and images from picture indicators. A tool cannot return other content types.
+  - tools-call-audio                 # audio content
+  - tools-call-embedded-resource     # embedded resource content
+  - tools-call-mixed-content         # text + image + embedded resource in one result
+
+  # --- A prompt VI returns one text message.
+  - prompts-get-embedded-resource
+  - prompts-get-with-image
+
+  # --- Resources are files; there are no resource templates.
+  - resources-templates-read
+
+  # --- Sampling and roots are deprecated in MCP 2026-07-28 (SEP-2577); the toolkit
+  #     asks the user (elicitation) only.
+  - input-required-result-basic-sampling
+  - input-required-result-basic-list-roots
+  - input-required-result-multiple-input-requests   # elicitation + sampling + roots in one result
+  - input-required-result-capability-check          # its fixture must offer a sampling request
+
+  # --- server-stateless: single checks that need diagnostic tools.
+  # A tool that demands a client capability and is refused with -32021. Here a tool
+  # gets "not supported" from Ask User.vi and decides itself what to do.
+  - server-stateless:sep-2575-server-rejects-undeclared-capability
+  - server-stateless:sep-2575-missing-capability-http-400
+  # Diagnostic tool test_streaming_elicitation is not provided. The server never sends
+  # requests of its own on a stream: questions go into the input_required result.
+  - server-stateless:sep-2575-http-server-no-independent-requests-on-stream
+  # Logging is deprecated in MCP 2026-07-28; the server sends no notifications/message at all.
+  - server-stateless:sep-2575-server-no-log-without-loglevel
+
+  # --- Not scored for 2026-07-28 (extension and pending scenarios), listed so the run is quiet.
+  - tasks-lifecycle                  # the tasks extension is not implemented
+  - tasks-capability-negotiation
+  - tasks-wire-fields
+  - tasks-request-state-removal
+  - tasks-mrtr-input
+  - tasks-request-headers
+  - tasks-dispatch-and-envelope
+  - tasks-required-task-error
+  - tasks-mrtr-composition
+  - json-schema-2020-12              # needs the fixture tool json_schema_2020_12_tool
+  - http-custom-header-server-validation   # needs a tool with x-mcp-header parameters; the toolkit never annotates any
