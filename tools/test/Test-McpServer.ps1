@@ -7,7 +7,8 @@ Sends requests with curl to an MCP server reachable over HTTP and checks the
 answers against the Model Context Protocol specification (Streamable HTTP
 transport, JSON-RPC rules, lifecycle, and the list methods of tools, prompts
 and resources). It works against any server: nothing depends on which tools,
-prompts or resources are registered, and no tool is called.
+prompts or resources are registered, and no registered tool is called (only a
+tool name that does not exist, plainly and with a progressToken).
 
 Every check is printed as PASS or FAIL. "required" checks are things the
 specification demands; "advisory" checks are recommendations or behaviour
@@ -167,6 +168,20 @@ if (Test-HasProperty $capabilities 'tools') {
     $r = Send-Request -Body '{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"this_tool_does_not_exist","arguments":{}}}'
     $failed = (Test-HasProperty $r.Json 'error') -or ((Test-HasProperty $r.Json 'result') -and (Test-HasProperty $r.Json.result 'isError') -and $r.Json.result.isError)
     Add-Result 'Tools' 'calling an unknown tool is answered with an error' ($failed -and $r.Json.id -eq 11) "status $($r.Status), body: $(Get-Short $r.Raw)"
+
+    # The same call with a progressToken: a server may now answer with an SSE stream. A failing call
+    # must still be answered, and must not leave the server unable to answer the next request.
+    $r = Send-Request -Body '{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"this_tool_does_not_exist","arguments":{},"_meta":{"progressToken":"t12"}}}'
+    $answer = $r.Json
+    if ($r.Headers -match '(?im)^content-type:\s*text/event-stream') {
+        $last = @($r.Raw -split '\r?\n' | Where-Object { $_ -match '^data:' }) | Select-Object -Last 1
+        $answer = $null
+        if ($last) { try { $answer = ($last -replace '^data:\s*', '') | ConvertFrom-Json } catch { $answer = $null } }
+    }
+    $failed = (Test-HasProperty $answer 'error') -or ((Test-HasProperty $answer 'result') -and (Test-HasProperty $answer.result 'isError') -and $answer.result.isError)
+    Add-Result 'Tools' 'calling an unknown tool with a progressToken is answered with an error' ($failed -and $answer.id -eq 12) "status $($r.Status), body: $(Get-Short $r.Raw)"
+    $r = Send-Request -Body '{"jsonrpc":"2.0","id":13,"method":"tools/list","params":{}}'
+    Add-Result 'Tools' 'the server still answers after that call' ($r.Status -eq 200 -and $r.Json.id -eq 13) "status $($r.Status) within $TimeoutSeconds s, body: $(Get-Short $r.Raw)"
 }
 
 if (Test-HasProperty $capabilities 'prompts') {
