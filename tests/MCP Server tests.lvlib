@@ -19,8 +19,6 @@
 			<Item Name="fake tool add.vi" Type="VI" URL="../fake tool add.vi"/>
 			<Item Name="fake tool annotated.vi" Type="VI" URL="../fake tool annotated.vi"/>
 			<Item Name="fake tool array shapes.vi" Type="VI" URL="../fake tool array shapes.vi"/>
-			<Item Name="fake tool schema shapes.vi" Type="VI" URL="../fake tool schema shapes.vi"/>
-			<Item Name="fake tool schema details.vi" Type="VI" URL="../fake tool schema details.vi"/>
 			<Item Name="fake tool arrays.vi" Type="VI" URL="../fake tool arrays.vi"/>
 			<Item Name="fake tool broken vi.vi" Type="VI" URL="../fake tool broken vi.vi"/>
 			<Item Name="fake tool confirm.vi" Type="VI" URL="../fake tool confirm.vi"/>
@@ -31,25 +29,29 @@
 			<Item Name="fake tool no inputs outputs.vi" Type="VI" URL="../fake tool no inputs outputs.vi"/>
 			<Item Name="fake tool picture outputs.vi" Type="VI" URL="../fake tool picture outputs.vi"/>
 			<Item Name="fake tool progress.vi" Type="VI" URL="../fake tool progress.vi"/>
-			<Item Name="fake tool return error.vi" Type="VI" URL="../fake tool return error.vi"/>
 			<Item Name="fake tool required input.vi" Type="VI" URL="../fake tool required input.vi"/>
+			<Item Name="fake tool return error.vi" Type="VI" URL="../fake tool return error.vi"/>
+			<Item Name="fake tool schema details.vi" Type="VI" URL="../fake tool schema details.vi"/>
+			<Item Name="fake tool schema shapes.vi" Type="VI" URL="../fake tool schema shapes.vi"/>
 			<Item Name="fake tool special labels.vi" Type="VI" URL="../fake tool special labels.vi"/>
+			<Item Name="fake tool unwired error.vi" Type="VI" URL="../fake tool unwired error.vi"/>
 			<Item Name="fake_tool_say_hello.vi" Type="VI" URL="../fake_tool_say_hello.vi"/>
 		</Item>
 	</Item>
 	<Item Name="SubVIs" Type="Folder">
-		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
 		<Item Name="Add Fixture Annotated Tool.vi" Type="VI" URL="../Add Fixture Annotated Tool.vi"/>
+		<Item Name="Add Fixture Array Shapes Tool.vi" Type="VI" URL="../Add Fixture Array Shapes Tool.vi"/>
 		<Item Name="Add Fixture Confirm Tool.vi" Type="VI" URL="../Add Fixture Confirm Tool.vi"/>
 		<Item Name="Add Fixture Error Descriptions Tool.vi" Type="VI" URL="../Add Fixture Error Descriptions Tool.vi"/>
 		<Item Name="Add Fixture Files.vi" Type="VI" URL="../Add Fixture Files.vi"/>
 		<Item Name="Add Fixture Picture Tool.vi" Type="VI" URL="../Add Fixture Picture Tool.vi"/>
-		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
 		<Item Name="Add Fixture Progress Tool.vi" Type="VI" URL="../Add Fixture Progress Tool.vi"/>
-		<Item Name="Add Fixture Schema Shapes Tool.vi" Type="VI" URL="../Add Fixture Schema Shapes Tool.vi"/>
+		<Item Name="Add Fixture Prompt.vi" Type="VI" URL="../Add Fixture Prompt.vi"/>
 		<Item Name="Add Fixture Schema Details Tool.vi" Type="VI" URL="../Add Fixture Schema Details Tool.vi"/>
+		<Item Name="Add Fixture Schema Shapes Tool.vi" Type="VI" URL="../Add Fixture Schema Shapes Tool.vi"/>
 		<Item Name="Add Fixture Special Labels Tool.vi" Type="VI" URL="../Add Fixture Special Labels Tool.vi"/>
 		<Item Name="Add Fixture Tool.vi" Type="VI" URL="../Add Fixture Tool.vi"/>
+		<Item Name="Add Fixture Unwired Error Tool.vi" Type="VI" URL="../Add Fixture Unwired Error Tool.vi"/>
 		<Item Name="JSON item equals.vi" Type="VI" URL="../JSON item equals.vi"/>
 		<Item Name="Progress Fixture Record.vi" Type="VI" URL="../Progress Fixture Record.vi"/>
 		<Item Name="Send HTTP request (custom).vi" Type="VI" URL="../Send HTTP request (custom).vi"/>
@@ -57,13 +59,15 @@
 		<Item Name="Send MCP request (headers).vi" Type="VI" URL="../Send MCP request (headers).vi"/>
 	</Item>
 	<Item Name="tests" Type="Folder">
+		<Item Name="test access allowed clients.vi" Type="VI" URL="../test access allowed clients.vi"/>
+		<Item Name="test access bearer token.vi" Type="VI" URL="../test access bearer token.vi"/>
 		<Item Name="test add prompt name clash.vi" Type="VI" URL="../test add prompt name clash.vi"/>
 		<Item Name="test add tool name clash.vi" Type="VI" URL="../test add tool name clash.vi"/>
 		<Item Name="test batch.vi" Type="VI" URL="../test batch.vi"/>
 		<Item Name="test broken tool message.vi" Type="VI" URL="../test broken tool message.vi"/>
 		<Item Name="test broken tool.vi" Type="VI" URL="../test broken tool.vi"/>
-		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
 		<Item Name="test elicitation.vi" Type="VI" URL="../test elicitation.vi"/>
+		<Item Name="test empty msg.vi" Type="VI" URL="../test empty msg.vi"/>
 		<Item Name="test http get rejected.vi" Type="VI" URL="../test http get rejected.vi"/>
 		<Item Name="test http origin.vi" Type="VI" URL="../test http origin.vi"/>
 		<Item Name="test http protocol version.vi" Type="VI" URL="../test http protocol version.vi"/>
@@ -78,17 +82,15 @@
 		<Item Name="test non object message.vi" Type="VI" URL="../test non object message.vi"/>
 		<Item Name="test notification accepted.vi" Type="VI" URL="../test notification accepted.vi"/>
 		<Item Name="test ping.vi" Type="VI" URL="../test ping.vi"/>
+		<Item Name="test progress cancel by close.vi" Type="VI" URL="../test progress cancel by close.vi"/>
+		<Item Name="test progress legacy cancel.vi" Type="VI" URL="../test progress legacy cancel.vi"/>
+		<Item Name="test progress notifications.vi" Type="VI" URL="../test progress notifications.vi"/>
 		<Item Name="test prompt required argument.vi" Type="VI" URL="../test prompt required argument.vi"/>
 		<Item Name="test prompt without arguments.vi" Type="VI" URL="../test prompt without arguments.vi"/>
 		<Item Name="test prompts list required.vi" Type="VI" URL="../test prompts list required.vi"/>
 		<Item Name="test prompts list.vi" Type="VI" URL="../test prompts list.vi"/>
-		<Item Name="test progress cancel by close.vi" Type="VI" URL="../test progress cancel by close.vi"/>
-		<Item Name="test progress legacy cancel.vi" Type="VI" URL="../test progress legacy cancel.vi"/>
-		<Item Name="test progress notifications.vi" Type="VI" URL="../test progress notifications.vi"/>
-		<Item Name="test access allowed clients.vi" Type="VI" URL="../test access allowed clients.vi"/>
-		<Item Name="test access bearer token.vi" Type="VI" URL="../test access bearer token.vi"/>
-		<Item Name="test protocol version negotiation.vi" Type="VI" URL="../test protocol version negotiation.vi"/>
 		<Item Name="test protocol version fallback.vi" Type="VI" URL="../test protocol version fallback.vi"/>
+		<Item Name="test protocol version negotiation.vi" Type="VI" URL="../test protocol version negotiation.vi"/>
 		<Item Name="test request status.vi" Type="VI" URL="../test request status.vi"/>
 		<Item Name="test request without method.vi" Type="VI" URL="../test request without method.vi"/>
 		<Item Name="test resource blob.vi" Type="VI" URL="../test resource blob.vi"/>
@@ -96,7 +98,9 @@
 		<Item Name="test resource text utf8.vi" Type="VI" URL="../test resource text utf8.vi"/>
 		<Item Name="test resources list.vi" Type="VI" URL="../test resources list.vi"/>
 		<Item Name="test server discover.vi" Type="VI" URL="../test server discover.vi"/>
+		<Item Name="test streamed tool error.vi" Type="VI" URL="../test streamed tool error.vi"/>
 		<Item Name="test string id.vi" Type="VI" URL="../test string id.vi"/>
+		<Item Name="test tool automatic error handling.vi" Type="VI" URL="../test tool automatic error handling.vi"/>
 		<Item Name="test tool call default arguments.vi" Type="VI" URL="../test tool call default arguments.vi"/>
 		<Item Name="test tool call without arguments.vi" Type="VI" URL="../test tool call without arguments.vi"/>
 		<Item Name="test tool error result.vi" Type="VI" URL="../test tool error result.vi"/>
@@ -108,13 +112,13 @@
 		<Item Name="test tools call.vi" Type="VI" URL="../test tools call.vi"/>
 		<Item Name="test tools list array items.vi" Type="VI" URL="../test tools list array items.vi"/>
 		<Item Name="test tools list array shapes.vi" Type="VI" URL="../test tools list array shapes.vi"/>
+		<Item Name="test tools list descriptions defaults ranges.vi" Type="VI" URL="../test tools list descriptions defaults ranges.vi"/>
+		<Item Name="test tools list error descriptions.vi" Type="VI" URL="../test tools list error descriptions.vi"/>
 		<Item Name="test tools list every array has items.vi" Type="VI" URL="../test tools list every array has items.vi"/>
 		<Item Name="test tools list mcp names.vi" Type="VI" URL="../test tools list mcp names.vi"/>
 		<Item Name="test tools list output schema.vi" Type="VI" URL="../test tools list output schema.vi"/>
-		<Item Name="test tools list title annotations.vi" Type="VI" URL="../test tools list title annotations.vi"/>
 		<Item Name="test tools list schema details.vi" Type="VI" URL="../test tools list schema details.vi"/>
-		<Item Name="test tools list descriptions defaults ranges.vi" Type="VI" URL="../test tools list descriptions defaults ranges.vi"/>
-		<Item Name="test tools list error descriptions.vi" Type="VI" URL="../test tools list error descriptions.vi"/>
+		<Item Name="test tools list title annotations.vi" Type="VI" URL="../test tools list title annotations.vi"/>
 		<Item Name="Test tools list.vi" Type="VI" URL="../Test tools list.vi"/>
 		<Item Name="test unknown method.vi" Type="VI" URL="../test unknown method.vi"/>
 		<Item Name="test unknown notification.vi" Type="VI" URL="../test unknown notification.vi"/>
