@@ -175,6 +175,8 @@
 			<Item Name="Response Status Code.vi" Type="VI" URL="../Response Status Code.vi"/>
 			<Item Name="Should Send Progress.vi" Type="VI" URL="../Should Send Progress.vi"/>
 			<Item Name="Disable Automatic Error Handling.vi" Type="VI" URL="../Disable Automatic Error Handling.vi"/>
+			<Item Name="Request State Store.vi" Type="VI" URL="../Request State Store.vi"/>
+			<Item Name="Resolve Request State.vi" Type="VI" URL="../Resolve Request State.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>
