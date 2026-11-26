@@ -63,6 +63,7 @@
 			<Item Name="exit.vi" Type="VI" URL="../exit.vi"/>
 			<Item Name="ping.vi" Type="VI" URL="../ping.vi"/>
 			<Item Name="resources templates list.vi" Type="VI" URL="../resources templates list.vi"/>
+			<Item Name="completion complete.vi" Type="VI" URL="../completion complete.vi"/>
 		</Item>
 		<Item Name="SubVIs" Type="Folder">
 			<Item Name="Internal API" Type="Folder">
@@ -177,6 +178,11 @@
 			<Item Name="Disable Automatic Error Handling.vi" Type="VI" URL="../Disable Automatic Error Handling.vi"/>
 			<Item Name="Request State Store.vi" Type="VI" URL="../Request State Store.vi"/>
 			<Item Name="Resolve Request State.vi" Type="VI" URL="../Resolve Request State.vi"/>
+			<Item Name="Add Completions Capability.vi" Type="VI" URL="../Add Completions Capability.vi"/>
+			<Item Name="Resource URI.vi" Type="VI" URL="../Resource URI.vi"/>
+			<Item Name="Tool List Cache.vi" Type="VI" URL="../Tool List Cache.vi"/>
+			<Item Name="Cached Tool List.vi" Type="VI" URL="../Cached Tool List.vi"/>
+			<Item Name="Valid Input Response.vi" Type="VI" URL="../Valid Input Response.vi"/>
 		</Item>
 		<Item Name="SSE" Type="Folder">
 			<Item Name="MCP SSE Response.lvclass" Type="LVClass" URL="../MCP SSE Response/MCP SSE Response.lvclass"/>

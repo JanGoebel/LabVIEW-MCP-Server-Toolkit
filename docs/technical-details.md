@@ -75,10 +75,27 @@ Desktop, reach the HTTP endpoint through the `mcp-remote` proxy.
 | `tools/list`, `tools/call` | the tools, and the result of a call |
 | `prompts/list`, `prompts/get` | the prompts, and the text of one prompt with its arguments filled in |
 | `resources/list`, `resources/read`, `resources/templates/list` | the files, and the content of one |
+| `completion/complete` | no suggestions: `{"completion":{"values":[],"total":0,"hasMore":false}}` for a prompt or resource the server has |
 | `notifications/initialized`, `notifications/cancelled` | accepted with `202` |
 
 An unknown method is answered with error `-32601` (method not found), malformed
 JSON with `-32700`, a request without a method with `-32600`.
+
+`completion/complete` exists so that clients which ask for argument suggestions get a
+valid answer: prompt arguments are free strings, so there is nothing to suggest.
+`params.ref` must be `{"type":"ref/prompt","name":...}` (a prompt of the server, by
+its MCP name) or `{"type":"ref/resource","uri":...}` (a resource, by its exact
+uri); anything else, an unknown prompt and an unknown uri are answered with
+`-32602`. Both eras declare it as the capability `completions: {}` in `initialize`
+and `server/discover`.
+
+A resource is listed and read under the uri `labview://<file name>` (the file
+name without extension, made a valid MCP name like a tool name). The optional
+`uri` input of `Add Resource (File).vi` replaces it, for example
+`test://static-text`; `resources/read` then matches that uri exactly. The
+`mimeType` always follows the file extension (`.txt` and unknown ones
+`text/plain`, `.png` `image/png`, `.pdf`, `.md`, `.json`, `.csv`, `.xml`, `.py`,
+`.c`).
 
 ## Protocol versions
 
@@ -125,6 +142,12 @@ is added. `tools/list` then returns for each tool:
 
 On `tools/call` the arguments are converted with JSONtext into the controls'
 own types, the VI is run, and the indicator values are flattened to JSON.
+
+The answer of `tools/list` is built once and then kept per server
+(`Cached Tool List.vi`, `Tool List Cache.vi`), because building it reads every
+tool VI through VI Server. It is built again after the tools of the server
+change (`Add Tool.vi`, `Clear Tools.vi`). A change made inside a tool VI while
+the server runs is therefore not listed until then.
 
 ### Data types
 
@@ -217,6 +240,12 @@ capability. For any other client the VI returns *not supported* without
 sending anything. Keys must be unique within one tool, since a tool can ask
 several questions, one per round trip. Prompt VIs can ask the same way: a
 `prompts/get` is answered with `input_required` too.
+
+An answer the client sends back counts only when it is a JSON object whose
+`action` is `accept`, `decline` or `cancel`. Anything else under the key (a
+number, a bare string, an unknown action) is treated like a missing answer:
+the question is asked again with a new `input_required`, as MCP 2026-07-28
+recommends for invalid input.
 
 A client sends back only the answers to the latest questions. So that a tool
 asking several questions in several rounds keeps the earlier answers, every

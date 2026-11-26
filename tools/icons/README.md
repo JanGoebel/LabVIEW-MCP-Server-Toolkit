@@ -9,6 +9,7 @@ style, so a new VI gets an icon that matches the existing ones pixel for pixel.
 | `Toolkit` | green, "MCP" | VIs of `MCP Server.lvlib` |
 | `Class` | yellow, `-BannerText` | member VIs of a class, e.g. "SSE" for `MCP SSE Response.lvclass` |
 | `Test` | red, empty | VIs of `MCP Server tests.lvlib` |
+| `Example` | none, white body | VIs of the examples under `examples\` |
 
 The body holds one to three lines of capitals, each at most 28 px wide (about
 six letters), centred.
