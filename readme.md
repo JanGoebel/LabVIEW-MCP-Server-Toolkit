@@ -324,11 +324,22 @@ it from the **+** menu.
 ### Full Featured MCP Server
 
 A simulated stock broker that uses every kind of building block: tools to look
-up prices, show a history chart and buy stocks; prompts such as "find the best
-trending stock"; and a resource that makes the assistant act as a stock market
-expert. The MCP log on the front panel shows every request the client sends.
+up prices, read company descriptions and news, show a history chart and buy or
+sell stocks; prompts such as "find the best trending stock"; and a resource that
+makes the assistant act as a stock market expert. The MCP log on the front panel
+shows every request the client sends.
 
-![Front panel of the Full Featured example: stock price chart and MCP log](docs/images/full-featured-panel.png)
+The market behind it is a small simulation: 20 stocks with a short description
+each (some companies are solid, some are not, and the description hints at
+which), prices that follow a trend plus the mood of the market, and news that
+move them. Some news are single events, others are stories that unfold over a
+few minutes with an uncertain ending, such as a takeover rumour or an audit.
+The assistant reads all of it with `get_stock_info` and `get_news` and trades
+with `buy_stock` and `sell_stock`. The chart on the front panel shows the last
+ten minutes of every stock, scaled so each curve starts at 100, and the news
+ticker below it shows the latest headlines.
+
+![Front panel of the Full Featured example: stock price chart, MCP log and news ticker](docs/images/full-featured-panel.png)
 
 ![Block diagram of the Full Featured example](docs/images/full-featured-main.png)
 
